@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "@tsconfig/node22/tsconfig.json",
+    "@tsconfig/strictest/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "build",
+    "sourceMap": true,
+    "declaration": true,
+    "noUnusedLocals": true,
+    "exactOptionalPropertyTypes": false,
+    "allowJs": true
+  },
+  "include": ["src/**/*", "examples/**/*", "test/**/*"]
+}

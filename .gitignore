@@ -1,0 +1,19 @@
+# Bootstrap scripts folder
+.DS_store
+.bootstrap
+
+# npm
+node_modules
+
+# env
+.env*
+!.env.example
+
+# temp
+/__temp
+
+# build
+/build
+
+#coverage
+/coverage/

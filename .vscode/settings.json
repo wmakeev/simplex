@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    "node_modules": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "cSpell.language": "en,ru",
+  "cSpell.words": [
+    "customerorder",
+    "customerorders",
+    "invoiceout"
+  ]
+}

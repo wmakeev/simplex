@@ -1,0 +1,80 @@
+{
+  "name": "simplex-lang",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "SimplEx - simple expression language",
+  "files": [
+    "build/src/",
+    "parser/",
+    "src/"
+  ],
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "keywords": [
+    "expression",
+    "language",
+    "simplex",
+    "etl",
+    "elt",
+    "peggy",
+    "peg",
+    "parser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wmakeev/simplex"
+  },
+  "scripts": {
+    "env:example": "npx sync-dotenv",
+    "cleanup": "rm -rf build/",
+    "compile:dev": "tsc",
+    "compile": "npm run cleanup && tsc --build tsconfig.prod.json",
+    "lint": "eslint . --fix",
+    "build:parser": "peggy -o parser/index.js --source-map --format es --dts src/simplex.peggy",
+    "build:dev": "npm run lint && npm run compile:dev",
+    "build": "npm run build:parser && npm run lint && npm run compile",
+    "coverage": "c8 node -r dotenv/config --test --enable-source-maps",
+    "coverage:report": "c8 report",
+    "test": "npm run build && npm run coverage",
+    "version": "auto-changelog -p && git add CHANGELOG.md",
+    "release": "np"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "quoteProps": "consistent",
+    "trailingComma": "none",
+    "arrowParens": "avoid"
+  },
+  "c8": {
+    "reporter": [
+      "lcov",
+      "text"
+    ]
+  },
+  "author": {
+    "name": "Vitaliy V. Makeev",
+    "email": "w.makeev@gmail.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@project/simplex-parser": "file:parser",
+    "@tsconfig/node22": "^22.0.0",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/node": "^22.13.4",
+    "auto-changelog": "^2.5.0",
+    "awesome-code-frame": "^1.1.0",
+    "c8": "^10.1.3",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.20.1",
+    "eslint-plugin-n": "^17.15.1",
+    "peggy": "^4.2.0",
+    "prettier": "^3.5.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
+  }
+}
