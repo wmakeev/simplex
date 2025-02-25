@@ -2,7 +2,7 @@ name: Test and coverage action
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   coverage:
     runs-on: ubuntu-latest
