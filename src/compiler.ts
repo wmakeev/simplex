@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import { parse } from '@project/simplex-parser'
 import { ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
@@ -9,16 +11,15 @@ import {
   LogicalExpression,
   UnaryExpression
 } from './simplex-tree.js'
-import {
-  bool,
-  ensureFunction,
-  isSimple,
-  num,
-  prettyType,
-  relComp,
-  toStr
-} from './utils.js'
 import assert from 'node:assert'
+import { castToBoolean } from './tools/cast.js'
+import {
+  ensureFunction,
+  ensureRelationalComparable,
+  ensureNumber
+} from './tools/ensure.js'
+import { isSimpleValue } from './tools/guards.js'
+import { castToString, typeOf } from './tools/index.js'
 
 interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
@@ -45,7 +46,7 @@ const defaultContextHelpers: ContextHelpers<
   Record<string, unknown>,
   Record<string, unknown>
 > = {
-  castToBoolean: bool,
+  castToBoolean,
 
   ensureFunction,
 
@@ -67,14 +68,11 @@ const defaultContextHelpers: ContextHelpers<
     if (obj == null) return obj
 
     if (typeof obj !== 'object') {
-      throw new UnexpectedTypeError('object', prettyType(obj))
+      throw new UnexpectedTypeError(['object'], obj)
     }
 
-    if (isSimple(key) === false) {
-      throw new UnexpectedTypeError(
-        'object key to be simple type',
-        prettyType(key)
-      )
+    if (isSimpleValue(key) === false) {
+      throw new UnexpectedTypeError(['simple type object key'], key)
     }
 
     if (hasOwn(obj, key as any)) {
@@ -109,9 +107,9 @@ type ExpressionUnaryOperators = Record<
 >
 
 export const defaultUnaryOperators: ExpressionUnaryOperators = {
-  '+': val => num(val),
-  '-': val => -num(val),
-  'not': val => !bool(val),
+  '+': val => ensureNumber(val),
+  '-': val => -ensureNumber(val),
+  'not': val => !castToBoolean(val),
   'typeof': val => typeof val
 }
 
@@ -125,43 +123,69 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
 
   '==': (a, b) => a === b,
 
-  '*': (a, b) => num(a) * num(b),
+  // TIPS give the opportunity to get a base js error
 
-  '+': (a, b) => num(a) + num(b),
-
-  '&': (a, b) => toStr(a) + toStr(b),
-
-  '-': (a, b) => num(a) - num(b),
-
-  '/': (a, b) => num(a) / num(b),
-
-  'mod': (a, b) => {
-    return num(a) % num(b)
+  '*': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return ensureNumber(a) * ensureNumber(b)
   },
 
-  '<': (a, b) => relComp(a) < relComp(b),
+  '+': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-plus-operands
+    return ensureNumber(a) + ensureNumber(b)
+  },
 
-  '<=': (a, b) => relComp(a) <= relComp(b),
+  '-': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return ensureNumber(a) - ensureNumber(b)
+  },
 
-  '>': (a, b) => relComp(a) > relComp(b),
+  '/': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return ensureNumber(a) / ensureNumber(b)
+  },
 
-  '>=': (a, b) => relComp(a) >= relComp(b),
+  'mod': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return ensureNumber(a) % ensureNumber(b)
+  },
+
+  '^': (a, b) => {
+    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return ensureNumber(a) ** ensureNumber(b)
+  },
+
+  '&': (a, b) => castToString(a) + castToString(b),
+
+  '<': (a, b) => ensureRelationalComparable(a) < ensureRelationalComparable(b),
+
+  '<=': (a, b) =>
+    ensureRelationalComparable(a) <= ensureRelationalComparable(b),
+
+  '>': (a, b) => ensureRelationalComparable(a) > ensureRelationalComparable(b),
+
+  '>=': (a, b) =>
+    ensureRelationalComparable(a) >= ensureRelationalComparable(b),
 
   'in': (a, b) => {
-    if (isSimple(a) && b != null && typeof b === 'object') {
+    if (isSimpleValue(a) && b != null && typeof b === 'object') {
       return Object.hasOwn(b, a as any)
     } else {
       throw new TypeError(
-        `Cannot use "in" operator to search for ${prettyType(a)} key in ${prettyType(b)}`
+        `Cannot use "in" operator to search for ${typeOf(a)} key in ${typeOf(b)}`
       )
     }
   },
 
-  '^': (a, b) => num(a) ** num(b),
+  'and': (a, b) => castToBoolean(a) && castToBoolean(b),
 
-  'and': (a, b) => bool(a) && bool(b),
-
-  'or': (a, b) => bool(a) || bool(b)
+  'or': (a, b) => castToBoolean(a) || castToBoolean(b)
 }
 
 interface ExpressionOperators {

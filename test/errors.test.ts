@@ -1,11 +1,35 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
-import { compile, ExpressionError } from '../src/index.js'
+import { compile, ExpressionError, UnexpectedTypeError } from '../src/index.js'
 import { codeFrameColumns } from 'awesome-code-frame'
 
 suite('errors', () => {
+  test('UnexpectedTypeError class', () => {
+    const val1 = {}
+    const err1 = new UnexpectedTypeError(['foo'], val1)
+
+    assert.equal(err1.message, 'Expected foo, but got Object instead')
+    assert.deepEqual(err1.expectedTypes, ['foo'])
+    assert.equal(err1.receivedValue, val1)
+
+    const val2 = [] as any[]
+    const err2 = new UnexpectedTypeError(['foo', 'bar'], val2)
+
+    assert.equal(err2.message, 'Expected foo or bar, but got Array instead')
+    assert.deepEqual(err2.expectedTypes, ['foo', 'bar'])
+    assert.equal(err2.receivedValue, val2)
+
+    const val3 = () => false
+    const err3 = new UnexpectedTypeError(['foo', 'bar', 'baz'], val3)
+
+    assert.equal(
+      err3.message,
+      'Expected foo, bar or baz, but got function instead'
+    )
+    assert.deepEqual(err3.expectedTypes, ['foo', 'bar', 'baz'])
+    assert.equal(err3.receivedValue, val3)
+  })
+
   test('simple', () => {
     const fn = compile('a')
 
@@ -164,7 +188,10 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
-      assert.equal(err.message, 'Expected number, but got string instead.')
+      assert.equal(
+        err.message,
+        'Expected number or bigint, but got string instead'
+      )
       assert.ok(err.location)
 
       const codeFrame = codeFrameColumns(expression, err.location)
@@ -211,7 +238,10 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
-      assert.equal(err.message, 'Expected number, but got string instead.')
+      assert.equal(
+        err.message,
+        'Expected number or bigint, but got string instead'
+      )
       assert.ok(err.location)
 
       const codeFrame = codeFrameColumns(expression, err.location)
@@ -250,7 +280,7 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
-      assert.equal(err.message, 'Expected object, but got string instead.')
+      assert.equal(err.message, 'Expected object, but got string instead')
 
       assert.deepEqual(err.location, {
         start: {
@@ -277,7 +307,7 @@ suite('errors', () => {
       assert.ok(err instanceof ExpressionError)
       assert.equal(
         err.message,
-        'Expected object key to be simple type, but got object instead.'
+        'Expected simple type object key, but got Object instead'
       )
 
       assert.deepEqual(err.location, {
@@ -322,7 +352,7 @@ suite('errors', () => {
         compile('false in true')()
       },
       {
-        message: 'Cannot use "in" operator to search for false key in true'
+        message: 'Cannot use "in" operator to search for boolean key in boolean'
       }
     )
   })

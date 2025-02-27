@@ -27,6 +27,8 @@ export default tseslint.config(
             { from: 'package', name: 'test', package: 'node:test' },
             { from: 'package', name: 'skip', package: 'node:test' },
             { from: 'package', name: 'only', package: 'node:test' },
+            { from: 'package', name: 'suite', package: 'node:test' },
+            { from: 'package', name: 'describe', package: 'node:test' },
             {
               from: 'package',
               name: 'stringToUint8Array',

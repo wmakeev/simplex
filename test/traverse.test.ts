@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
+ 
 
 import { parse } from '@project/simplex-parser'
 import assert from 'node:assert/strict'

@@ -1,5 +1,4 @@
 /* eslint-disable no-sparse-arrays */
-/* eslint-disable @typescript-eslint/no-floating-promises */
 
 import { test, suite } from 'node:test'
 import { compile } from '../src/compiler.js'
