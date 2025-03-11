@@ -1,6 +1,5 @@
- 
-
-import { parse } from '@project/simplex-parser'
+// eslint-disable-next-line n/no-missing-import
+import { parse } from '../parser/index.js'
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
 import {

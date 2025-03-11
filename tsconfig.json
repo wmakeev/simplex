@@ -10,7 +10,8 @@
     "declaration": true,
     "noUnusedLocals": true,
     "exactOptionalPropertyTypes": false,
-    "allowJs": true
+    "allowJs": true,
+    "checkJs": false
   },
-  "include": ["src/**/*", "examples/**/*", "test/**/*"]
+  "include": ["src/**/*", "parser/**/*", "examples/**/*", "test/**/*"]
 }

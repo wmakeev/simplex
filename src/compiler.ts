@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { parse } from '@project/simplex-parser'
+// eslint-disable-next-line n/no-missing-import
+import { parse } from '../parser/index.js'
 import { ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
   BinaryExpression,
