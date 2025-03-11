@@ -5,6 +5,7 @@
   "description": "SimplEx - simple expression language",
   "files": [
     "build/src/",
+    "build/parser/",
     "parser/",
     "src/"
   ],
