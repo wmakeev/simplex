@@ -71,6 +71,7 @@ export type MemberExpression =
   | {
       type: 'MemberExpression'
       computed: false
+      extension: boolean
       object: IdentifierExpression | ObjectExpression | ArrayExpression
       property: IdentifierExpression
       location: Location

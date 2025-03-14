@@ -1058,6 +1058,7 @@ suite('parser', () => {
           }
         },
         computed: false,
+        extension: false,
         location: {
           start: {
             offset: 0,
@@ -1068,6 +1069,59 @@ suite('parser', () => {
             offset: 3,
             line: 1,
             column: 4
+          }
+        }
+      }
+    })
+
+    assert.deepEqual(parse('a::b'), {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'MemberExpression',
+        object: {
+          type: 'Identifier',
+          name: 'a',
+          location: {
+            start: {
+              offset: 0,
+              line: 1,
+              column: 1
+            },
+            end: {
+              offset: 1,
+              line: 1,
+              column: 2
+            }
+          }
+        },
+        property: {
+          type: 'Identifier',
+          name: 'b',
+          location: {
+            start: {
+              offset: 3,
+              line: 1,
+              column: 4
+            },
+            end: {
+              offset: 4,
+              line: 1,
+              column: 5
+            }
+          }
+        },
+        computed: false,
+        extension: true,
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 4,
+            line: 1,
+            column: 5
           }
         }
       }
@@ -1110,6 +1164,7 @@ suite('parser', () => {
           }
         },
         computed: true,
+        extension: false,
         location: {
           start: {
             offset: 0,
@@ -1202,6 +1257,7 @@ suite('parser', () => {
             }
           },
           computed: false,
+          extension: false,
           location: {
             start: {
               offset: 0,
@@ -1226,6 +1282,75 @@ suite('parser', () => {
             offset: 5,
             line: 1,
             column: 6
+          }
+        }
+      }
+    })
+
+    assert.deepEqual(parse('a::b()'), {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'CallExpression',
+        callee: {
+          type: 'MemberExpression',
+          object: {
+            type: 'Identifier',
+            name: 'a',
+            location: {
+              start: {
+                offset: 0,
+                line: 1,
+                column: 1
+              },
+              end: {
+                offset: 1,
+                line: 1,
+                column: 2
+              }
+            }
+          },
+          property: {
+            type: 'Identifier',
+            name: 'b',
+            location: {
+              start: {
+                offset: 3,
+                line: 1,
+                column: 4
+              },
+              end: {
+                offset: 4,
+                line: 1,
+                column: 5
+              }
+            }
+          },
+          computed: false,
+          extension: true,
+          location: {
+            start: {
+              offset: 0,
+              line: 1,
+              column: 1
+            },
+            end: {
+              offset: 4,
+              line: 1,
+              column: 5
+            }
+          }
+        },
+        arguments: [],
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 6,
+            line: 1,
+            column: 7
           }
         }
       }
@@ -1270,6 +1395,7 @@ suite('parser', () => {
             }
           },
           computed: true,
+          extension: false,
           location: {
             start: {
               offset: 0,

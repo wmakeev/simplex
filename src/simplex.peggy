@@ -474,12 +474,17 @@ MemberExpression
     tail:(
         __ "[" __ property:Expression __ "]" {
           return {
-            property: property, computed: true, location: getLocation(location())
+            property: property, computed: true, extension: false, location: getLocation(location())
           };
         }
       / __ "." __ property:IdentifierName {
           return {
-            property: property, computed: false, location: getLocation(location())
+            property: property, computed: false, extension: false, location: getLocation(location())
+          };
+        }
+      / __ "::" __ property:IdentifierName {
+          return {
+            property: property, computed: false, extension: true, location: getLocation(location())
           };
         }
     )*
@@ -490,6 +495,7 @@ MemberExpression
           object: result,
           property: element.property,
           computed: element.computed,
+          extension: element.extension,
           location: getLocation(location())
         };
       }, head);
