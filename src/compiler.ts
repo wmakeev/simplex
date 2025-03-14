@@ -521,7 +521,7 @@ export function compile<Data = Record<string, unknown>, Globals = null>(
     try {
       return func(data)
     } catch (err) {
-      assert.ok(err instanceof Error)
+      if (err instanceof Error === false) throw err
 
       const stackRows = err.stack?.split('\n').map(row => row.trim())
 
