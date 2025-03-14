@@ -55,9 +55,7 @@ suite('errors', () => {
   })
 
   test('simple one line', () => {
-    const expression = 'a + b'
-
-    const fn = compile(expression)
+    const fn = compile('a + b')
 
     try {
       fn({ a: 1 })
@@ -78,7 +76,7 @@ suite('errors', () => {
         }
       })
 
-      const codeFrame = codeFrameColumns(expression, err.location)
+      const codeFrame = codeFrameColumns(err.expression, err.location)
 
       assert.equal(
         codeFrame,
@@ -121,7 +119,7 @@ suite('errors', () => {
         }
       })
 
-      const codeFrame = codeFrameColumns(expression, err.location)
+      const codeFrame = codeFrameColumns(err.expression, err.location)
 
       assert.equal(
         codeFrame,
@@ -166,7 +164,7 @@ suite('errors', () => {
       assert.ok(err instanceof ExpressionError)
       assert.ok(err.location)
 
-      const codeFrame = codeFrameColumns(expression, err.location)
+      const codeFrame = codeFrameColumns(err.expression, err.location)
 
       assert.equal(
         codeFrame,
@@ -194,7 +192,7 @@ suite('errors', () => {
       )
       assert.ok(err.location)
 
-      const codeFrame = codeFrameColumns(expression, err.location)
+      const codeFrame = codeFrameColumns(err.expression, err.location)
 
       assert.equal(
         codeFrame,
@@ -244,7 +242,7 @@ suite('errors', () => {
       )
       assert.ok(err.location)
 
-      const codeFrame = codeFrameColumns(expression, err.location)
+      const codeFrame = codeFrameColumns(err.expression, err.location)
 
       assert.equal(
         codeFrame,

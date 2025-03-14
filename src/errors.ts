@@ -3,10 +3,12 @@ import { typeOf } from './tools/index.js'
 
 export class ExpressionError extends Error {
   constructor(
-    error: Error,
-    public location: Location | null
+    message: string,
+    public expression: string,
+    public location: Location | null,
+    options?: ErrorOptions
   ) {
-    super(error.message, { cause: error })
+    super(message, options)
   }
 }
 

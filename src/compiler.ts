@@ -557,7 +557,9 @@ export function compile<Data = Record<string, unknown>, Globals = null>(
         offsets
       )
 
-      throw new ExpressionError(err, errorLocation)
+      throw new ExpressionError(err.message, expression, errorLocation, {
+        cause: err
+      })
     }
   }
 }
