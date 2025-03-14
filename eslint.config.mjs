@@ -62,6 +62,6 @@ export default tseslint.config(
     }
   },
   {
-    ignores: ['lib/', 'parser/', 'build/', '__temp/', 'coverage/']
+    ignores: ['lib/', 'parser/', 'build/', '__temp/', 'coverage/', 'scripts/']
   }
 )

@@ -30,6 +30,7 @@
     "cleanup": "rm -rf build/",
     "compile:dev": "tsc",
     "compile": "npm run cleanup && tsc --build tsconfig.prod.json",
+    "pick-version": "node ./scripts/lib-version.js",
     "lint": "eslint . --fix",
     "build:parser": "peggy -o parser/index.js --source-map --format es --dts src/simplex.peggy",
     "build:dev": "npm run lint && npm run compile:dev",
@@ -37,7 +38,7 @@
     "coverage": "c8 node -r dotenv/config --test --enable-source-maps",
     "coverage:report": "c8 report",
     "test": "npm run build && npm run coverage",
-    "version": "auto-changelog -p && git add CHANGELOG.md",
+    "version": "npm run pick-version && auto-changelog -p && git add CHANGELOG.md src/version.ts",
     "release": "np"
   },
   "engines": {
