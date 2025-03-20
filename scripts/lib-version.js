@@ -5,7 +5,12 @@ const pkg = JSON.parse(
   readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')
 )
 
-writeFileSync(
-  path.join(process.cwd(), 'src/version.ts'),
-  `export const version = '${pkg.version}'\n`
-)
+const versionTag = '{{version}}'
+
+const replaceVersion = file => {
+  const fileContent = readFileSync(file, 'utf-8')
+  writeFileSync(file, fileContent.replace(versionTag, pkg.version))
+}
+
+// js
+replaceVersion(path.join(process.cwd(), 'build/src/version.js'))

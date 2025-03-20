@@ -38,7 +38,7 @@
     "coverage": "c8 node -r dotenv/config --test --enable-source-maps",
     "coverage:report": "c8 report",
     "test": "npm run build && npm run coverage",
-    "version": "npm run pick-version && auto-changelog -p && git add CHANGELOG.md src/version.ts",
+    "version": "npm run pick-version && auto-changelog -p && git add CHANGELOG.md build/src/version.js",
     "release": "np"
   },
   "engines": {
