@@ -1,5 +1,9 @@
 import { test, suite } from 'node:test'
-import { compile } from '../src/compiler.js'
+import {
+  compile,
+  defaultBinaryOperators,
+  defaultLogicalOperators
+} from '../src/compiler.js'
 import assert from 'node:assert/strict'
 
 suite('operators', () => {
@@ -49,7 +53,34 @@ suite('operators', () => {
     assert.equal(compile('false and true')(), false)
     assert.equal(compile('false or true')(), true)
 
-    assert.equal(compile('not false')(), true)
+    assert.equal(
+      compile('false and 1 + 2', {
+        binaryOperators: {
+          ...defaultBinaryOperators,
+          '+': () => {
+            assert.fail('operator "+" should not call')
+          }
+        }
+      })(),
+      false
+    )
+
+    assert.equal(
+      compile('false or 1 + 2 or (true and false)', {
+        binaryOperators: {
+          ...defaultBinaryOperators,
+          '+': () => 42
+        },
+        logicalOperators: {
+          ...defaultLogicalOperators,
+          or: (a, b) => a() || b(),
+          and: () => {
+            assert.fail('operator "and" should not call')
+          }
+        }
+      })(),
+      42
+    )
   })
 
   test('nullish coalescing', () => {

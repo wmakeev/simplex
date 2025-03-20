@@ -25,12 +25,34 @@ suite('traverse code', () => {
     assert.equal(getCode('false'), 'false')
   })
 
-  test('operators', () => {
+  test('unary operators', () => {
     assert.equal(getCode('+1'), 'uop["+"](1)')
     assert.equal(getCode('-1'), 'uop["-"](1)')
+  })
+
+  test('binary operators', () => {
     assert.equal(getCode('-1 + 2'), 'bop["+"](uop["-"](1),2)')
     assert.equal(getCode('1 + 2 * -6'), 'bop["+"](1,bop["*"](2,uop["-"](6)))')
     assert.equal(getCode('(1 + 2) * 6'), 'bop["*"](bop["+"](1,2),6)')
+  })
+
+  test('logical operators', () => {
+    assert.equal(
+      getCode('true and false'),
+      'lop["and"](()=>(true),()=>(false))'
+    )
+    assert.equal(
+      getCode('true and (false or true)'),
+      'lop["and"](()=>(true),()=>(lop["or"](()=>(false),()=>(true))))'
+    )
+    assert.equal(
+      getCode('true and (false or true)'),
+      'lop["and"](()=>(true),()=>(lop["or"](()=>(false),()=>(true))))'
+    )
+    assert.equal(
+      getCode('true and (1 > 2 and -3 or {})'),
+      'lop["and"](()=>(true),()=>(lop["or"](()=>(lop["and"](()=>(bop[">"](1,2)),()=>(uop["-"](3)))),()=>({}))))'
+    )
   })
 
   test('property access', () => {

@@ -6,8 +6,9 @@ import assert from 'node:assert/strict'
 //
 
 suite('precedence', () => {
-  test('common', () => {
+  test('logical', () => {
     assert.equal(compile('not false and true')(), true)
+    assert.equal(compile('true and not false')(), true)
     assert.equal(compile('not (false or true)')(), false)
   })
 

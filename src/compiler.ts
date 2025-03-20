@@ -115,7 +115,7 @@ export const defaultUnaryOperators: ExpressionUnaryOperators = {
 }
 
 type ExpressionBinaryOperators = Record<
-  BinaryExpression['operator'] | LogicalExpression['operator'],
+  BinaryExpression['operator'],
   (left: unknown, right: unknown) => unknown
 >
 
@@ -182,18 +182,29 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
         `Cannot use "in" operator to search for ${typeOf(a)} key in ${typeOf(b)}`
       )
     }
-  },
+  }
+}
 
-  'and': (a, b) => castToBoolean(a) && castToBoolean(b),
+type ExpressionLogicalOperators = Record<
+  LogicalExpression['operator'],
+  (left: () => unknown, right: () => unknown) => unknown
+>
 
-  'or': (a, b) => castToBoolean(a) || castToBoolean(b)
+export const defaultLogicalOperators: ExpressionLogicalOperators = {
+  // TODO Use castToBoolean from compile options?
+  and: (a, b) => castToBoolean(a()) && castToBoolean(b()),
+  or: (a, b) => castToBoolean(a()) || castToBoolean(b())
 }
 
 interface ExpressionOperators {
   unaryOperators: Record<UnaryExpression['operator'], (val: unknown) => unknown>
   binaryOperators: Record<
-    BinaryExpression['operator'] | LogicalExpression['operator'],
+    BinaryExpression['operator'],
     (left: unknown, right: unknown) => unknown
+  >
+  logicalOperators: Record<
+    LogicalExpression['operator'],
+    (left: () => unknown, right: () => unknown) => unknown
   >
 }
 
@@ -274,11 +285,11 @@ const visitors: {
 
   LogicalExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart(`bop["${node.operator}"](`, node),
+      codePart(`lop["${node.operator}"](()=>(`, node),
       ...visit(node.left),
-      codePart(',', node),
+      codePart('),()=>(', node),
       ...visit(node.right),
-      codePart(')', node)
+      codePart('))', node)
     ]
 
     return parts
@@ -481,7 +492,10 @@ export type CompileOptions<Data, Globals> = Partial<
   ContextHelpers<Data, Globals> & ExpressionOperators & { globals: Globals }
 >
 
-export function compile<Data = Record<string, unknown>, Globals = null>(
+export function compile<
+  Data = Record<string, unknown>,
+  Globals = Record<string, unknown>
+>(
   expression: string,
   options?: CompileOptions<Data, Globals>
 ): (data?: Data) => unknown {
@@ -493,6 +507,7 @@ export function compile<Data = Record<string, unknown>, Globals = null>(
   const bootstrapCodeHead = [
     `var bool = ctx.castToBoolean;`,
     `var bop = ctx.binaryOperators;`,
+    `var lop = ctx.logicalOperators;`,
     `var uop = ctx.unaryOperators;`,
     `var call = ctx.callFunction;`,
     `var getIdentifierValue = ctx.getIdentifierValue;`,
@@ -508,14 +523,20 @@ export function compile<Data = Record<string, unknown>, Globals = null>(
 
   const functionCode = bootstrapCodeHead + expressionCode + ';}'
 
-  const func = new Function('ctx', functionCode)({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const defaultOptions: CompileOptions<Data, Globals> = {
     ...defaultContextHelpers,
     ...{
       unaryOperators: defaultUnaryOperators,
-      binaryOperators: defaultBinaryOperators
+      binaryOperators: defaultBinaryOperators,
+      logicalOperators: defaultLogicalOperators
     },
-    ...options
-  }) as (data?: Data) => unknown
+    ...(options as any)
+  }
+
+  const func = new Function('ctx', functionCode)(defaultOptions) as (
+    data?: Data
+  ) => unknown
 
   return function (data?: Data) {
     try {
