@@ -551,9 +551,21 @@ Arguments
     }
 
 ArgumentList
-  = head:Expression tail:(__ "," __ Expression)* {
+  = head:CallArgument tail:(__ "," __ CallArgument)* {
       return buildList(head, tail, 3);
     }
+
+CallArgument
+  = Expression
+  / CurryPlaceholder
+
+CurryPlaceholder
+  = "%" {
+    return {
+      type: 'CurryPlaceholder',
+      location: getLocation(location())
+    }
+  }
 
 LeftHandSideExpression
   = CallExpression

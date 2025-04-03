@@ -88,7 +88,12 @@ export type MemberExpression =
 export interface CallExpression {
   type: 'CallExpression'
   callee: Expression
-  arguments: Expression[]
+  arguments: (Expression | CurryPlaceholder)[]
+  location: Location
+}
+
+export interface CurryPlaceholder {
+  type: 'CurryPlaceholder'
   location: Location
 }
 

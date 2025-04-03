@@ -387,25 +387,51 @@ const visitors: {
   },
 
   CallExpression: (node, visit) => {
-    const innerArgs =
-      node.arguments.length > 0
-        ? node.arguments.flatMap(arg => [...visit(arg), codePart(',', node)])
-        : null
+    if (node.arguments.length > 0) {
+      const innerArgs = node.arguments.flatMap((arg, index) => [
+        ...(arg.type === 'CurryPlaceholder'
+          ? [codePart(`a${index}`, arg)]
+          : visit(arg)),
+        codePart(',', node)
+      ])
 
-    // remove last comma
-    innerArgs?.pop()
+      const curriedArgs = node.arguments.flatMap((arg, index) =>
+        arg.type === 'CurryPlaceholder' ? [`a${index}`] : []
+      )
 
-    const parts: VisitResult[] = [
-      codePart('call(', node),
-      ...visit(node.callee),
-      codePart(',', node),
-      ...(innerArgs === null
-        ? [codePart('null', node)]
-        : [codePart('[', node), ...innerArgs, codePart(']', node)]),
-      codePart(')', node)
-    ]
+      // remove last comma
+      innerArgs?.pop()
 
-    return parts
+      // call({{callee}},[{{arguments}}])
+      let parts: VisitResult[] = [
+        codePart('call(', node),
+        ...visit(node.callee),
+        codePart(',[', node),
+        ...innerArgs,
+        codePart('])', node)
+      ]
+
+      if (curriedArgs.length > 0) {
+        parts = [
+          codePart(`(scope=>(${curriedArgs.join()})=>`, node),
+          ...parts,
+          codePart(')(scope)', node)
+        ]
+      }
+
+      return parts
+    }
+
+    //
+    else {
+      const parts: VisitResult[] = [
+        codePart('call(', node),
+        ...visit(node.callee),
+        codePart(',null)', node)
+      ]
+
+      return parts
+    }
   },
 
   NullishCoalescingExpression: (node, visit) => {

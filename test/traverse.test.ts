@@ -125,6 +125,23 @@ suite('traverse code', () => {
     )
   })
 
+  test('curry call', () => {
+    assert.equal(
+      getCode('a(%)'),
+      '(scope=>(a0)=>call(get(scope,"a"),[a0]))(scope)'
+    )
+
+    assert.equal(
+      getCode('a(%, %)'),
+      '(scope=>(a0,a1)=>call(get(scope,"a"),[a0,a1]))(scope)'
+    )
+
+    assert.equal(
+      getCode('a(%, foo, 2 + 3, %)'),
+      '(scope=>(a0,a3)=>call(get(scope,"a"),[a0,get(scope,"foo"),bop["+"](2,3),a3]))(scope)'
+    )
+  })
+
   test('pipe', () => {
     assert.equal(
       getCode('1 | a'),
@@ -326,11 +343,9 @@ suite('traverse offsets', () => {
       ['{opt:false,next:function(_){return ', 'add(_)'],
       ['call(', 'add(_)'],
       ['get(scope,"add")', 'add'],
-      [',', 'add(_)'],
-      ['[', 'add(_)'],
+      [',[', 'add(_)'],
       ['_', '_'],
-      [']', 'add(_)'],
-      [')', 'add(_)'],
+      ['])', 'add(_)'],
       ['}}', 'add(_)'],
       [',', 'add(_)'],
       ['{opt:false,next:function(_){return ', 'if _ > 2 then "1" else "2"'],
@@ -400,13 +415,11 @@ suite('traverse offsets', () => {
       ['{opt:false,next:function(_){return ', 'append(_, "-baz")'],
       ['call(', 'append(_, "-baz")'],
       ['get(scope,"append")', 'append'],
-      [',', 'append(_, "-baz")'],
-      ['[', 'append(_, "-baz")'],
+      [',[', 'append(_, "-baz")'],
       ['_', '_'],
       [',', 'append(_, "-baz")'],
       ['"-baz"', '"-baz"'],
-      [']', 'append(_, "-baz")'],
-      [')', 'append(_, "-baz")'],
+      ['])', 'append(_, "-baz")'],
       ['}}', 'append(_, "-baz")'],
       [',', 'append(_, "-baz")'],
       ['{opt:false,next:function(_){return ', '_ & c'],
