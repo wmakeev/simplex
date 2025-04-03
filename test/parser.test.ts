@@ -2197,4 +2197,255 @@ else
       }
     })
   })
+
+  test('LetExpression', () => {
+    const expr1: unknown = parse('let a = 1, a')
+    assert.deepEqual(expr1, {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'LetExpression',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'a',
+              location: {
+                start: {
+                  offset: 4,
+                  line: 1,
+                  column: 5
+                },
+                end: {
+                  offset: 5,
+                  line: 1,
+                  column: 6
+                }
+              }
+            },
+            init: {
+              type: 'Literal',
+              value: 1,
+              location: {
+                start: {
+                  offset: 8,
+                  line: 1,
+                  column: 9
+                },
+                end: {
+                  offset: 9,
+                  line: 1,
+                  column: 10
+                }
+              }
+            },
+            location: {
+              start: {
+                offset: 4,
+                line: 1,
+                column: 5
+              },
+              end: {
+                offset: 9,
+                line: 1,
+                column: 10
+              }
+            }
+          }
+        ],
+        expression: {
+          type: 'Identifier',
+          name: 'a',
+          location: {
+            start: {
+              offset: 11,
+              line: 1,
+              column: 12
+            },
+            end: {
+              offset: 12,
+              line: 1,
+              column: 13
+            }
+          }
+        },
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 12,
+            line: 1,
+            column: 13
+          }
+        }
+      }
+    })
+
+    const expr2: unknown = parse('let a = 1, b = a, a + b')
+    assert.deepEqual(expr2, {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'LetExpression',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'a',
+              location: {
+                start: {
+                  offset: 4,
+                  line: 1,
+                  column: 5
+                },
+                end: {
+                  offset: 5,
+                  line: 1,
+                  column: 6
+                }
+              }
+            },
+            init: {
+              type: 'Literal',
+              value: 1,
+              location: {
+                start: {
+                  offset: 8,
+                  line: 1,
+                  column: 9
+                },
+                end: {
+                  offset: 9,
+                  line: 1,
+                  column: 10
+                }
+              }
+            },
+            location: {
+              start: {
+                offset: 4,
+                line: 1,
+                column: 5
+              },
+              end: {
+                offset: 9,
+                line: 1,
+                column: 10
+              }
+            }
+          },
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'b',
+              location: {
+                start: {
+                  offset: 11,
+                  line: 1,
+                  column: 12
+                },
+                end: {
+                  offset: 12,
+                  line: 1,
+                  column: 13
+                }
+              }
+            },
+            init: {
+              type: 'Identifier',
+              name: 'a',
+              location: {
+                start: {
+                  offset: 15,
+                  line: 1,
+                  column: 16
+                },
+                end: {
+                  offset: 16,
+                  line: 1,
+                  column: 17
+                }
+              }
+            },
+            location: {
+              start: {
+                offset: 11,
+                line: 1,
+                column: 12
+              },
+              end: {
+                offset: 16,
+                line: 1,
+                column: 17
+              }
+            }
+          }
+        ],
+        expression: {
+          type: 'BinaryExpression',
+          operator: '+',
+          left: {
+            type: 'Identifier',
+            name: 'a',
+            location: {
+              start: {
+                offset: 18,
+                line: 1,
+                column: 19
+              },
+              end: {
+                offset: 19,
+                line: 1,
+                column: 20
+              }
+            }
+          },
+          right: {
+            type: 'Identifier',
+            name: 'b',
+            location: {
+              start: {
+                offset: 22,
+                line: 1,
+                column: 23
+              },
+              end: {
+                offset: 23,
+                line: 1,
+                column: 24
+              }
+            }
+          },
+          location: {
+            start: {
+              offset: 18,
+              line: 1,
+              column: 19
+            },
+            end: {
+              offset: 23,
+              line: 1,
+              column: 24
+            }
+          }
+        },
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 23,
+            line: 1,
+            column: 24
+          }
+        }
+      }
+    })
+  })
 })

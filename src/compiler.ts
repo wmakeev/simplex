@@ -2,7 +2,7 @@
 
 // eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
-import { ExpressionError, UnexpectedTypeError } from './errors.js'
+import { CompileError, ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
   BinaryExpression,
   Expression,
@@ -520,6 +520,54 @@ const visitors: {
 
       return parts
     }
+  },
+
+  LetExpression: (node, visit) => {
+    const declarationsNamesSet = new Set()
+
+    for (const d of node.declarations) {
+      if (declarationsNamesSet.has(d.id.name)) {
+        throw new CompileError(
+          `"${d.id.name}" name defined inside let expression was repeated`,
+          '',
+          d.id.location
+        )
+      }
+      declarationsNamesSet.add(d.id.name)
+    }
+
+    // (scope=> {
+    //   var _varNames = [];
+    //   var _varValues = [];
+    //   scope = [_varNames, _varValues, scope];
+
+    //   // a = {{init}}
+    //   _varNames.push("a");
+    //   _varValues.push({{init}});
+
+    //   // {{expression}}
+    //   return {{expression}}
+    // })(scope)
+
+    const parts: VisitResult[] = [
+      codePart(
+        `(scope=>{var _varNames=[];var _varValues=[];scope=[_varNames,_varValues,scope];`,
+        node
+      ),
+      ...node.declarations.flatMap(d => [
+        codePart(`_varValues.push(`, d),
+        ...visit(d.init),
+        codePart(`);`, d),
+        codePart(`_varNames.push(`, d),
+        codePart(JSON.stringify(d.id.name), d.id),
+        codePart(`);`, d)
+      ]),
+      codePart(`return `, node),
+      ...visit(node.expression),
+      codePart(`})(scope)`, node)
+    ]
+
+    return parts
   }
 }
 
@@ -569,7 +617,17 @@ export function compile<
   options?: CompileOptions<Data, Globals>
 ): (data?: Data) => unknown {
   const tree = parse(expression) as ExpressionStatement
-  const traverseResult = traverse(tree)
+  let traverseResult
+
+  try {
+    traverseResult = traverse(tree)
+  } catch (err) {
+    // TODO Use class to access expression from visitors?
+    if (err instanceof CompileError) {
+      err.expression = expression
+    }
+    throw err
+  }
 
   const { code: expressionCode, offsets } = traverseResult
 

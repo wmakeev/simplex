@@ -150,6 +150,7 @@ Keyword
   / OrToken
   / ThenToken
   / TypeofToken
+  / LetToken
 
 Literal
   = NullLiteral
@@ -360,6 +361,7 @@ ThenToken   = "then"   !IdentifierPart
 TrueToken   = "true"   !IdentifierPart
 TypeofToken = "typeof" !IdentifierPart
 ModToken    = "mod"    !IdentifierPart
+LetToken    = "let"    !IdentifierPart
 
 // Skipped
 __
@@ -652,6 +654,7 @@ LogicalANDExpression
 
 LogicalANDOperator
   = $AndToken
+  / "&&"
 
 LogicalORExpression
   = head:LogicalANDExpression
@@ -660,6 +663,7 @@ LogicalORExpression
 
 LogicalOROperator
   = $OrToken
+  / "||"
 
 ConditionalExpression
   = IfToken __ test:Expression __ ThenToken __
@@ -742,8 +746,40 @@ FormalParameterList
       return buildList(head, tail, 3);
     }
 
+LetExpression
+  = LetToken __ declarations:VariableDeclarationList __ "," __ body:Expression {
+  	return {
+    	type: "LetExpression",
+        declarations,
+        expression: body,
+        location: getLocation(location())
+    }
+  }
+
+VariableDeclarationList
+  = head:VariableDeclaration tail:(__ "," __ VariableDeclaration)* {
+      return buildList(head, tail, 3);
+    }
+
+VariableDeclaration
+  = id:Identifier init:(__ Initialiser) {
+      return {
+        type: "VariableDeclarator",
+        id: id,
+        init: extractOptional(init, 1),
+        location: getLocation(location())
+      };
+    }
+
+Initialiser
+  = EqualOperator __ expression:Expression { return expression; }
+
+EqualOperator
+  = "=" !"="
+
 Expression
-  = LambdaExpression
+  = LetExpression
+  / LambdaExpression
   / PipeExpression
 
 ExpressionStatement

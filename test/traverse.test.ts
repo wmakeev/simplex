@@ -184,6 +184,18 @@ suite('traverse code', () => {
       '((scope,params)=>function(p0){scope=[params,[p0],scope];return ((scope,params)=>function(p0){scope=[params,[p0],scope];return bop["+"](bop["+"](get(scope,"a"),get(scope,"b")),get(scope,"c"))})(scope,["b"])})(scope,["a"])'
     )
   })
+
+  test('let', () => {
+    assert.equal(
+      getCode('let a = 1, a'),
+      '(scope=>{var _varNames=[];var _varValues=[];scope=[_varNames,_varValues,scope];_varValues.push(1);_varNames.push("a");return get(scope,"a")})(scope)'
+    )
+
+    assert.equal(
+      getCode('let a = 1, b = 2 + 4, c = a + b, a + b * c'),
+      '(scope=>{var _varNames=[];var _varValues=[];scope=[_varNames,_varValues,scope];_varValues.push(1);_varNames.push("a");_varValues.push(bop["+"](2,4));_varNames.push("b");_varValues.push(bop["+"](get(scope,"a"),get(scope,"b")));_varNames.push("c");return bop["+"](get(scope,"a"),bop["*"](get(scope,"b"),get(scope,"c")))})(scope)'
+    )
+  })
 })
 
 const getTraverse = (expression: string) => {

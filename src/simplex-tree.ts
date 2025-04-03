@@ -12,6 +12,7 @@ export type Expression =
   | PipeSequence
   | UnaryExpression
   | LambdaExpression
+  | LetExpression
 
 export type ExpressionType = Expression['type']
 
@@ -164,6 +165,20 @@ export interface PipeSequence {
 export interface LambdaExpression {
   type: 'LambdaExpression'
   params: IdentifierExpression[]
+  expression: Expression
+  location: Location
+}
+
+export interface VariableDeclarator {
+  type: 'VariableDeclarator'
+  id: IdentifierExpression
+  init: Expression
+  location: Location
+}
+
+export interface LetExpression {
+  type: 'LetExpression'
+  declarations: VariableDeclarator[]
   expression: Expression
   location: Location
 }

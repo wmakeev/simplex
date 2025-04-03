@@ -12,6 +12,17 @@ export class ExpressionError extends Error {
   }
 }
 
+export class CompileError extends Error {
+  constructor(
+    message: string,
+    public expression: string,
+    public location: Location | null,
+    options?: ErrorOptions
+  ) {
+    super(message, options)
+  }
+}
+
 export class UnexpectedTypeError extends TypeError {
   I18N_STRING = 'UNEXPECTED_TYPE'
 
