@@ -56,86 +56,116 @@ suite('traverse code', () => {
   })
 
   test('property access', () => {
-    assert.equal(getCode('a'), 'get("a")')
-    assert.equal(getCode('a.b'), 'prop(get("a"),"b")')
-    assert.equal(getCode('a.b["c"]'), 'prop(prop(get("a"),"b"),"c")')
-    assert.equal(getCode('a["c"]'), 'prop(get("a"),"c")')
+    assert.equal(getCode('a'), 'get(scope,"a")')
+    assert.equal(getCode('a.b'), 'prop(get(scope,"a"),"b")')
+    assert.equal(getCode('a.b["c"]'), 'prop(prop(get(scope,"a"),"b"),"c")')
+    assert.equal(getCode('a["c"]'), 'prop(get(scope,"a"),"c")')
   })
 
   test('object', () => {
     assert.equal(getCode('{}'), '{}')
-    assert.equal(getCode('{ a: 1, c: 1 + x }'), '{a:1,c:bop["+"](1,get("x"))}')
+    assert.equal(
+      getCode('{ a: 1, c: 1 + x }'),
+      '{a:1,c:bop["+"](1,get(scope,"x"))}'
+    )
   })
 
   test('array', () => {
     assert.equal(getCode('[]'), '[]')
-    assert.equal(getCode('[1, 2, , { a: 1 }, x]'), '[1,2,,{a:1},get("x")]')
+    assert.equal(
+      getCode('[1, 2, , { a: 1 }, x]'),
+      '[1,2,,{a:1},get(scope,"x")]'
+    )
   })
 
   test('conditional', () => {
     assert.equal(
       getCode('if a > 2 then "foo"'),
-      '(bool(bop[">"](get("a"),2))?"foo":undefined)'
+      '(bool(bop[">"](get(scope,"a"),2))?"foo":undefined)'
     )
     assert.equal(
       getCode(`if a > 2 then "foo" else 'bar'`),
-      '(bool(bop[">"](get("a"),2))?"foo":"bar")'
+      '(bool(bop[">"](get(scope,"a"),2))?"foo":"bar")'
     )
   })
 
   test('call', () => {
-    assert.equal(getCode('a()'), 'call(get("a"),null)')
+    assert.equal(getCode('a()'), 'call(get(scope,"a"),null)')
 
-    assert.equal(getCode('a.b()'), 'call(prop(get("a"),"b"),null)')
+    assert.equal(getCode('a.b()'), 'call(prop(get(scope,"a"),"b"),null)')
 
-    assert.equal(getCode('a.b()()'), 'call(call(prop(get("a"),"b"),null),null)')
+    assert.equal(
+      getCode('a.b()()'),
+      'call(call(prop(get(scope,"a"),"b"),null),null)'
+    )
 
-    assert.equal(getCode('a.b().c'), 'prop(call(prop(get("a"),"b"),null),"c")')
+    assert.equal(
+      getCode('a.b().c'),
+      'prop(call(prop(get(scope,"a"),"b"),null),"c")'
+    )
 
-    assert.equal(getCode('a.b()[1]'), 'prop(call(prop(get("a"),"b"),null),1)')
+    assert.equal(
+      getCode('a.b()[1]'),
+      'prop(call(prop(get(scope,"a"),"b"),null),1)'
+    )
 
     assert.equal(
       getCode('a.b()[1].c'),
-      'prop(prop(call(prop(get("a"),"b"),null),1),"c")'
+      'prop(prop(call(prop(get(scope,"a"),"b"),null),1),"c")'
     )
 
     assert.equal(
       getCode('a.b()["foo"]'),
-      'prop(call(prop(get("a"),"b"),null),"foo")'
+      'prop(call(prop(get(scope,"a"),"b"),null),"foo")'
     )
 
-    assert.equal(getCode('a(1, x, "foo")'), 'call(get("a"),[1,get("x"),"foo"])')
+    assert.equal(
+      getCode('a(1, x, "foo")'),
+      'call(get(scope,"a"),[1,get(scope,"x"),"foo"])'
+    )
   })
 
   test('pipe', () => {
     assert.equal(
       getCode('1 | a'),
-      'pipe(1,[{opt:false,next:function(_){return get("a")}}])'
+      'pipe(1,[{opt:false,next:function(_){return get(scope,"a")}}])'
     )
 
     assert.equal(
       getCode('1 |? a(_)'),
-      'pipe(1,[{opt:true,next:function(_){return call(get("a"),[_])}}])'
+      'pipe(1,[{opt:true,next:function(_){return call(get(scope,"a"),[_])}}])'
     )
 
     assert.equal(
       getCode('1 + a | b(_)'),
-      'pipe(bop["+"](1,get("a")),[{opt:false,next:function(_){return call(get("b"),[_])}}])'
+      'pipe(bop["+"](1,get(scope,"a")),[{opt:false,next:function(_){return call(get(scope,"b"),[_])}}])'
     )
 
     assert.equal(
       getCode('1 | a(_) | b(2, _)'),
-      'pipe(1,[{opt:false,next:function(_){return call(get("a"),[_])}},{opt:false,next:function(_){return call(get("b"),[2,_])}}])'
+      'pipe(1,[{opt:false,next:function(_){return call(get(scope,"a"),[_])}},{opt:false,next:function(_){return call(get(scope,"b"),[2,_])}}])'
     )
 
     assert.equal(
       getCode('null |? add2(_) | a * _'),
-      'pipe(null,[{opt:true,next:function(_){return call(get("add2"),[_])}},{opt:false,next:function(_){return bop["*"](get("a"),_)}}])'
+      'pipe(null,[{opt:true,next:function(_){return call(get(scope,"add2"),[_])}},{opt:false,next:function(_){return bop["*"](get(scope,"a"),_)}}])'
     )
   })
 
   test('nullish coalescing', () => {
-    assert.equal(getCode('a ?? b'), '(get("a")??get("b"))')
+    assert.equal(getCode('a ?? b'), '(get(scope,"a")??get(scope,"b"))')
+  })
+
+  test('lambda', () => {
+    assert.equal(
+      getCode('a => b'),
+      '((scope,params)=>function(p0){scope=[params,[p0],scope];return get(scope,"b")})(scope,["a"])'
+    )
+
+    assert.equal(
+      getCode('a => (b) => a + b + c'),
+      '((scope,params)=>function(p0){scope=[params,[p0],scope];return ((scope,params)=>function(p0){scope=[params,[p0],scope];return bop["+"](bop["+"](get(scope,"a"),get(scope,"b")),get(scope,"c"))})(scope,["b"])})(scope,["a"])'
+    )
   })
 })
 
@@ -295,7 +325,7 @@ suite('traverse offsets', () => {
       [',[', '( -1+ 2 *4) | add(_) | (if _ > 2 then "1" else "2")'],
       ['{opt:false,next:function(_){return ', 'add(_)'],
       ['call(', 'add(_)'],
-      ['get("add")', 'add'],
+      ['get(scope,"add")', 'add'],
       [',', 'add(_)'],
       ['[', 'add(_)'],
       ['_', '_'],
@@ -345,20 +375,20 @@ suite('traverse offsets', () => {
       ['(bool(', 'if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"'],
       ['bop[">"](', '-a > 1 + x'],
       ['uop["-"](', '-a'],
-      ['get("a")', 'a'],
+      ['get(scope,"a")', 'a'],
       [')', '-a'],
       [',', '-a > 1 + x'],
       ['bop["+"](', '1 + x'],
       ['1', '1'],
       [',', '1 + x'],
-      ['get("x")', 'x'],
+      ['get(scope,"x")', 'x'],
       [')', '1 + x'],
       [')', '-a > 1 + x'],
       [')?', 'if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"'],
       ['bop["&"](', '"foo" & b'],
       ['"foo"', '"foo"'],
       [',', '"foo" & b'],
-      ['get("b")', 'b'],
+      ['get(scope,"b")', 'b'],
       [')', '"foo" & b'],
       [':', 'if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"'],
       ['"bar"', '"bar"'],
@@ -369,7 +399,7 @@ suite('traverse offsets', () => {
       ],
       ['{opt:false,next:function(_){return ', 'append(_, "-baz")'],
       ['call(', 'append(_, "-baz")'],
-      ['get("append")', 'append'],
+      ['get(scope,"append")', 'append'],
       [',', 'append(_, "-baz")'],
       ['[', 'append(_, "-baz")'],
       ['_', '_'],
@@ -383,7 +413,7 @@ suite('traverse offsets', () => {
       ['bop["&"](', '_ & c'],
       ['_', '_'],
       [',', '_ & c'],
-      ['get("c")', 'c'],
+      ['get(scope,"c")', 'c'],
       [')', '_ & c'],
       ['}}', '_ & c'],
       [

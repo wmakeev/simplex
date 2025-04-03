@@ -255,7 +255,7 @@ const visitors: {
     if (node.name === PIPE_LTR) return [codePart(PIPE_LTR, node)]
 
     const parts: VisitResult[] = [
-      codePart(`get(${JSON.stringify(node.name)})`, node)
+      codePart(`get(scope,${JSON.stringify(node.name)})`, node)
     ]
 
     return parts
@@ -451,6 +451,49 @@ const visitors: {
     ]
 
     return parts
+  },
+
+  LambdaExpression: (node, visit) => {
+    // Lambda with parameters
+    if (node.params.length > 0) {
+      const paramsNames = node.params.map(p => p.name)
+
+      const fnParams = Array.from(
+        { length: paramsNames.length },
+        (_, index) => `p${index}`
+      )
+
+      const fnParamsList = fnParams.join()
+      const fnParamsNamesList = paramsNames.map(p => JSON.stringify(p)).join()
+
+      // TODO Is "...args" more performant?
+      // (params => function (p0, p1) {
+      //   var scope = [params, [p0, p1], scope]
+      //   return {{code}}
+      // })(["a", "b"])
+      const parts: VisitResult[] = [
+        codePart(
+          `((scope,params)=>function(${fnParamsList}){scope=[params,[${fnParamsList}],scope];return `,
+          node
+        ),
+        ...visit(node.expression),
+        codePart(`})(scope,[${fnParamsNamesList}])`, node)
+      ]
+
+      return parts
+    }
+
+    // Lambda without parameters
+    else {
+      // (() => {{code}})
+      const parts: VisitResult[] = [
+        codePart(`(()=>`, node),
+        ...visit(node.expression),
+        codePart(`)`, node)
+      ]
+
+      return parts
+    }
   }
 }
 
@@ -515,7 +558,13 @@ export function compile<
     `var pipe = ctx.pipe;`,
     `var globals = ctx.globals ?? null;`,
     `return data => {`,
-    `var get = name => getIdentifierValue(name, globals, data);`,
+    `var scope = null;`,
+    `var get = (scope, name) => {`,
+    `if (scope === null) return getIdentifierValue(name, globals, data);`,
+    `var paramIndex = scope[0].findIndex(it => it === name);`,
+    `if (paramIndex === -1) return get(scope[2], name);`,
+    `return scope[1][paramIndex]`,
+    `};`,
     `return `
   ].join('')
 

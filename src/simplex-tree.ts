@@ -11,6 +11,7 @@ export type Expression =
   | NullishCoalescingExpression
   | PipeSequence
   | UnaryExpression
+  | LambdaExpression
 
 export type ExpressionType = Expression['type']
 
@@ -152,5 +153,12 @@ export interface PipeSequence {
     operator: '|?' | '|'
     expression: Expression
   }[]
+  location: Location
+}
+
+export interface LambdaExpression {
+  type: 'LambdaExpression'
+  params: IdentifierExpression[]
+  expression: Expression
   location: Location
 }

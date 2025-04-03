@@ -1967,4 +1967,234 @@ else
       }
     })
   })
+
+  test('LambdaExpression', () => {
+    const expr1: unknown = parse('a => b')
+    assert.deepEqual(expr1, {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'LambdaExpression',
+        params: [
+          {
+            type: 'Identifier',
+            name: 'a',
+            location: {
+              start: {
+                offset: 0,
+                line: 1,
+                column: 1
+              },
+              end: {
+                offset: 1,
+                line: 1,
+                column: 2
+              }
+            }
+          }
+        ],
+        expression: {
+          type: 'Identifier',
+          name: 'b',
+          location: {
+            start: {
+              offset: 5,
+              line: 1,
+              column: 6
+            },
+            end: {
+              offset: 6,
+              line: 1,
+              column: 7
+            }
+          }
+        },
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 6,
+            line: 1,
+            column: 7
+          }
+        }
+      }
+    })
+
+    const expr2: unknown = parse('a => b => c')
+    assert.deepEqual(expr2, {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'LambdaExpression',
+        params: [
+          {
+            type: 'Identifier',
+            name: 'a',
+            location: {
+              start: {
+                offset: 0,
+                line: 1,
+                column: 1
+              },
+              end: {
+                offset: 1,
+                line: 1,
+                column: 2
+              }
+            }
+          }
+        ],
+        expression: {
+          type: 'LambdaExpression',
+          params: [
+            {
+              type: 'Identifier',
+              name: 'b',
+              location: {
+                start: {
+                  offset: 5,
+                  line: 1,
+                  column: 6
+                },
+                end: {
+                  offset: 6,
+                  line: 1,
+                  column: 7
+                }
+              }
+            }
+          ],
+          expression: {
+            type: 'Identifier',
+            name: 'c',
+            location: {
+              start: {
+                offset: 10,
+                line: 1,
+                column: 11
+              },
+              end: {
+                offset: 11,
+                line: 1,
+                column: 12
+              }
+            }
+          },
+          location: {
+            start: {
+              offset: 5,
+              line: 1,
+              column: 6
+            },
+            end: {
+              offset: 11,
+              line: 1,
+              column: 12
+            }
+          }
+        },
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 11,
+            line: 1,
+            column: 12
+          }
+        }
+      }
+    })
+
+    const expr3: unknown = parse('(a) => (b) => (c)')
+    assert.deepEqual(expr3, {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'LambdaExpression',
+        params: [
+          {
+            type: 'Identifier',
+            name: 'a',
+            location: {
+              start: {
+                offset: 1,
+                line: 1,
+                column: 2
+              },
+              end: {
+                offset: 2,
+                line: 1,
+                column: 3
+              }
+            }
+          }
+        ],
+        expression: {
+          type: 'LambdaExpression',
+          params: [
+            {
+              type: 'Identifier',
+              name: 'b',
+              location: {
+                start: {
+                  offset: 8,
+                  line: 1,
+                  column: 9
+                },
+                end: {
+                  offset: 9,
+                  line: 1,
+                  column: 10
+                }
+              }
+            }
+          ],
+          expression: {
+            type: 'Identifier',
+            name: 'c',
+            location: {
+              start: {
+                offset: 15,
+                line: 1,
+                column: 16
+              },
+              end: {
+                offset: 16,
+                line: 1,
+                column: 17
+              }
+            }
+          },
+          location: {
+            start: {
+              offset: 7,
+              line: 1,
+              column: 8
+            },
+            end: {
+              offset: 17,
+              line: 1,
+              column: 18
+            }
+          }
+        },
+        location: {
+          start: {
+            offset: 0,
+            line: 1,
+            column: 1
+          },
+          end: {
+            offset: 17,
+            line: 1,
+            column: 18
+          }
+        }
+      }
+    })
+  })
 })

@@ -704,8 +704,35 @@ PipeOperator
   = "|?"
   / "|"
 
+LambdaExpression
+  = "(" __ params:(FormalParameterList __)? ")" __ LambdaArrow __ body:Expression {
+      return {
+        type: "LambdaExpression",
+        params: optionalList(extractOptional(params, 0)),
+        expression: body,
+        location: getLocation(location())
+      };
+    }
+  / __ param:Identifier __ LambdaArrow __ body:Expression {
+   	  return {
+      	type: "LambdaExpression",
+        params: [param],
+        expression: body,
+        location: getLocation(location())
+      }
+    }
+
+LambdaArrow
+  = "=>"
+
+FormalParameterList
+  = head:Identifier tail:(__ "," __ Identifier)* {
+      return buildList(head, tail, 3);
+    }
+
 Expression
-  = PipeExpression
+  = LambdaExpression
+  / PipeExpression
 
 ExpressionStatement
   = expression:Expression? EOS {
@@ -714,3 +741,4 @@ ExpressionStatement
         expression: expression
       };
     }
+

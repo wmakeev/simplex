@@ -23,6 +23,26 @@ suite('compile', () => {
     assert.equal(fn(), 42)
   })
 
+  test('in function scope with globals', () => {
+    const fn = compile('(a => a + 1)(24)', {
+      globals: {
+        a: 42
+      }
+    })
+
+    assert.equal(fn(), 25)
+  })
+
+  test('in function deep scope with globals', () => {
+    const fn = compile('((fn, a) => fn())(() => a, a + 1)', {
+      globals: {
+        a: 42
+      }
+    })
+
+    assert.equal(fn(), 42)
+  })
+
   test('with data', () => {
     const fn = compile('a')
     assert.equal(fn({ a: 42 }), 42)
