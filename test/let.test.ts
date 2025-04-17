@@ -55,7 +55,7 @@ suite('let', () => {
         add1 = a => a + 1,
         mult2 = a => a * 2,
 
-        add1(a - 2) | mult2(_)
+        add1(a - 2) | mult2(%)
       `,
       {
         globals: {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
 import assert from 'node:assert/strict'
@@ -1496,7 +1497,9 @@ suite('parser', () => {
   })
 
   test('NullishCoalescingExpression', () => {
-    assert.deepEqual(parse('a ?? b'), {
+    const result = parse('a ?? b')
+
+    assert.deepEqual(result, {
       type: 'ExpressionStatement',
       expression: {
         type: 'NullishCoalescingExpression',
@@ -1550,7 +1553,10 @@ suite('parser', () => {
   })
 
   test('PipeExpression', () => {
-    assert.deepEqual(parse('a | b'), {
+    let result
+
+    result = parse('a | b')
+    assert.deepEqual(result, {
       type: 'ExpressionStatement',
       expression: {
         type: 'PipeSequence',
@@ -1606,7 +1612,8 @@ suite('parser', () => {
       }
     })
 
-    assert.deepEqual(parse('a | b | c'), {
+    result = parse('a | b | c')
+    assert.deepEqual(result, {
       type: 'ExpressionStatement',
       expression: {
         type: 'PipeSequence',
@@ -1681,7 +1688,8 @@ suite('parser', () => {
       }
     })
 
-    assert.deepEqual(parse('null |? add2(_) | a * _'), {
+    result = parse('null |? add2(%) | a * %')
+    assert.deepEqual(result, {
       type: 'ExpressionStatement',
       expression: {
         type: 'PipeSequence',
@@ -1724,8 +1732,7 @@ suite('parser', () => {
               },
               arguments: [
                 {
-                  type: 'Identifier',
-                  name: '_',
+                  type: 'TopicReference',
                   location: {
                     start: {
                       offset: 13,
@@ -1776,8 +1783,7 @@ suite('parser', () => {
                 }
               },
               right: {
-                type: 'Identifier',
-                name: '_',
+                type: 'TopicReference',
                 location: {
                   start: {
                     offset: 22,

@@ -10,6 +10,7 @@ export type Expression =
   | ObjectExpression
   | NullishCoalescingExpression
   | PipeSequence
+  | TopicReference
   | UnaryExpression
   | LambdaExpression
   | LetExpression
@@ -130,7 +131,7 @@ export interface BinaryExpression {
 
 export interface LogicalExpression {
   type: 'LogicalExpression'
-  operator: 'and' | 'or'
+  operator: 'and' | '&&' | 'or' | '||'
   left: Expression
   right: Expression
   location: Location
@@ -152,11 +153,16 @@ export interface NullishCoalescingExpression {
   location: Location
 }
 
+export interface TopicReference {
+  type: 'TopicReference'
+  location: Location
+}
+
 export interface PipeSequence {
   type: 'PipeSequence'
   head: Expression
   tail: {
-    operator: '|?' | '|'
+    operator: '|?' | '|' | '|>'
     expression: Expression
   }[]
   location: Location

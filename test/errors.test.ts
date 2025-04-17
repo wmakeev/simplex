@@ -145,8 +145,8 @@ suite('errors', () => {
         '  else',
         '    "bar"',
         ')',
-        '  | append(_, "-baz")',
-        '  | _ & c'
+        '  | append(%, "-baz")',
+        '  | % & c'
       ].join('\n')
 
     const fn = compile(expression, {
@@ -221,8 +221,8 @@ suite('errors', () => {
         '  else',
         '    "bar"',
         ')',
-        '  | append(_, "-baz")',
-        '  | _ & c'
+        '  | append(%, "-baz")',
+        '  | % & c'
       ].join('\n')
 
     const fn = compile(expression, {

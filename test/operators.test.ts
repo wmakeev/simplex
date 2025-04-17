@@ -51,7 +51,10 @@ suite('operators', () => {
 
   test('logical', () => {
     assert.equal(compile('false and true')(), false)
+    assert.equal(compile('false && true')(), false)
+
     assert.equal(compile('false or true')(), true)
+    assert.equal(compile('false || true')(), true)
 
     assert.equal(
       compile('false and 1 + 2', {
@@ -110,14 +113,46 @@ suite('operators', () => {
     )
 
     assert.equal(
-      compile('a | _')({
+      compile('a |> b')({
+        a: 11,
+        b: 12
+      }),
+      12
+    )
+
+    assert.throws(() => {
+      compile('%')()
+    }, /is unbound/)
+
+    assert.throws(() => {
+      compile('% => 2')
+    }, /Expected/)
+
+    assert.throws(() => {
+      compile('a | % => 2')
+    }, /Expected/)
+
+    assert.throws(() => {
+      compile('{ %: 2 }')
+    }, /Expected/)
+
+    assert.throws(() => {
+      compile('let % = 2, a')
+    }, /Expected/)
+
+    assert.throws(() => {
+      compile('a | { %: 2 }')
+    }, /Expected/)
+
+    assert.equal(
+      compile('a | %')({
         a: 11
       }),
       11
     )
 
     assert.equal(
-      compile('a | add(_, 2) | 4 * _')({
+      compile('a | add(%, 2) | 4 * %')({
         a: 1,
         add: (a: number, b: number) => a + b
       }),
@@ -125,7 +160,7 @@ suite('operators', () => {
     )
 
     assert.equal(
-      compile('a | add(_, 2) | 4 * _')({
+      compile('a | add(%, 2) | 4 * %')({
         a: 1,
         add: (a: number, b: number) => a + b
       }),
@@ -133,7 +168,7 @@ suite('operators', () => {
     )
 
     assert.equal(
-      compile('null | add2(_) | a * _')({
+      compile('null | add2(%) | a * %')({
         a: 10,
         add2: (a: number | null) => (a === null ? 1 : a + 2)
       }),
@@ -149,7 +184,7 @@ suite('operators', () => {
     assert.equal(compile('false |? 42')(), 42)
 
     assert.equal(
-      compile('null |? add2(_) | a * _')({
+      compile('null |? add2(%) | a * %')({
         a: 10,
         add2: () => {
           assert.fail('should not called')
@@ -159,7 +194,7 @@ suite('operators', () => {
     )
 
     assert.equal(
-      compile('2 | nil(_) |? a * _')({
+      compile('2 | nil(%) |? a * %')({
         a: 10,
         nil: (arg: unknown) => {
           assert.equal(arg, 2)

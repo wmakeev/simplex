@@ -11,6 +11,7 @@
 ## Table of contents <!-- omit in toc -->
 
 - [Quick start](#quick-start)
+- [Links](#links)
 
 ## Quick start
 
@@ -30,3 +31,7 @@ console.log(result)
 ```
 
 <img alt="In the process of development" src="under-construction.png"/>
+
+## Links
+
+- [AST Explorer](https://astexplorer.net/)

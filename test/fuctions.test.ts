@@ -40,7 +40,7 @@ suite('functions', () => {
 
 suite('curried functions', () => {
   test('function curry', () => {
-    const fn = compile('func(%)', {
+    const fn = compile('func(#)', {
       globals: {
         func: () => 42
       }
@@ -53,7 +53,7 @@ suite('curried functions', () => {
   })
 
   test('function curry (2 args) #1', () => {
-    const fn = compile('func(%, 3)', {
+    const fn = compile('func(#, 3)', {
       globals: {
         func: (a: number, b: number) => a / b
       }
@@ -66,7 +66,7 @@ suite('curried functions', () => {
   })
 
   test('function curry (2 args) #2', () => {
-    const fn = compile('func(9, %)', {
+    const fn = compile('func(9, #)', {
       globals: {
         func: (a: number, b: number) => a / b
       }
@@ -79,7 +79,7 @@ suite('curried functions', () => {
   })
 
   test('curried function catch context', () => {
-    const fn = compile('((fn, a) => fn(a))(func(%, a), 84)', {
+    const fn = compile('((fn, a) => fn(a))(func(#, a), 84)', {
       globals: {
         a: 42,
         func: (a: number, b: number) => a / b

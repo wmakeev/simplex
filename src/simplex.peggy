@@ -349,19 +349,19 @@ Zs = [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
 
 // Tokens
 
-AndToken    = "and"    !IdentifierPart
-ElseToken   = "else"   !IdentifierPart
-FalseToken  = "false"  !IdentifierPart
-IfToken     = "if"     !IdentifierPart
-InToken     = "in"     !IdentifierPart
-NotToken    = "not"    !IdentifierPart
-NullToken   = "null"   !IdentifierPart
-OrToken     = "or"     !IdentifierPart
-ThenToken   = "then"   !IdentifierPart
-TrueToken   = "true"   !IdentifierPart
-TypeofToken = "typeof" !IdentifierPart
-ModToken    = "mod"    !IdentifierPart
-LetToken    = "let"    !IdentifierPart
+AndToken               = "and"    !IdentifierPart
+ElseToken              = "else"   !IdentifierPart
+FalseToken             = "false"  !IdentifierPart
+IfToken                = "if"     !IdentifierPart
+InToken                = "in"     !IdentifierPart
+NotToken               = "not"    !IdentifierPart
+NullToken              = "null"   !IdentifierPart
+OrToken                = "or"     !IdentifierPart
+ThenToken              = "then"   !IdentifierPart
+TrueToken              = "true"   !IdentifierPart
+TypeofToken            = "typeof" !IdentifierPart
+ModToken               = "mod"    !IdentifierPart
+LetToken               = "let"    !IdentifierPart
 
 // Skipped
 __
@@ -371,9 +371,7 @@ _
   = (WhiteSpace / MultiLineCommentNoLineTerminator)*
 
 EOS
-  = __ ";"
-  / _ SingleLineComment? LineTerminatorSequence
-  / _ &"}"
+  = _ SingleLineComment? LineTerminatorSequence
   / __ EOF
 
 EOF
@@ -382,6 +380,7 @@ EOF
 PrimaryExpression
   = Identifier
   / Literal
+  / TopicReference
   / ArrayLiteral
   / ObjectLiteral
   / "(" __ expression:Expression __ ")" { return expression; }
@@ -562,7 +561,7 @@ CallArgument
   / CurryPlaceholder
 
 CurryPlaceholder
-  = "%" {
+  = "#" {
     return {
       type: 'CurryPlaceholder',
       location: getLocation(location())
@@ -718,7 +717,16 @@ PipeExpression
 
 PipeOperator
   = "|?"
+  / "|>"
   / "|"
+
+TopicReference
+  = "%" {
+      return {
+        type: "TopicReference",
+        location: getLocation(location())
+      };
+    }
 
 LambdaExpression
   = "(" __ params:(FormalParameterList __)? ")" __ LambdaArrow __ body:Expression {

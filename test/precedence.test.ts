@@ -2,9 +2,6 @@ import { test, suite } from 'node:test'
 import { compile } from '../src/compiler.js'
 import assert from 'node:assert/strict'
 
-//TODO
-//
-
 suite('precedence', () => {
   test('logical', () => {
     assert.equal(compile('not false and true')(), true)
@@ -14,7 +11,7 @@ suite('precedence', () => {
 
   test('pipeline', () => {
     assert.equal(
-      compile('a | if _ ?? false then c else d + 2 | _ + 1')({
+      compile('a | if % ?? false then c else d + 2 | % + 1')({
         a: null,
         b: true,
         c: 5,
@@ -24,12 +21,20 @@ suite('precedence', () => {
       'pipe operator #1'
     )
 
-    assert.equal(compile('if 1 then 2 else 3 | _ + 2')(), 2, 'pipe operator #2')
+    assert.equal(compile('if 1 then 2 else 3 | % + 2')(), 2, 'pipe operator #2')
 
     assert.equal(
-      compile('(if 1 then 2 else 3) | _ + 2')(),
+      compile('(if 1 then 2 else 3) | % + 2')(),
       4,
       'pipe operator #3'
     )
+
+    assert.throws(() => {
+      compile('a | a => a + %')
+    }, /Expected/)
+
+    const result = compile('a | (a => a + %)')({ a: 42 })
+    assert.ok(typeof result === 'function')
+    assert.equal(result(8), 50)
   })
 })

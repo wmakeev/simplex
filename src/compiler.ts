@@ -36,12 +36,13 @@ interface ContextHelpers<Data, Globals> {
   pipe(
     this: void,
     head: unknown,
-    tail: { opt: boolean; next: (_: unknown) => unknown }[]
+    tail: { opt: boolean; next: (topic: unknown) => unknown }[]
   ): unknown
 }
 
 var hasOwn = Object.hasOwn
 var ERROR_STACK_REGEX = /<anonymous>:(?<row>\d+):(?<col>\d+)/g
+var TOPIC_TOKEN = '%'
 
 const defaultContextHelpers: ContextHelpers<
   Record<string, unknown>,
@@ -52,6 +53,13 @@ const defaultContextHelpers: ContextHelpers<
   ensureFunction,
 
   getIdentifierValue: (identifierName, globals, data) => {
+    // TODO Should test on parse time?
+    if (identifierName === TOPIC_TOKEN) {
+      throw new Error(
+        `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body.`
+      )
+    }
+
     if (identifierName === 'undefined') return undefined
 
     if (globals != null && Object.hasOwn(globals, identifierName)) {
@@ -185,15 +193,28 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
   }
 }
 
+type LogicalOperatorFunction = (
+  left: () => unknown,
+  right: () => unknown
+) => unknown
+
 type ExpressionLogicalOperators = Record<
   LogicalExpression['operator'],
-  (left: () => unknown, right: () => unknown) => unknown
+  LogicalOperatorFunction
 >
+
+const logicalAndOperatorFn: LogicalOperatorFunction = (a, b) =>
+  castToBoolean(a()) && castToBoolean(b())
+
+const logicalOrOperatorFn: LogicalOperatorFunction = (a, b) =>
+  castToBoolean(a()) || castToBoolean(b())
 
 export const defaultLogicalOperators: ExpressionLogicalOperators = {
   // TODO Use castToBoolean from compile options?
-  and: (a, b) => castToBoolean(a()) && castToBoolean(b()),
-  or: (a, b) => castToBoolean(a()) || castToBoolean(b())
+  'and': logicalAndOperatorFn,
+  '&&': logicalAndOperatorFn,
+  'or': logicalOrOperatorFn,
+  '||': logicalOrOperatorFn
 }
 
 interface ExpressionOperators {
@@ -207,8 +228,6 @@ interface ExpressionOperators {
     (left: () => unknown, right: () => unknown) => unknown
   >
 }
-
-const PIPE_LTR = '_'
 
 export interface SourceLocation {
   len: number
@@ -252,8 +271,6 @@ const visitors: {
   },
 
   Identifier: node => {
-    if (node.name === PIPE_LTR) return [codePart(PIPE_LTR, node)]
-
     const parts: VisitResult[] = [
       codePart(`get(scope,${JSON.stringify(node.name)})`, node)
     ]
@@ -454,11 +471,11 @@ const visitors: {
 
       const tailParts: VisitResult[] = [
         codePart(
-          `{opt:${opt},next:function(${PIPE_LTR}){return `,
+          `{opt:${opt},next:(scope=>topic=>{scope=[["%"],[topic],scope];return `,
           t.expression
         ),
         ...visit(t.expression),
-        codePart(`}}`, t.expression),
+        codePart(`})(scope)}`, t.expression),
         codePart(`,`, t.expression)
       ]
 
@@ -476,6 +493,11 @@ const visitors: {
       codePart('])', node)
     ]
 
+    return parts
+  },
+
+  TopicReference: node => {
+    const parts: VisitResult[] = [codePart(`get(scope,"${TOPIC_TOKEN}")`, node)]
     return parts
   },
 
@@ -631,30 +653,38 @@ export function compile<
 
   const { code: expressionCode, offsets } = traverseResult
 
-  const bootstrapCodeHead = [
-    `var bool = ctx.castToBoolean;`,
-    `var bop = ctx.binaryOperators;`,
-    `var lop = ctx.logicalOperators;`,
-    `var uop = ctx.unaryOperators;`,
-    `var call = ctx.callFunction;`,
-    `var getIdentifierValue = ctx.getIdentifierValue;`,
-    `var prop = ctx.getProperty;`,
-    `var pipe = ctx.pipe;`,
-    `var globals = ctx.globals ?? null;`,
-    `return data => {`,
-    `var scope = null;`,
-    `var get = (scope, name) => {`,
-    `if (scope === null) return getIdentifierValue(name, globals, data);`,
-    `var paramIndex = scope[0].findIndex(it => it === name);`,
-    `if (paramIndex === -1) return get(scope[2], name);`,
-    `return scope[1][paramIndex]`,
-    `};`,
-    `return `
-  ].join('')
+  const bootstrapCodeHead =
+    `
+    var bool=ctx.castToBoolean;
+    var bop=ctx.binaryOperators;
+    var lop=ctx.logicalOperators;
+    var uop=ctx.unaryOperators;
+    var call=ctx.callFunction;
+    var getIdentifierValue=ctx.getIdentifierValue;
+    var prop=ctx.getProperty;
+    var pipe=ctx.pipe;
+    var globals=ctx.globals??null;
+
+    function _get(_scope,name){
+      if(_scope===null)return getIdentifierValue(name,globals,this);
+      var paramIndex=_scope[0].findIndex(it=>it===name);
+      if(paramIndex===-1)return _get.call(this,_scope[2],name);
+      return _scope[1][paramIndex]
+    };
+
+    return data=>{
+      var scope=null;
+      var get=_get.bind(data);
+      return
+  `
+      .split('\n')
+      .map(it => it.trim())
+      .filter(it => it !== '')
+      .join('') + ' '
 
   const bootstrapCodeHeadLen = bootstrapCodeHead.length
 
-  const functionCode = bootstrapCodeHead + expressionCode + ';}'
+  const functionCode = bootstrapCodeHead + expressionCode + '}'
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defaultOptions: CompileOptions<Data, Globals> = {
