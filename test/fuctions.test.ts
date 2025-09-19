@@ -36,6 +36,32 @@ suite('functions', () => {
 
     assert.equal(fn(), 26)
   })
+
+  test('function sequence call', () => {
+    const fn = compile('thunk(24, add2)()', {
+      globals: {
+        a: 42,
+        add2: (a: number) => a + 2,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        thunk: (a: number, fn: (arg0: number) => any) => () => fn(a)
+      }
+    })
+
+    assert.equal(fn(), 26)
+  })
+
+  test('function sequence call with arg', () => {
+    const fn = compile('thunk(24, add2)("4")', {
+      globals: {
+        a: 42,
+        add2: (a: number) => a + 2,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-plus-operands
+        thunk: (a: number, fn: (arg0: number) => any) => (num: any) => fn(a) + num
+      }
+    })
+
+    assert.equal(fn(), '264')
+  })
 })
 
 suite('curried functions', () => {

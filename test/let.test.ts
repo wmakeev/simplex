@@ -29,6 +29,7 @@ suite('let', () => {
       assert.fail('should throw')
     } catch (err) {
       assert.ok(err instanceof CompileError)
+      assert.ok(err.name, 'CompileError')
       assert.equal(
         err.message,
         '"a" name defined inside let expression was repeated'

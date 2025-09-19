@@ -8,6 +8,7 @@ suite('errors', () => {
     const val1 = {}
     const err1 = new UnexpectedTypeError(['foo'], val1)
 
+    assert.equal(err1.name, 'UnexpectedTypeError')
     assert.equal(err1.message, 'Expected foo, but got Object instead')
     assert.deepEqual(err1.expectedTypes, ['foo'])
     assert.equal(err1.receivedValue, val1)
@@ -105,6 +106,7 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
+      assert.equal(err.name, 'ExpressionError')
 
       assert.deepEqual(err.location, {
         start: {
@@ -186,6 +188,7 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
+      assert.equal(err.name, 'ExpressionError')
       assert.equal(
         err.message,
         'Expected number or bigint, but got string instead'
@@ -236,6 +239,7 @@ suite('errors', () => {
       assert.fail('should fail')
     } catch (err) {
       assert.ok(err instanceof ExpressionError)
+      assert.equal(err.name, 'ExpressionError')
       assert.equal(
         err.message,
         'Expected number or bigint, but got string instead'

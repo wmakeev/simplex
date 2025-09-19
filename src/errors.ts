@@ -9,6 +9,7 @@ export class ExpressionError extends Error {
     options?: ErrorOptions
   ) {
     super(message, options)
+    this.name = this.constructor.name
   }
 }
 
@@ -20,6 +21,7 @@ export class CompileError extends Error {
     options?: ErrorOptions
   ) {
     super(message, options)
+    this.name = this.constructor.name
   }
 }
 
@@ -31,16 +33,16 @@ export class UnexpectedTypeError extends TypeError {
     public receivedValue: unknown
   ) {
     super(
-      `Expected ${
-        expectedTypes.length === 1
-          ? expectedTypes[0]
-          : expectedTypes
-              .flatMap((t, index) => {
-                return [t, index === expectedTypes.length - 2 ? ' or ' : ', ']
-              })
-              .slice(0, -1)
-              .join('')
+      `Expected ${expectedTypes.length === 1
+        ? expectedTypes[0]
+        : expectedTypes
+          .flatMap((t, index) => {
+            return [t, index === expectedTypes.length - 2 ? ' or ' : ', ']
+          })
+          .slice(0, -1)
+          .join('')
       }, but got ${typeOf(receivedValue)} instead`
     )
+    this.name = this.constructor.name
   }
 }
