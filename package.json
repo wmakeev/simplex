@@ -33,7 +33,7 @@
     "pick-version": "node ./scripts/lib-version.js",
     "lint": "eslint . --fix",
     "build:parser": "peggy -o parser/index.js --source-map --format es --dts src/simplex.peggy",
-    "copy-parser": "cp -rf parser/ build/ && cp -f src/simplex.peggy build/src/",
+    "copy-parser": "cp -rf ./parser/ ./build/ && cp -f ./src/simplex.peggy ./build/src/",
     "build:dev": "npm run lint && npm run compile:dev",
     "build": "npm run build:parser && npm run lint && npm run compile && npm run copy-parser",
     "coverage": "c8 node -r dotenv/config --test --enable-source-maps",
