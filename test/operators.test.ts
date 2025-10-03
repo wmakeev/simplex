@@ -103,6 +103,11 @@ suite('operators', () => {
     assert.equal(compile('[1].foo')(), undefined)
   })
 
+  test('index access', () => {
+    assert.equal(compile('[1, 2, 3][1]')(), 2)
+    assert.equal(compile('"123"[1]')(), "2")
+  })
+
   test('pipeline', () => {
     assert.equal(
       compile('a | b')({

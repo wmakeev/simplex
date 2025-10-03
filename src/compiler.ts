@@ -76,7 +76,13 @@ const defaultContextHelpers: ContextHelpers<
   getProperty(obj, key) {
     if (obj == null) return obj
 
-    if (typeof obj !== 'object') {
+    const typeofObj = typeof obj
+
+    if (typeofObj === 'string' && typeof key === 'number') {
+      return (obj as string)[key]
+    }
+
+    if (typeofObj !== 'object') {
       throw new UnexpectedTypeError(['object'], obj)
     }
 
