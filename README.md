@@ -2,11 +2,11 @@
 
 [![npm](https://img.shields.io/npm/v/simplex-lang.svg?cacheSeconds=1800&style=flat-square)](https://www.npmjs.com/package/simplex-lang)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/wmakeev/simplex/main.yml?style=flat-square)](https://github.com/wmakeev/simplex/actions/workflows/main.yml)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/wmakeev/simplex/main/badges/coverage.json)
 ![no dependencies](https://img.shields.io/badge/dependencies-no-green?style=flat-square)
 [![parser](https://img.shields.io/badge/parser-peggy-pink?style=flat-square)](https://peggyjs.org/)
-<!-- [![Codecov](https://img.shields.io/codecov/c/github/wmakeev/simplex?style=flat-square)](https://app.codecov.io/gh/wmakeev/simplex/tree/master/) -->
 
-> **SimpEx** - javascript **Simpl**e **Ex**pression language
+> **SimplEx** - javascript **Simpl**e **Ex**pression language
 
 ## Table of contents <!-- omit in toc -->
 

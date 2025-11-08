@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - main
+
+permissions:
+  contents: write
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -18,12 +22,21 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: npm ci
-      - run: npm run test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and generate coverage
+        run: npm run test
         # env:
         #   SECRET: ${{ secrets.SECRET }}
 
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v5
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Commit coverage badge data
+        # This action will commit the coverage-summary.json file to the repo.
+        # It only runs if the file has changed.
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update coverage report
+          file_pattern: 'badges/coverage.json'
+          # Optional: Add a token with push access if your repo is private
+          # commit_user_name: my-github-actions-bot
+          # commit_user_email: my-github-actions-bot@users.noreply.github.com
