@@ -36,7 +36,7 @@
     "copy-parser": "cp -rf ./parser/ ./build/ && cp -f ./src/simplex.peggy ./build/src/",
     "build:dev": "npm run lint && npm run compile:dev",
     "build": "npm run build:parser && npm run lint && npm run compile && npm run copy-parser",
-    "coverage": "c8 node -r dotenv/config --test --enable-source-maps",
+    "coverage": "c8 node -r dotenv/config --test \"build/test/**/*.test.js\" --enable-source-maps",
     "coverage:report": "c8 report --reporter=json-summary",
     "test": "npm run build && npm run coverage && npm run coverage:report",
     "posttest": "node scripts/coverage-badge.js",
