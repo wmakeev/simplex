@@ -99,11 +99,11 @@ const defaultContextHelpers: ContextHelpers<
   },
 
   callFunction(fn, args) {
-    return (
-      args === null
-        ? ensureFunction(fn)()
-        : ensureFunction(fn).apply(null, args)
-    ) as unknown
+    return fn == null
+      ? null
+      : ((args === null
+          ? ensureFunction(fn)()
+          : ensureFunction(fn).apply(null, args)) as unknown)
   },
 
   pipe(head, tail) {

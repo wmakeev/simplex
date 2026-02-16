@@ -3,6 +3,22 @@ import { suite, test } from 'node:test'
 import { compile } from '../src/index.js'
 
 suite('functions', () => {
+  test('function call on null', () => {
+    const fn = compile('func(24)', {
+      globals: {
+        func: null
+      }
+    })
+
+    assert.equal(fn(), null)
+  })
+
+  test('function call on null', () => {
+    const fn = compile('null | %()')
+
+    assert.equal(fn(), null)
+  })
+
   test('function call without arguments', () => {
     const fn = compile('func(24)', {
       globals: {
@@ -55,8 +71,9 @@ suite('functions', () => {
       globals: {
         a: 42,
         add2: (a: number) => a + 2,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-plus-operands
-        thunk: (a: number, fn: (arg0: number) => any) => (num: any) => fn(a) + num
+        thunk: (a: number, fn: (arg0: number) => any) => (num: any) =>
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-plus-operands
+          fn(a) + num
       }
     })
 
