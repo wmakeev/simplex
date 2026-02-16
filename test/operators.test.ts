@@ -41,12 +41,37 @@ suite('operators', () => {
   })
 
   test('in', () => {
-    // in
+    // in Array
     assert.equal(compile('2 in [1, 2, 3]')(), true)
     assert.equal(compile('4 in [1, 2, 3]')(), false)
     assert.equal(compile('10 in [1, 2, 3]')(), false)
+    assert.throws(
+      () => {
+        compile('"foo" in [1, 2, 3]')()
+      },
+      {
+        message:
+          'Wrong "in" operator usage - key value should to be safe integer'
+      }
+    )
+
+    // in Object
     assert.equal(compile('"foo" in { foo: 1 }')(), true)
     assert.equal(compile('"baz" in { foo: 1 }')(), false)
+
+    // in Map
+    assert.equal(
+      compile('"baz" in map')({
+        map: new Map([['foo', 42]])
+      }),
+      false
+    )
+    assert.equal(
+      compile('"foo" in map')({
+        map: new Map([['foo', 42]])
+      }),
+      true
+    )
   })
 
   test('logical', () => {
@@ -98,6 +123,9 @@ suite('operators', () => {
     assert.equal(compile('{a:42}.a')(), 42)
     assert.equal(compile('a.b["foo bar"]')({ a: { b: { 'foo bar': 42 } } }), 42)
 
+    // Map value access
+    assert.equal(compile('a.b')({ a: new Map([['b', 42]]) }), 42)
+
     // array property access
     assert.equal(compile('[11, 22, 33]["1"]')(), 22)
     assert.equal(compile('[1].foo')(), undefined)
@@ -105,7 +133,7 @@ suite('operators', () => {
 
   test('index access', () => {
     assert.equal(compile('[1, 2, 3][1]')(), 2)
-    assert.equal(compile('"123"[1]')(), "2")
+    assert.equal(compile('"123"[1]')(), '2')
   })
 
   test('pipeline', () => {

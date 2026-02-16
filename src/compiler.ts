@@ -20,7 +20,7 @@ import {
   ensureNumber
 } from './tools/ensure.js'
 import { isSimpleValue } from './tools/guards.js'
-import { castToString, typeOf } from './tools/index.js'
+import { castToString, objToStringAlias, typeOf } from './tools/index.js'
 
 interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
@@ -74,7 +74,7 @@ const defaultContextHelpers: ContextHelpers<
   },
 
   getProperty(obj, key) {
-    if (obj == null) return obj
+    if (obj == null) return undefined
 
     const typeofObj = typeof obj
 
@@ -95,12 +95,16 @@ const defaultContextHelpers: ContextHelpers<
       return obj[key] as unknown
     }
 
+    if (obj instanceof Map) {
+      return obj.get(key) as unknown
+    }
+
     return undefined
   },
 
   callFunction(fn, args) {
     return fn == null
-      ? null
+      ? undefined
       : ((args === null
           ? ensureFunction(fn)()
           : ensureFunction(fn).apply(null, args)) as unknown)
@@ -188,13 +192,34 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
   '>=': (a, b) =>
     ensureRelationalComparable(a) >= ensureRelationalComparable(b),
 
+  // Is some container has specified key
   'in': (a, b) => {
-    if (isSimpleValue(a) && b != null && typeof b === 'object') {
-      return Object.hasOwn(b, a as any)
-    } else {
-      throw new TypeError(
-        `Cannot use "in" operator to search for ${typeOf(a)} key in ${typeOf(b)}`
-      )
+    const bType = objToStringAlias.call(b)
+
+    switch (bType) {
+      case '[object Object]': {
+        return Object.hasOwn(b as object, a as any)
+      }
+
+      case '[object Array]': {
+        if (Number.isSafeInteger(a)) {
+          // @ts-ignore
+          return a in b
+        } else {
+          throw new TypeError(
+            `Wrong "in" operator usage - key value should to be safe integer`
+          )
+        }
+      }
+
+      case '[object Map]':
+        // @ts-ignore
+        return b.has(a) as boolean
+
+      default:
+        throw new TypeError(
+          `Cannot use "in" operator to ensure ${typeOf(a)} key in ${typeOf(b)}`
+        )
     }
   }
 }

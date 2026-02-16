@@ -10,13 +10,13 @@ suite('functions', () => {
       }
     })
 
-    assert.equal(fn(), null)
+    assert.equal(fn(), undefined)
   })
 
   test('function call on null', () => {
     const fn = compile('null | %()')
 
-    assert.equal(fn(), null)
+    assert.equal(fn(), undefined)
   })
 
   test('function call without arguments', () => {

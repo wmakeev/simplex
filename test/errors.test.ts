@@ -333,7 +333,7 @@ suite('errors', () => {
         compile('"foo" in "bar"')()
       },
       {
-        message: 'Cannot use "in" operator to search for string key in string',
+        message: 'Cannot use "in" operator to ensure string key in string',
         location: {
           end: {
             column: 15,
@@ -354,7 +354,7 @@ suite('errors', () => {
         compile('false in true')()
       },
       {
-        message: 'Cannot use "in" operator to search for boolean key in boolean'
+        message: 'Cannot use "in" operator to ensure boolean key in boolean'
       }
     )
   })
