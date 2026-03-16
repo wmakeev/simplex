@@ -31,7 +31,8 @@ node --import tsx --test test/parser.test.ts
 
 - **`src/simplex.peggy`** — PEG grammar defining the expression language (Peggy format). Generates `parser/index.js`.
 - **`src/simplex-tree.ts`** — AST node type definitions (Literal, Identifier, BinaryExpression, CallExpression, PipeSequence, LambdaExpression, LetExpression, etc.)
-- **`src/compiler.ts`** — Core compiler: `visitors` object maps AST node types to JS code strings; `traverse()` walks AST; `compile()` orchestrates parse → codegen → Function creation. Includes default operators and context helpers.
+- **`src/visitors.ts`** — AST visitors: `visitors` object maps AST node types to JS code strings; `traverse()` walks the AST and produces generated code with source location offsets.
+- **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, bootstrap code generation, and runtime error mapping.
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
 - **`src/tools/`** — Runtime utilities: type guards (`guards.ts`), casting (`cast.ts`), type checking (`index.ts`), validation (`ensure.ts`)
 - **`src/index.ts`** — Public API re-exports
