@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { suite, test } from 'node:test'
 import { compile } from '../src/index.js'
 
 const evalExp = (expression: string, data?: Record<string, unknown>) => {
@@ -11,8 +11,8 @@ const evalExp = (expression: string, data?: Record<string, unknown>) => {
   })(data)
 }
 
-describe('arithmetics', () => {
-  it('can do simple numeric expressions', () => {
+suite('arithmetics', () => {
+  test('can do simple numeric expressions', () => {
     assert.equal(evalExp('1 + 2 * 3'), 7)
     assert.equal(evalExp('2 * 3 + 1'), 7)
     assert.equal(evalExp('1 + (2 * 3)'), 7)
@@ -23,7 +23,7 @@ describe('arithmetics', () => {
     assert.equal(evalExp('2 * 3 ^ 2'), 18)
   })
 
-  it('supports functions with multiple args', () => {
+  test('supports functions with multiple args', () => {
     assert.equal(evalExp('min()'), Infinity)
     assert.equal(evalExp('min(2)'), 2)
     assert.equal(evalExp('max(2)'), 2)
@@ -39,7 +39,7 @@ describe('arithmetics', () => {
     assert.equal(evalExp('max(2, 5, 6, 1, 9, 12)'), 12)
   })
 
-  it('can do comparisons', () => {
+  test('can do comparisons', () => {
     assert.equal(evalExp('foo == 4', { foo: 4 }), true)
     assert.equal(evalExp('foo == 4', { foo: 3 }), false)
     assert.equal(evalExp('foo == 4', { foo: -4 }), false)
@@ -60,7 +60,7 @@ describe('arithmetics', () => {
     assert.equal(evalExp('foo <= 4', { foo: 5 }), false)
   })
 
-  it('can do boolean logic', () => {
+  test('can do boolean logic', () => {
     const obj = { T: true, F: false }
 
     assert.equal(evalExp('F and F', obj), false)
@@ -80,18 +80,18 @@ describe('arithmetics', () => {
     assert.equal(evalExp('not T and F', obj), false)
   })
 
-  it('does modulo', () => {
+  test('does modulo', () => {
     assert.equal(evalExp('10 mod 2'), 0)
     assert.equal(evalExp('11 mod 2'), 1)
     assert.equal(evalExp('-1 mod 2'), -1)
     assert.equal(evalExp('-0.1 mod 5'), -0.1)
   })
 
-  it('exponentiation has precedence over unary minus', () => {
+  test('exponentiation has precedence over unary minus', () => {
     assert.equal(evalExp('-x^2', { x: 2 }), -4)
   })
 
-  it('exponentiation is right-associative', () => {
+  test('exponentiation is right-associative', () => {
     assert.equal(evalExp('5^3^2'), 5 ** (3 ** 2))
   })
 })

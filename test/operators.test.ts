@@ -3,7 +3,7 @@ import {
   compile,
   defaultBinaryOperators,
   defaultLogicalOperators
-} from '../src/compiler.js'
+} from '../src/index.js'
 import assert from 'node:assert/strict'
 
 suite('operators', () => {

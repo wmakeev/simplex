@@ -1,0 +1,58 @@
+# Refactoring Opportunities
+
+Categorized list of refactoring opportunities for the simplex-lang codebase.
+
+## HIGH
+
+### 1. Extract comma-separated list builder (`visitors.ts`)
+
+**Lines 110-276.** ObjectExpression, ArrayExpression, CallExpression, and PipeSequence all repeat a pattern of `flatMap` over children followed by popping the trailing comma. Extract a shared helper that builds comma-separated output segments.
+
+### 2. Extract magic strings to constants (`compiler.ts`, `visitors.ts`)
+
+Bootstrap variable names (`"bool"`, `"bop"`, `"lop"`, `"uop"`, `"get"`, `"call"`, `"pipe"`), scope index patterns (`_scope[0]`, `_scope[1]`, `_scope[2]`), and the topic token `"%"` are hardcoded across `compiler.ts` (lines 278-307) and `visitors.ts` (lines 9, 253, 279). Centralize into a shared constants module.
+
+## MEDIUM
+
+### 3. Simplify operator definitions (`compiler.ts` lines 131-228)
+
+16 binary operators repeat `ensureNumber()` guards and identical `// eslint-disable` / `@ts-expect-error` comments. A factory function would cut the duplication significantly. Additionally, `'and'`/`'&&'` and `'or'`/`'||'` are exact duplicates (lines 240-252).
+
+### 4. Consolidate small utility files (`src/tools/`)
+
+- `guards.ts` — 34 lines, 2 functions
+- `cast.ts` — 26 lines, 2 functions
+- `ensure.ts` — 41 lines, 3 functions
+- `index.ts` — 53 lines, mixed re-exports + utils
+
+Consider merging into fewer files or reorganizing by concern.
+
+### 5. Extract operator call wrappers (`visitors.ts`)
+
+Repeated patterns for wrapping visitor output in `uop[]()`, `bop[]()`, `lop[]()`, and `call()` calls. Could be extracted into visitor builder utilities.
+
+### 6. Reduce error class boilerplate (`errors.ts` lines 4-47)
+
+`ExpressionError` and `CompileError` have nearly identical constructors (name assignment, message formatting, location handling). Extract a shared base class or factory.
+
+### 7. Simplify error mapping (`compiler.ts` lines 352-396)
+
+~40-line try/catch with 5 nested ifs, regex-based stack parsing, and a fragile `assert.equal(rowOffset, 3)`. Extract into a dedicated utility function and reduce nesting.
+
+### 8. Extract context helpers (`compiler.ts` lines 28-124)
+
+The large `defaultContextHelpers` object mixes type checking, error throwing, and complex logic. Extract individual helper functions to improve readability and testability.
+
+## LOW
+
+### ~~9. Test style consistency~~ ✅
+
+All test files now use `suite`/`test` and import from the public API (`src/index.js`).
+
+### 10. Address existing TODOs
+
+10 TODO comments across `compiler.ts`, `visitors.ts`, and `guards.ts` covering parse-time validation, computed properties, and performance improvements.
+
+### 11. Test coverage balance
+
+`parser.test.ts` is 2457 lines (~55% of all test code). Visitor and compiler behavior could use expanded dedicated tests.

@@ -1,5 +1,5 @@
 import { test, suite } from 'node:test'
-import { compile } from '../src/compiler.js'
+import { compile } from '../src/index.js'
 import assert from 'node:assert/strict'
 
 suite('precedence', () => {
