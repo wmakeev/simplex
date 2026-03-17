@@ -327,6 +327,22 @@ suite('errors', () => {
     }
   })
 
+  test('type safety errors', () => {
+    assert.throws(() => compile('"5" + 1')(), {
+      message: 'Expected number or bigint, but got string instead'
+    })
+    assert.throws(() => compile('true + 1')(), {
+      message: 'Expected number or bigint, but got boolean instead'
+    })
+    assert.throws(() => compile('null + 1')(), {
+      message: 'Expected number or bigint, but got Null instead'
+    })
+    assert.equal(compile('NaN == NaN')({ NaN }), false)
+    assert.throws(() => compile('"hello"()')(), {
+      message: 'Expected function, but got string instead'
+    })
+  })
+
   test('incorrect use of "in" operator', () => {
     assert.throws(
       () => {

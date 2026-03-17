@@ -49,6 +49,24 @@ suite('let', () => {
     assert.equal(fn(), 86)
   })
 
+  test('nested let', () => {
+    const fn = compile('let a = 1, let b = a + 1, a + b')
+
+    assert.equal(fn(), 3)
+  })
+
+  test('lambda param shadows let binding', () => {
+    const fn = compile('let x = 1, (x => x + 2)(10)')
+
+    assert.equal(fn(), 12)
+  })
+
+  test('three sequential bindings', () => {
+    const fn = compile('let a = 1, b = a + 1, c = a + b, c')
+
+    assert.equal(fn(), 3)
+  })
+
   test('multiline let with pipe body', () => {
     const fn = compile(
       `

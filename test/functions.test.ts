@@ -19,6 +19,18 @@ suite('functions', () => {
     assert.equal(fn(), undefined)
   })
 
+  test('calling undefined returns undefined', () => {
+    const fn = compile('undefined()')
+
+    assert.equal(fn(), undefined)
+  })
+
+  test('null method call returns undefined', () => {
+    const fn = compile('null.foo()')
+
+    assert.equal(fn(), undefined)
+  })
+
   test('function ignores extra arguments', () => {
     const fn = compile('func(24)', {
       globals: {

@@ -84,6 +84,36 @@ suite('compile', () => {
     assert.equal(fn(new Map([['foo', 'bar']])), 'bar')
   })
 
+  test('non-Error throw is re-thrown as-is', () => {
+    const fn = compile('func()', {
+      globals: {
+        func: () => {
+           
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
+          throw 'string error'
+        }
+      }
+    })
+
+    assert.throws(() => fn(), err => err === 'string error')
+  })
+
+  test('Error with no eval frame in stack is re-thrown', () => {
+    const fn = compile('func()', {
+      globals: {
+        func: () => {
+          const err = new Error('test')
+          err.stack = 'Error: test\n    at Object.<anonymous> (/foo.js:1:1)'
+          throw err
+        }
+      }
+    })
+
+    assert.throws(() => fn(), {
+      message: 'test'
+    })
+  })
+
   test('operators override', () => {
     const fn = compile('not -a + b - 2', {
       unaryOperators: {

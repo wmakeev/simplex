@@ -21,6 +21,9 @@ suite('operators', () => {
     assert.equal(compile('2 * 2')(), 4)
     assert.equal(compile('4 / 2')(), 2)
     assert.equal(compile('2 ^ 2')(), 4)
+    assert.equal(compile('1 / 0')(), Infinity)
+    assert.ok(Number.isNaN(compile('5 mod 0')()))
+    assert.equal(compile('2 ^ (-2)')(), 0.25)
   })
 
   test('string', () => {
@@ -45,6 +48,8 @@ suite('operators', () => {
     assert.equal(compile('2 in [1, 2, 3]')(), true)
     assert.equal(compile('4 in [1, 2, 3]')(), false)
     assert.equal(compile('10 in [1, 2, 3]')(), false)
+    assert.equal(compile('0 in [1, 2, 3]')(), true)
+    assert.equal(compile('-1 in [1, 2, 3]')(), false)
     assert.throws(
       () => {
         compile('"foo" in [1, 2, 3]')()
@@ -52,6 +57,20 @@ suite('operators', () => {
       {
         message:
           'Wrong "in" operator usage - key value should to be safe integer'
+      }
+    )
+    assert.throws(
+      () => {
+        compile('1.5 in [1, 2, 3]')()
+      },
+      {
+        message:
+          'Wrong "in" operator usage - key value should to be safe integer'
+      }
+    )
+    assert.throws(
+      () => {
+        compile('1 in null')()
       }
     )
 
@@ -69,6 +88,12 @@ suite('operators', () => {
     assert.equal(
       compile('"foo" in map')({
         map: new Map([['foo', 42]])
+      }),
+      true
+    )
+    assert.equal(
+      compile('1 in map')({
+        map: new Map([[1, 'one']])
       }),
       true
     )
@@ -115,6 +140,9 @@ suite('operators', () => {
     assert.equal(compile('null ?? 1')(), 1)
     assert.equal(compile('undefined ?? 1')(), 1)
     assert.equal(compile('2 ?? 1')(), 2)
+    assert.equal(compile('0 ?? 1')(), 0)
+    assert.equal(compile('false ?? 1')(), false)
+    assert.equal(compile('"" ?? 1')(), '')
   })
 
   test('property access', () => {
@@ -129,6 +157,20 @@ suite('operators', () => {
     // array property access
     assert.equal(compile('[11, 22, 33]["1"]')(), 22)
     assert.equal(compile('[1].foo')(), undefined)
+
+    // null-safe property access
+    assert.equal(compile('null.a')(), undefined)
+    assert.equal(compile('null.a.b.c')(), undefined)
+
+    // number property access throws
+    assert.throws(() => compile('(1).foo')(), {
+      name: 'ExpressionError'
+    })
+
+    // non-numeric string index access on string throws
+    assert.throws(() => compile('"abc"["foo"]')(), {
+      name: 'ExpressionError'
+    })
   })
 
   test('index access', () => {
@@ -236,5 +278,23 @@ suite('operators', () => {
       }),
       null
     )
+
+    // optional pipe with falsy non-null values
+    assert.equal(compile('"" |? % & "x"')(), 'x')
+    assert.equal(compile('0 |? % + 1')(), 1)
+  })
+
+  test('feature composition with pipes', () => {
+    // pipe inside lambda
+    assert.equal(compile('(x => x | % + 1)(5)')(), 6)
+
+    // lambda inside pipe
+    assert.equal(compile('5 | (x => x + 1)(%)')(), 6)
+
+    // conditional inside pipe
+    assert.equal(compile('5 | if % > 3 then % * 2 else 0')(), 10)
+
+    // let inside pipe
+    assert.equal(compile('5 | (let x = %, x + 1)')(), 6)
   })
 })
