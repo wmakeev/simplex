@@ -39,7 +39,7 @@ suite('let', () => {
     }
   })
 
-  test('with one variable and scope catch', () => {
+  test('with multiple variables and scope catch in lambda', () => {
     const fn = compile('(a => let a = a + 1, b = a, a + b)(a)', {
       globals: {
         a: 42

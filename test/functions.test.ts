@@ -3,7 +3,7 @@ import { suite, test } from 'node:test'
 import { compile } from '../src/index.js'
 
 suite('functions', () => {
-  test('function call on null', () => {
+  test('function call on null global', () => {
     const fn = compile('func(24)', {
       globals: {
         func: null
@@ -13,7 +13,7 @@ suite('functions', () => {
     assert.equal(fn(), undefined)
   })
 
-  test('function call on null', () => {
+  test('function call on null via pipe', () => {
     const fn = compile('null | %()')
 
     assert.equal(fn(), undefined)
@@ -159,15 +159,6 @@ suite('lambdas', () => {
 
     assert.ok(typeof result === 'function')
     assert.equal(result(1, 2), 3)
-  })
-
-  test('nested lambda', () => {
-    const fn = compile('a => b => a + b')
-
-    const result = fn()
-
-    assert.ok(typeof result === 'function')
-    assert.equal(result(1)(2), 3)
   })
 
   test('nested lambda', () => {

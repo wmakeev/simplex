@@ -3,15 +3,7 @@
 import { test, suite } from 'node:test'
 import { compile } from '../src/index.js'
 import assert from 'node:assert/strict'
-
-const evalExp = (expression: string, data?: Record<string, unknown>) => {
-  return compile(expression, {
-    globals: {
-      min: Math.min,
-      max: Math.max
-    }
-  })(data)
-}
+import { evalExp } from './helpers.js'
 
 suite('notations', () => {
   test('string', () => {

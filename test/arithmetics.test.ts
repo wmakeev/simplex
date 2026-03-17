@@ -1,15 +1,6 @@
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
-import { compile } from '../src/index.js'
-
-const evalExp = (expression: string, data?: Record<string, unknown>) => {
-  return compile(expression, {
-    globals: {
-      min: Math.min,
-      max: Math.max
-    }
-  })(data)
-}
+import { evalExp } from './helpers.js'
 
 suite('arithmetics', () => {
   test('can do simple numeric expressions', () => {
