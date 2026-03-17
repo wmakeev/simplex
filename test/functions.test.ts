@@ -19,7 +19,7 @@ suite('functions', () => {
     assert.equal(fn(), undefined)
   })
 
-  test('function call without arguments', () => {
+  test('function ignores extra arguments', () => {
     const fn = compile('func(24)', {
       globals: {
         func: () => 42
@@ -40,7 +40,7 @@ suite('functions', () => {
     assert.equal(fn(), 43)
   })
 
-  test('function call with many argument', () => {
+  test('function call with multiple arguments', () => {
     const fn = compile('func(24, add2)', {
       globals: {
         a: 42,
@@ -121,7 +121,7 @@ suite('curried functions', () => {
     assert.equal(result(3), 3)
   })
 
-  test('curried function catch context', () => {
+  test('curried function captures closure', () => {
     const fn = compile('((fn, a) => fn(a))(func(#, a), 84)', {
       globals: {
         a: 42,
@@ -170,7 +170,7 @@ suite('lambdas', () => {
     assert.equal(result(1)(2), 3)
   })
 
-  test('lambda argument override globals', () => {
+  test('lambda argument overrides globals', () => {
     const fn = compile('(a => a + 1)(24)', {
       globals: {
         a: 42
@@ -180,7 +180,7 @@ suite('lambdas', () => {
     assert.equal(fn(), 25)
   })
 
-  test('lambda catch context', () => {
+  test('lambda captures closure over globals', () => {
     const fn = compile('((fn, a) => fn())(() => a, 24)', {
       globals: {
         a: 42

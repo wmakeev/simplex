@@ -213,7 +213,7 @@ suite('errors', () => {
     }
   })
 
-  test('complex multi line error', () => {
+  test('error spans multiple lines', () => {
     const expression =
       // prettier-ignore
       [
@@ -274,7 +274,7 @@ suite('errors', () => {
     }
   })
 
-  test('string property access error #1', () => {
+  test('property access on string throws', () => {
     const fn = compile('"".foo')
 
     try {
@@ -299,7 +299,7 @@ suite('errors', () => {
     }
   })
 
-  test('object property access error #2', () => {
+  test('object key must be simple type', () => {
     const fn = compile('{}[{}]')
 
     try {
@@ -327,7 +327,7 @@ suite('errors', () => {
     }
   })
 
-  test('incorrect using of "in" operator', () => {
+  test('incorrect use of "in" operator', () => {
     assert.throws(
       () => {
         compile('"foo" in "bar"')()

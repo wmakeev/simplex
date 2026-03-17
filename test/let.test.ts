@@ -13,7 +13,7 @@ suite('let', () => {
     assert.equal(fn(), 42)
   })
 
-  test('with one variable and scope catch', () => {
+  test('variable captures outer scope on init', () => {
     const fn = compile('let a = a, a', {
       globals: {
         a: 42

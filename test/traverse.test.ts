@@ -256,7 +256,7 @@ suite('traverse offsets', () => {
     ])
   })
 
-  test('tow tokens', () => {
+  test('two tokens', () => {
     const { code, offsets } = getTraverse('-1')
 
     assert.equal(code, 'uop["-"](1)')
@@ -310,7 +310,7 @@ suite('traverse offsets', () => {
     ])
   })
 
-  test('tow tokens map', () => {
+  test('two tokens map', () => {
     const expression = '-1'
     const traverseResult = getTraverse(expression)
     const mapResult = mapCode(expression, traverseResult)

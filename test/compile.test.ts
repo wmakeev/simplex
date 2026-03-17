@@ -48,7 +48,7 @@ suite('compile', () => {
     assert.equal(fn({ a: 2 }), 1)
   })
 
-  test('undefined identifier', () => {
+  test('undefined is not overridable', () => {
     const fn = compile('undefined', {
       globals: {
         undefined: 1
