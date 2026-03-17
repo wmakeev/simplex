@@ -24,7 +24,7 @@ npm run coverage       # Run tests with c8 coverage (no build)
 To run a single test file:
 
 ```bash
-node --import tsx --test test/parser.test.ts
+npm run compile:dev && node --test build/test/parser.test.js
 ```
 
 ## Architecture
@@ -48,7 +48,7 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - Prettier: no semicolons, single quotes, no trailing commas, avoid parens on single arrow params
 - TypeScript: extends `@tsconfig/node22` + `@tsconfig/strictest`
 - Node.js built-in test runner (`node:test`) with `assert`
-- Tests use `tsx` for TypeScript execution
+- Tests run from compiled JS in `build/` (compile first, then run)
 
 ## Project Files
 
