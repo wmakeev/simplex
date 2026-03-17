@@ -1,6 +1,8 @@
 import { html } from 'htm/preact'
 import { activeTab, compileResult, updateUrlHash } from '../state'
 import type { OutputTab, CompileResult } from '../state'
+import { DocsView } from './docs-view'
+import { AstTreeView } from './ast-tree-view'
 
 function formatResult(value: unknown): string {
   if (value === undefined) return 'undefined'
@@ -54,16 +56,14 @@ function GeneratedView({ result }: { result: CompileResult }) {
 }
 
 function AstView({ result }: { result: CompileResult }) {
-  if (!result.ast) {
-    return html`<div class="output-content" style="color: var(--text-secondary)">No AST</div>`
-  }
-  return html`<div class="output-content">${JSON.stringify(result.ast, null, 2)}</div>`
+  return html`<${AstTreeView} ast=${result.ast} />`
 }
 
 const tabs: { id: OutputTab; label: string }[] = [
   { id: 'result', label: 'Result' },
   { id: 'generated', label: 'Generated JS' },
-  { id: 'ast', label: 'AST' }
+  { id: 'ast', label: 'AST' },
+  { id: 'docs', label: 'Docs' }
 ]
 
 export function OutputPanel() {
@@ -97,6 +97,7 @@ export function OutputPanel() {
       ${tab === 'result' && html`<${ResultView} result=${result} />`}
       ${tab === 'generated' && html`<${GeneratedView} result=${result} />`}
       ${tab === 'ast' && html`<${AstView} result=${result} />`}
+      ${tab === 'docs' && html`<${DocsView} />`}
     </div>
   `
 }

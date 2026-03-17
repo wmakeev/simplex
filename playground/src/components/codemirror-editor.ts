@@ -5,21 +5,30 @@ import { EditorView, keymap } from '@codemirror/view'
 import { basicSetup } from 'codemirror'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { lintGutter, setDiagnostics } from '@codemirror/lint'
 import { darkMode } from '../state'
+import { simplexLanguage } from '../simplex-language'
 
 const lightTheme = EditorView.theme({
   '&': { backgroundColor: 'var(--bg-editor)' },
   '.cm-gutters': { backgroundColor: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)' }
 })
 
+export interface Diagnostic {
+  from: number
+  to: number
+  message: string
+}
+
 interface EditorProps {
   value: string
   onChange: (value: string) => void
   language?: 'json' | 'expression'
   onCtrlEnter?: () => void
+  diagnostics?: Diagnostic[]
 }
 
-export function CodeMirrorEditor({ value, onChange, language, onCtrlEnter }: EditorProps) {
+export function CodeMirrorEditor({ value, onChange, language, onCtrlEnter, diagnostics }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef(onChange)
@@ -35,11 +44,14 @@ export function CodeMirrorEditor({ value, onChange, language, onCtrlEnter }: Edi
           onChangeRef.current(update.state.doc.toString())
         }
       }),
-      EditorState.tabSize.of(2)
+      EditorState.tabSize.of(2),
+      lintGutter()
     ]
 
     if (language === 'json') {
       extensions.push(json())
+    } else if (language === 'expression') {
+      extensions.push(simplexLanguage())
     }
 
     if (onCtrlEnter) {
@@ -82,6 +94,26 @@ export function CodeMirrorEditor({ value, onChange, language, onCtrlEnter }: Edi
       })
     }
   }, [value])
+
+  // Update diagnostics
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view) return
+
+    if (!diagnostics || diagnostics.length === 0) {
+      view.dispatch(setDiagnostics(view.state, []))
+      return
+    }
+
+    const cmDiagnostics = diagnostics.map(d => ({
+      from: d.from,
+      to: d.to,
+      severity: 'error' as const,
+      message: d.message
+    }))
+
+    view.dispatch(setDiagnostics(view.state, cmDiagnostics))
+  }, [diagnostics])
 
   return html`<div class="editor-wrapper" ref=${containerRef}></div>`
 }

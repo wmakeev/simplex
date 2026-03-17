@@ -1,7 +1,7 @@
 import { signal, computed, effect } from '@preact/signals'
 import { compileExpression } from './compiler-bridge'
 
-export type OutputTab = 'result' | 'generated' | 'ast'
+export type OutputTab = 'result' | 'generated' | 'ast' | 'docs'
 
 export const expression = signal('1 + 2')
 export const globalsJson = signal('{}')
