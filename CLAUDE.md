@@ -49,3 +49,12 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - TypeScript: extends `@tsconfig/node22` + `@tsconfig/strictest`
 - Node.js built-in test runner (`node:test`) with `assert`
 - Tests use `tsx` for TypeScript execution
+
+## Project Files
+
+- **`REFACTORING.md`** — Prioritized refactoring opportunities (HIGH/MEDIUM/LOW). Consult before refactoring tasks.
+- **`TODO.md`** — Feature backlog. Consult when adding new language features.
+
+## Maintenance
+
+After any changes that affect architecture, file structure, build commands, or conventions — update this file to reflect the new state. This includes adding/removing/renaming source files, changing the build pipeline, or modifying code style rules.
