@@ -205,6 +205,7 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 
 ## Workflow
 
+- After implementing a task from a TODO file, mark it as done (`[x]`) before committing.
 - After completing and testing a plan implementation, always offer to commit the changes.
 - After a commit is made, always offer to push to the remote.
 - After a push, always check CI status (`gh run list`).
