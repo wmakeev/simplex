@@ -4,7 +4,7 @@ import type { OutputTab, CompileResult } from '../state'
 import { DocsView } from './docs-view'
 import { AstTreeView } from './ast-tree-view'
 
-function formatResult(value: unknown): string {
+export function formatResult(value: unknown): string {
   if (value === undefined) return 'undefined'
   if (value === null) return 'null'
   if (typeof value === 'function') return '[Function]'
@@ -15,7 +15,7 @@ function formatResult(value: unknown): string {
   }
 }
 
-function getResultType(value: unknown): string {
+export function getResultType(value: unknown): string {
   if (value === null) return 'null'
   if (Array.isArray(value)) return 'array'
   return typeof value

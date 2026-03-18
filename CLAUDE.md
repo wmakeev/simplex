@@ -195,11 +195,13 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - TypeScript: extends `@tsconfig/node22` + `@tsconfig/strictest`
 - Node.js built-in test runner (`node:test`) with `assert`
 - Tests run from compiled JS in `build/` (compile first, then run)
+- All documentation and project `.md` files must be written in English
 
 ## Project Files
 
 - **`REFACTORING.md`** — Prioritized refactoring opportunities (HIGH/MEDIUM/LOW). Consult before refactoring tasks.
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
+- **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
 ## Maintenance
 

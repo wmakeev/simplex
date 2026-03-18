@@ -39,6 +39,7 @@
     "coverage": "c8 node -r dotenv/config --test \"build/test/**/*.test.js\" --enable-source-maps",
     "coverage:report": "c8 report --reporter=json-summary",
     "test": "npm run build && npm run coverage && npm run coverage:report",
+    "test:playground": "cd playground && npm test",
     "posttest": "node scripts/coverage-badge.js",
     "version": "npm run pick-version && auto-changelog -p && git add CHANGELOG.md",
     "release": "np"

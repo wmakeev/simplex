@@ -1,7 +1,7 @@
 import { html } from 'htm/preact'
 import { useState } from 'preact/hooks'
 
-function isAstNode(value: unknown): value is Record<string, unknown> {
+export function isAstNode(value: unknown): value is Record<string, unknown> {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -10,7 +10,7 @@ function isAstNode(value: unknown): value is Record<string, unknown> {
   )
 }
 
-function getSummary(node: Record<string, unknown>): string | null {
+export function getSummary(node: Record<string, unknown>): string | null {
   switch (node.type) {
     case 'Literal':
       return JSON.stringify(node.value)
@@ -42,7 +42,7 @@ const summaryKeys: Record<string, Set<string>> = {
 
 const skipKeys = new Set(['type', 'location'])
 
-function getChildEntries(
+export function getChildEntries(
   node: Record<string, unknown>
 ): [string, unknown][] {
   const skipped = summaryKeys[node.type as string] ?? new Set()
