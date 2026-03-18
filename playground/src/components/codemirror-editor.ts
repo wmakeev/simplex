@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'preact/hooks'
 import { html } from 'htm/preact'
 import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
+import { indentWithTab } from '@codemirror/commands'
 import { basicSetup } from 'codemirror'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
@@ -39,6 +40,7 @@ export function CodeMirrorEditor({ value, onChange, language, onCtrlEnter, diagn
 
     const extensions = [
       basicSetup,
+      keymap.of([indentWithTab]),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
           onChangeRef.current(update.state.doc.toString())
