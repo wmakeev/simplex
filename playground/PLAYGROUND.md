@@ -2,13 +2,9 @@
 
 Interactive web playground for the SimplEx expression language.
 
-## Status
+## TODO
 
-- [x] Phase 1: Core (Vite + Preact/HTM + CodeMirror + compiler integration)
-- [x] Phase 2: Examples, URL state, share links
-- [x] Phase 3: GitHub Actions deployment workflow
-- [x] Phase 4a: Syntax highlighting, error highlighting
-- [x] Phase 4b: Documentation tab, AST tree view (PWA deferred)
+See [TODO.md](./TODO.md) for the task list.
 
 ## Testing
 
@@ -77,7 +73,7 @@ Switching dark/light theme recreates CodeMirror instances (dependency in `useEff
 
 ~514KB / ~168KB gzip. Main components: CodeMirror (~150KB + language/lint), parser (~217KB source, smaller after minification), Preact+signals (~4KB). For optimization, `manualChunks` can be added to Vite config to split parser and CodeMirror.
 
-## Syntax Highlighting (Phase 4a)
+## Syntax Highlighting
 
 ### SimplEx Language Mode
 
@@ -119,12 +115,12 @@ Error diagnostics via `@codemirror/lint`:
 - Highlights 1 character starting at offset; if the error is at the end of the string (offset === length), highlights the last character
 - Diagnostics are recomputed on each render (depends on `compileResult` signal)
 
-### Dependencies (Phase 4a)
+### Dependencies
 
 - `@codemirror/language` — `StreamLanguage`, `StringStream` for custom language mode
 - `@codemirror/lint` — `setDiagnostics()`, `lintGutter()` for inline errors
 
-## Phase 4b — Documentation Tab & AST Tree View
+## Documentation Tab & AST Tree View
 
 - **Docs tab** (`docs-view.ts`): static HTML rendering of the SimplEx Language Reference (Literals, Operators, Collections, Property Access, Functions, Currying, Conditionals, Pipes, Lambdas, Let, Comments, Scope)
 - **AST tree view** (`ast-tree-view.ts`): interactive collapsible tree replacing raw JSON in the AST tab
