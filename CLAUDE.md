@@ -203,6 +203,12 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
 - **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
+## Workflow
+
+- After completing and testing a plan implementation, always offer to commit the changes.
+- After a commit is made, always offer to push to the remote.
+- After a push, always check CI status (`gh run list`).
+
 ## Maintenance
 
 After any changes that affect architecture, file structure, build commands, language syntax/semantics, or conventions — update this file to reflect the new state. This includes adding/removing/renaming source files, changing the build pipeline, modifying code style rules, or changing the expression language (operators, grammar, runtime behavior).
