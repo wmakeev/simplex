@@ -8,7 +8,9 @@ export const globalsJson = signal('{}')
 export const dataJson = signal('{}')
 export const activeTab = signal<OutputTab>('result')
 export const darkMode = signal(
-  window.matchMedia('(prefers-color-scheme: dark)').matches
+  localStorage.getItem('theme')
+    ? localStorage.getItem('theme') === 'dark'
+    : window.matchMedia('(prefers-color-scheme: dark)').matches
 )
 
 export interface CompileResult {
@@ -36,7 +38,9 @@ export function runCompile() {
 }
 
 effect(() => {
-  document.documentElement.dataset['theme'] = darkMode.value ? 'dark' : 'light'
+  const theme = darkMode.value ? 'dark' : 'light'
+  document.documentElement.dataset['theme'] = theme
+  localStorage.setItem('theme', theme)
 })
 
 // URL state encoding/decoding
