@@ -21,6 +21,13 @@ import { isSimpleValue } from './tools/guards.js'
 import { castToString, objToStringAlias, typeOf } from './tools/index.js'
 import { traverse } from './visitors.js'
 import type { SourceLocation, VisitResult } from './visitors.js'
+import {
+  TOPIC_TOKEN,
+  GEN,
+  SCOPE_NAMES,
+  SCOPE_VALUES,
+  SCOPE_PARENT
+} from './constants.js'
 
 export type { SourceLocation, VisitResult }
 export { traverse }
@@ -45,7 +52,6 @@ interface ContextHelpers<Data, Globals> {
 
 var hasOwn = Object.hasOwn
 var ERROR_STACK_REGEX = /<anonymous>:(?<row>\d+):(?<col>\d+)/g
-var TOPIC_TOKEN = '%'
 
 const defaultContextHelpers: ContextHelpers<
   Record<string, unknown>,
@@ -277,26 +283,26 @@ function getExpressionErrorLocation(
 
 const bootstrapCodeHead =
   `
-    var bool=ctx.castToBoolean;
-    var bop=ctx.binaryOperators;
-    var lop=ctx.logicalOperators;
-    var uop=ctx.unaryOperators;
-    var call=ctx.callFunction;
-    var getIdentifierValue=ctx.getIdentifierValue;
-    var prop=ctx.getProperty;
-    var pipe=ctx.pipe;
-    var globals=ctx.globals??null;
+    var ${GEN.bool}=ctx.castToBoolean;
+    var ${GEN.bop}=ctx.binaryOperators;
+    var ${GEN.lop}=ctx.logicalOperators;
+    var ${GEN.uop}=ctx.unaryOperators;
+    var ${GEN.call}=ctx.callFunction;
+    var ${GEN.getIdentifierValue}=ctx.getIdentifierValue;
+    var ${GEN.prop}=ctx.getProperty;
+    var ${GEN.pipe}=ctx.pipe;
+    var ${GEN.globals}=ctx.globals??null;
 
-    function _get(_scope,name){
-      if(_scope===null)return getIdentifierValue(name,globals,this);
-      var paramIndex=_scope[0].findIndex(it=>it===name);
-      if(paramIndex===-1)return _get.call(this,_scope[2],name);
-      return _scope[1][paramIndex]
+    function ${GEN._get}(${GEN._scope},name){
+      if(${GEN._scope}===null)return ${GEN.getIdentifierValue}(name,${GEN.globals},this);
+      var paramIndex=${GEN._scope}[${SCOPE_NAMES}].findIndex(it=>it===name);
+      if(paramIndex===-1)return ${GEN._get}.call(this,${GEN._scope}[${SCOPE_PARENT}],name);
+      return ${GEN._scope}[${SCOPE_VALUES}][paramIndex]
     };
 
     return data=>{
-      var scope=null;
-      var get=_get.bind(data);
+      var ${GEN.scope}=null;
+      var ${GEN.get}=${GEN._get}.bind(data);
       return
   `
     .split('\n')

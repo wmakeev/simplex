@@ -1,12 +1,11 @@
 import { CompileError } from './errors.js'
+import { TOPIC_TOKEN, GEN } from './constants.js'
 import {
   Expression,
   ExpressionByType,
   ExpressionStatement,
   Location
 } from './simplex-tree.js'
-
-var TOPIC_TOKEN = '%'
 
 export interface SourceLocation {
   len: number
@@ -62,7 +61,7 @@ const visitors: {
 
   Identifier: node => {
     const parts: VisitResult[] = [
-      codePart(`get(scope,${JSON.stringify(node.name)})`, node)
+      codePart(`${GEN.get}(${GEN.scope},${JSON.stringify(node.name)})`, node)
     ]
 
     return parts
@@ -70,7 +69,7 @@ const visitors: {
 
   UnaryExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart(`uop["${node.operator}"](`, node),
+      codePart(`${GEN.uop}["${node.operator}"](`, node),
       ...visit(node.argument),
       codePart(')', node)
     ]
@@ -80,7 +79,7 @@ const visitors: {
 
   BinaryExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart(`bop["${node.operator}"](`, node),
+      codePart(`${GEN.bop}["${node.operator}"](`, node),
       ...visit(node.left),
       codePart(',', node),
       ...visit(node.right),
@@ -92,7 +91,7 @@ const visitors: {
 
   LogicalExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart(`lop["${node.operator}"](()=>(`, node),
+      codePart(`${GEN.lop}["${node.operator}"](()=>(`, node),
       ...visit(node.left),
       codePart('),()=>(', node),
       ...visit(node.right),
@@ -104,7 +103,7 @@ const visitors: {
 
   ConditionalExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart('(bool(', node),
+      codePart(`(${GEN.bool}(`, node),
       ...visit(node.test),
       codePart(')?', node),
       ...visit(node.consequent),
@@ -157,7 +156,7 @@ const visitors: {
     // TODO Pass computed to prop?
 
     const parts: VisitResult[] = [
-      codePart('prop(', node),
+      codePart(`${GEN.prop}(`, node),
       ...visit(object),
       codePart(',', node),
       ...(computed
@@ -183,7 +182,7 @@ const visitors: {
 
       // call({{callee}},[{{arguments}}])
       let parts: VisitResult[] = [
-        codePart('call(', node),
+        codePart(`${GEN.call}(`, node),
         ...visit(node.callee),
         codePart(',[', node),
         ...commaSeparated(items, node),
@@ -192,9 +191,9 @@ const visitors: {
 
       if (curriedArgs.length > 0) {
         parts = [
-          codePart(`(scope=>(${curriedArgs.join()})=>`, node),
+          codePart(`(${GEN.scope}=>(${curriedArgs.join()})=>`, node),
           ...parts,
-          codePart(')(scope)', node)
+          codePart(`)(${GEN.scope})`, node)
         ]
       }
 
@@ -204,7 +203,7 @@ const visitors: {
     //
     else {
       const parts: VisitResult[] = [
-        codePart('call(', node),
+        codePart(`${GEN.call}(`, node),
         ...visit(node.callee),
         codePart(',null)', node)
       ]
@@ -232,16 +231,16 @@ const visitors: {
       const opt = t.operator === '|?'
       return [
         codePart(
-          `{opt:${opt},next:(scope=>topic=>{scope=[["%"],[topic],scope];return `,
+          `{opt:${opt},next:(${GEN.scope}=>topic=>{${GEN.scope}=[["${TOPIC_TOKEN}"],[topic],${GEN.scope}];return `,
           t.expression
         ),
         ...visit(t.expression),
-        codePart(`})(scope)}`, t.expression)
+        codePart(`})(${GEN.scope})}`, t.expression)
       ]
     })
 
     return [
-      codePart('pipe(', node),
+      codePart(`${GEN.pipe}(`, node),
       ...headCode,
       codePart(',[', node),
       ...commaSeparated(items, node),
@@ -250,7 +249,9 @@ const visitors: {
   },
 
   TopicReference: node => {
-    const parts: VisitResult[] = [codePart(`get(scope,"${TOPIC_TOKEN}")`, node)]
+    const parts: VisitResult[] = [
+      codePart(`${GEN.get}(${GEN.scope},"${TOPIC_TOKEN}")`, node)
+    ]
     return parts
   },
 
@@ -274,11 +275,11 @@ const visitors: {
       // })(["a", "b"])
       const parts: VisitResult[] = [
         codePart(
-          `((scope,params)=>function(${fnParamsList}){scope=[params,[${fnParamsList}],scope];return `,
+          `((${GEN.scope},params)=>function(${fnParamsList}){${GEN.scope}=[params,[${fnParamsList}],${GEN.scope}];return `,
           node
         ),
         ...visit(node.expression),
-        codePart(`})(scope,[${fnParamsNamesList}])`, node)
+        codePart(`})(${GEN.scope},[${fnParamsNamesList}])`, node)
       ]
 
       return parts
@@ -326,20 +327,20 @@ const visitors: {
 
     const parts: VisitResult[] = [
       codePart(
-        `(scope=>{var _varNames=[];var _varValues=[];scope=[_varNames,_varValues,scope];`,
+        `(${GEN.scope}=>{var ${GEN._varNames}=[];var ${GEN._varValues}=[];${GEN.scope}=[${GEN._varNames},${GEN._varValues},${GEN.scope}];`,
         node
       ),
       ...node.declarations.flatMap(d => [
-        codePart(`_varValues.push(`, d),
+        codePart(`${GEN._varValues}.push(`, d),
         ...visit(d.init),
         codePart(`);`, d),
-        codePart(`_varNames.push(`, d),
+        codePart(`${GEN._varNames}.push(`, d),
         codePart(JSON.stringify(d.id.name), d.id),
         codePart(`);`, d)
       ]),
       codePart(`return `, node),
       ...visit(node.expression),
-      codePart(`})(scope)`, node)
+      codePart(`})(${GEN.scope})`, node)
     ]
 
     return parts

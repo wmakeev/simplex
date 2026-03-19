@@ -8,9 +8,9 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
 ~~**Lines 110-276.** ObjectExpression, ArrayExpression, CallExpression, and PipeSequence all repeat a pattern of `flatMap` over children followed by popping the trailing comma. Extract a shared helper that builds comma-separated output segments.~~
 
-### 2. Extract magic strings to constants (`compiler.ts`, `visitors.ts`)
+### ~~2. Extract magic strings to constants (`compiler.ts`, `visitors.ts`)~~
 
-Bootstrap variable names (`"bool"`, `"bop"`, `"lop"`, `"uop"`, `"get"`, `"call"`, `"pipe"`), scope index patterns (`_scope[0]`, `_scope[1]`, `_scope[2]`), and the topic token `"%"` are hardcoded across `compiler.ts` (lines 278-307) and `visitors.ts` (lines 9, 253, 279). Centralize into a shared constants module.
+~~Bootstrap variable names (`"bool"`, `"bop"`, `"lop"`, `"uop"`, `"get"`, `"call"`, `"pipe"`), scope index patterns (`_scope[0]`, `_scope[1]`, `_scope[2]`), and the topic token `"%"` are hardcoded across `compiler.ts` (lines 278-307) and `visitors.ts` (lines 9, 253, 279). Centralize into a shared constants module.~~
 
 ## MEDIUM
 
