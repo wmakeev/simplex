@@ -146,48 +146,21 @@ type ExpressionBinaryOperators = Record<
   (left: unknown, right: unknown) => unknown
 >
 
+const numericOp =
+  (fn: (a: number, b: number) => number): ((a: unknown, b: unknown) => unknown) =>
+  (a, b) => fn(ensureNumber(a) as number, ensureNumber(b) as number)
+
 export const defaultBinaryOperators: ExpressionBinaryOperators = {
   '!=': (a, b) => a !== b,
 
   '==': (a, b) => a === b,
 
-  // TIPS give the opportunity to get a base js error
-
-  '*': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ensureNumber(a) * ensureNumber(b)
-  },
-
-  '+': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-plus-operands
-    return ensureNumber(a) + ensureNumber(b)
-  },
-
-  '-': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ensureNumber(a) - ensureNumber(b)
-  },
-
-  '/': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ensureNumber(a) / ensureNumber(b)
-  },
-
-  'mod': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ensureNumber(a) % ensureNumber(b)
-  },
-
-  '^': (a, b) => {
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return ensureNumber(a) ** ensureNumber(b)
-  },
+  '*': numericOp((a, b) => a * b),
+  '+': numericOp((a, b) => a + b),
+  '-': numericOp((a, b) => a - b),
+  '/': numericOp((a, b) => a / b),
+  'mod': numericOp((a, b) => a % b),
+  '^': numericOp((a, b) => a ** b),
 
   '&': (a, b) => castToString(a) + castToString(b),
 
