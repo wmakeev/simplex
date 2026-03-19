@@ -10,7 +10,6 @@ import {
   LogicalExpression,
   UnaryExpression
 } from './simplex-tree.js'
-import assert from 'node:assert'
 import {
   castToBoolean,
   castToString,
@@ -244,6 +243,36 @@ interface ExpressionOperators {
   >
 }
 
+function mapRuntimeError(
+  err: unknown,
+  expression: string,
+  offsets: SourceLocation[]
+): ExpressionError | null {
+  if (!(err instanceof Error)) return null
+
+  const evalRow = err.stack
+    ?.split('\n')
+    .map(r => r.trim())
+    .find(r => r.startsWith('at eval '))
+  if (!evalRow) return null
+
+  ERROR_STACK_REGEX.lastIndex = 0
+  const match = ERROR_STACK_REGEX.exec(evalRow)
+  const rowStr = match?.groups?.['row']
+  const colStr = match?.groups?.['col']
+  if (!rowStr || !colStr) return null
+
+  const row = Number.parseInt(rowStr)
+  if (row !== 3) return null
+
+  const col = Number.parseInt(colStr)
+  const adjustedCol = col - bootstrapCodeHeadLen
+  if (adjustedCol < 0) return null
+
+  const location = getExpressionErrorLocation(adjustedCol, offsets)
+  return new ExpressionError(err.message, expression, location, { cause: err })
+}
+
 function getExpressionErrorLocation(
   colOffset: number,
   locations: SourceLocation[]
@@ -334,45 +363,7 @@ export function compile<
     try {
       return func(data)
     } catch (err) {
-      if (err instanceof Error === false) throw err
-
-      const stackRows = err.stack?.split('\n').map(row => row.trim())
-
-      const evalRow = stackRows?.find(row => row.startsWith('at eval '))
-
-      if (evalRow === undefined) {
-        throw err
-      }
-
-      ERROR_STACK_REGEX.lastIndex = 0
-      const match = ERROR_STACK_REGEX.exec(evalRow)
-
-      if (match == null) {
-        throw err
-      }
-
-      const rowOffsetStr = match.groups?.['row']
-      const colOffsetStr = match.groups?.['col']
-
-      if (rowOffsetStr === undefined || colOffsetStr === undefined) {
-        throw err
-      }
-
-      const rowOffset = Number.parseInt(rowOffsetStr)
-      assert.equal(rowOffset, 3)
-
-      const colOffset = Number.parseInt(colOffsetStr)
-      const adjustedColOffset = colOffset - bootstrapCodeHeadLen
-      assert.ok(adjustedColOffset >= 0)
-
-      const errorLocation = getExpressionErrorLocation(
-        adjustedColOffset,
-        offsets
-      )
-
-      throw new ExpressionError(err.message, expression, errorLocation, {
-        cause: err
-      })
+      throw mapRuntimeError(err, expression, offsets) ?? err
     }
   }
 }
