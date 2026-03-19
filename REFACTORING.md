@@ -22,7 +22,7 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   Merged `guards.ts`, `cast.ts`, `ensure.ts` into `index.ts` — single file organized by sections (guards, cast, ensure).
 
-- [ ] **5. Extract operator call wrappers (`visitors.ts`)**
+- [x] **5. Extract operator call wrappers (`visitors.ts`)**
 
   Repeated patterns for wrapping visitor output in `uop[]()`, `bop[]()`, `lop[]()`, and `call()` calls. Could be extracted into visitor builder utilities.
 

@@ -47,6 +47,35 @@ const commaSeparated = (
   )
 }
 
+/** Wrap visited args as `fnName(arg1, arg2, ...)`. */
+const wrapCall = (
+  fnName: string,
+  node: { location: Location },
+  ...args: VisitResult[][]
+): VisitResult[] => [
+  codePart(`${fnName}(`, node),
+  ...commaSeparated(args, node),
+  codePart(')', node)
+]
+
+/** Wrap visited args as `registry["op"](arg1, arg2, ...)`. */
+const wrapOp = (
+  registry: string,
+  operator: string,
+  node: { location: Location },
+  ...args: VisitResult[][]
+): VisitResult[] => [
+  codePart(`${registry}["${operator}"](`, node),
+  ...commaSeparated(args, node),
+  codePart(')', node)
+]
+
+/** Wrap visit results as a thunk: `()=>(...)`. */
+const thunk = (
+  node: { location: Location },
+  parts: VisitResult[]
+): VisitResult[] => [codePart('()=>(', node), ...parts, codePart(')', node)]
+
 const visitors: {
   [P in keyof ExpressionByType]: (
     node: ExpressionByType[P],
@@ -67,39 +96,20 @@ const visitors: {
     return parts
   },
 
-  UnaryExpression: (node, visit) => {
-    const parts: VisitResult[] = [
-      codePart(`${GEN.uop}["${node.operator}"](`, node),
-      ...visit(node.argument),
-      codePart(')', node)
-    ]
+  UnaryExpression: (node, visit) =>
+    wrapOp(GEN.uop, node.operator, node, visit(node.argument)),
 
-    return parts
-  },
+  BinaryExpression: (node, visit) =>
+    wrapOp(GEN.bop, node.operator, node, visit(node.left), visit(node.right)),
 
-  BinaryExpression: (node, visit) => {
-    const parts: VisitResult[] = [
-      codePart(`${GEN.bop}["${node.operator}"](`, node),
-      ...visit(node.left),
-      codePart(',', node),
-      ...visit(node.right),
-      codePart(')', node)
-    ]
-
-    return parts
-  },
-
-  LogicalExpression: (node, visit) => {
-    const parts: VisitResult[] = [
-      codePart(`${GEN.lop}["${node.operator}"](()=>(`, node),
-      ...visit(node.left),
-      codePart('),()=>(', node),
-      ...visit(node.right),
-      codePart('))', node)
-    ]
-
-    return parts
-  },
+  LogicalExpression: (node, visit) =>
+    wrapOp(
+      GEN.lop,
+      node.operator,
+      node,
+      thunk(node, visit(node.left)),
+      thunk(node, visit(node.right))
+    ),
 
   ConditionalExpression: (node, visit) => {
     const parts: VisitResult[] = [
@@ -155,17 +165,11 @@ const visitors: {
 
     // TODO Pass computed to prop?
 
-    const parts: VisitResult[] = [
-      codePart(`${GEN.prop}(`, node),
-      ...visit(object),
-      codePart(',', node),
-      ...(computed
-        ? visit(property)
-        : [codePart(JSON.stringify(property.name), property)]),
-      codePart(')', node)
-    ]
+    const propertyPart = computed
+      ? visit(property)
+      : [codePart(JSON.stringify(property.name), property)]
 
-    return parts
+    return wrapCall(GEN.prop, node, visit(object), propertyPart)
   },
 
   CallExpression: (node, visit) => {
