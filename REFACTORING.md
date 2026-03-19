@@ -30,11 +30,11 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   `ExpressionError` and `CompileError` have nearly identical constructors (name assignment, message formatting, location handling). Extract a shared base class or factory.
 
-- [ ] **7. Simplify error mapping (`compiler.ts` lines 352-396)**
+- [ ] **7. Simplify error mapping (`compiler.ts` lines 334-376)**
 
   ~40-line try/catch with 5 nested ifs, regex-based stack parsing, and a fragile `assert.equal(rowOffset, 3)`. Extract into a dedicated utility function and reduce nesting.
 
-- [ ] **8. Extract context helpers (`compiler.ts` lines 28-124)**
+- [ ] **8. Extract context helpers (`compiler.ts` lines 58-149)**
 
   The large `defaultContextHelpers` object mixes type checking, error throwing, and complex logic. Extract individual helper functions to improve readability and testability.
 
@@ -46,7 +46,7 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
 - [ ] **10. Address existing TODOs**
 
-  10 TODO comments across `compiler.ts`, `visitors.ts`, and `guards.ts` covering parse-time validation, computed properties, and performance improvements.
+  10 TODO comments across `compiler.ts`, `visitors.ts`, and `tools/index.ts` covering parse-time validation, computed properties, and performance improvements.
 
 - [ ] **11. Test coverage balance**
 
