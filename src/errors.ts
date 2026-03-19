@@ -1,7 +1,7 @@
 import { Location } from './simplex-tree.js'
 import { typeOf } from './tools/index.js'
 
-export class ExpressionError extends Error {
+export class SimplexError extends Error {
   constructor(
     message: string,
     public expression: string,
@@ -13,17 +13,9 @@ export class ExpressionError extends Error {
   }
 }
 
-export class CompileError extends Error {
-  constructor(
-    message: string,
-    public expression: string,
-    public location: Location | null,
-    options?: ErrorOptions
-  ) {
-    super(message, options)
-    this.name = this.constructor.name
-  }
-}
+export class ExpressionError extends SimplexError {}
+
+export class CompileError extends SimplexError {}
 
 export class UnexpectedTypeError extends TypeError {
   I18N_STRING = 'UNEXPECTED_TYPE'

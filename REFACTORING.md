@@ -26,7 +26,7 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   Repeated patterns for wrapping visitor output in `uop[]()`, `bop[]()`, `lop[]()`, and `call()` calls. Could be extracted into visitor builder utilities.
 
-- [ ] **6. Reduce error class boilerplate (`errors.ts` lines 4-47)**
+- [x] **6. Reduce error class boilerplate (`errors.ts` lines 4-47)**
 
   `ExpressionError` and `CompileError` have nearly identical constructors (name assignment, message formatting, location handling). Extract a shared base class or factory.
 
