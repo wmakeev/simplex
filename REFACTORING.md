@@ -18,14 +18,9 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   16 binary operators repeat `ensureNumber()` guards and identical `// eslint-disable` / `@ts-expect-error` comments. A factory function would cut the duplication significantly. Additionally, `'and'`/`'&&'` and `'or'`/`'||'` are exact duplicates (lines 240-252).
 
-- [ ] **4. Consolidate small utility files (`src/tools/`)**
+- [x] **4. Consolidate small utility files (`src/tools/`)**
 
-  - `guards.ts` — 34 lines, 2 functions
-  - `cast.ts` — 26 lines, 2 functions
-  - `ensure.ts` — 41 lines, 3 functions
-  - `index.ts` — 53 lines, mixed re-exports + utils
-
-  Consider merging into fewer files or reorganizing by concern.
+  Merged `guards.ts`, `cast.ts`, `ensure.ts` into `index.ts` — single file organized by sections (guards, cast, ensure).
 
 - [ ] **5. Extract operator call wrappers (`visitors.ts`)**
 

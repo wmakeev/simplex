@@ -11,14 +11,16 @@ import {
   UnaryExpression
 } from './simplex-tree.js'
 import assert from 'node:assert'
-import { castToBoolean } from './tools/cast.js'
 import {
+  castToBoolean,
+  castToString,
   ensureFunction,
+  ensureNumber,
   ensureRelationalComparable,
-  ensureNumber
-} from './tools/ensure.js'
-import { isSimpleValue } from './tools/guards.js'
-import { castToString, objToStringAlias, typeOf } from './tools/index.js'
+  isSimpleValue,
+  objToStringAlias,
+  typeOf
+} from './tools/index.js'
 import { traverse } from './visitors.js'
 import type { SourceLocation, VisitResult } from './visitors.js'
 import {
