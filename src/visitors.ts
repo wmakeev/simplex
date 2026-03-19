@@ -37,6 +37,17 @@ const combineVisitResults = (parts: VisitResult[]) => {
   })
 }
 
+/** Build a comma-separated list of VisitResult[] segments. */
+const commaSeparated = (
+  items: VisitResult[][],
+  commaNode: { location: Location }
+): VisitResult[] => {
+  if (items.length === 0) return []
+  return items.flatMap((item, i) =>
+    i < items.length - 1 ? [...item, codePart(',', commaNode)] : item
+  )
+}
+
 const visitors: {
   [P in keyof ExpressionByType]: (
     node: ExpressionByType[P],
@@ -108,60 +119,36 @@ const visitors: {
   },
 
   ObjectExpression: (node, visit) => {
-    const innerObj = node.properties
-      .map((p): [VisitResult, VisitResult[]] => {
-        if (p.key.type === 'Identifier') {
-          return [codePart(p.key.name, p), visit(p.value)]
-        }
-        //
-        else if (p.key.type === 'Literal') {
-          // TODO look for ECMA spec
-          return [codePart(JSON.stringify(p.key.value), p), visit(p.value)]
-        }
-        //
-        else {
-          // TODO Restrict on parse step
-          // TODO Error with locations
-          throw new TypeError(`Incorrect object key type ${p.key.type}`)
-        }
-      })
-      .flatMap(([k, v]) => {
-        return [k, codePart(':', node), ...v, codePart(',', node)]
-      })
+    const items = node.properties.map(p => {
+      let key: VisitResult
+      if (p.key.type === 'Identifier') {
+        key = codePart(p.key.name, p)
+      } else if (p.key.type === 'Literal') {
+        // TODO look for ECMA spec
+        key = codePart(JSON.stringify(p.key.value), p)
+      } else {
+        // TODO Restrict on parse step
+        // TODO Error with locations
+        throw new TypeError(`Incorrect object key type ${p.key.type}`)
+      }
+      return [key, codePart(':', node), ...visit(p.value)]
+    })
 
-    // remove last comma
-    if (innerObj.length > 1) {
-      innerObj.pop()
-    }
-
-    const parts: VisitResult[] = [
+    return [
       codePart('{', node),
-      ...innerObj,
+      ...commaSeparated(items, node),
       codePart('}', node)
     ]
-
-    return parts
   },
 
   ArrayExpression: (node, visit) => {
-    const innerArrParts = node.elements.flatMap(el => {
-      return el === null
-        ? [codePart(',', node)]
-        : [...visit(el), codePart(',', node)]
-    })
+    const items = node.elements.map(el => (el === null ? [] : visit(el)))
 
-    // remove last comma
-    if (innerArrParts.length > 1) {
-      innerArrParts.pop()
-    }
-
-    const parts: VisitResult[] = [
+    return [
       codePart('[', node),
-      ...innerArrParts,
+      ...commaSeparated(items, node),
       codePart(']', node)
     ]
-
-    return parts
   },
 
   MemberExpression: (node, visit) => {
@@ -184,26 +171,22 @@ const visitors: {
 
   CallExpression: (node, visit) => {
     if (node.arguments.length > 0) {
-      const innerArgs = node.arguments.flatMap((arg, index) => [
-        ...(arg.type === 'CurryPlaceholder'
+      const items = node.arguments.map((arg, index) =>
+        arg.type === 'CurryPlaceholder'
           ? [codePart(`a${index}`, arg)]
-          : visit(arg)),
-        codePart(',', node)
-      ])
+          : visit(arg)
+      )
 
       const curriedArgs = node.arguments.flatMap((arg, index) =>
         arg.type === 'CurryPlaceholder' ? [`a${index}`] : []
       )
-
-      // remove last comma
-      innerArgs?.pop()
 
       // call({{callee}},[{{arguments}}])
       let parts: VisitResult[] = [
         codePart('call(', node),
         ...visit(node.callee),
         codePart(',[', node),
-        ...innerArgs,
+        ...commaSeparated(items, node),
         codePart('])', node)
       ]
 
@@ -245,34 +228,25 @@ const visitors: {
   PipeSequence: (node, visit) => {
     const headCode = visit(node.head)
 
-    const tailsCodeArrInner = node.tail.flatMap(t => {
+    const items = node.tail.map(t => {
       const opt = t.operator === '|?'
-
-      const tailParts: VisitResult[] = [
+      return [
         codePart(
           `{opt:${opt},next:(scope=>topic=>{scope=[["%"],[topic],scope];return `,
           t.expression
         ),
         ...visit(t.expression),
-        codePart(`})(scope)}`, t.expression),
-        codePart(`,`, t.expression)
+        codePart(`})(scope)}`, t.expression)
       ]
-
-      return tailParts
     })
 
-    // remove last comma
-    tailsCodeArrInner.pop()
-
-    const parts: VisitResult[] = [
+    return [
       codePart('pipe(', node),
       ...headCode,
       codePart(',[', node),
-      ...tailsCodeArrInner,
+      ...commaSeparated(items, node),
       codePart('])', node)
     ]
-
-    return parts
   },
 
   TopicReference: node => {

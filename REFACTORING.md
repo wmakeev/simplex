@@ -4,9 +4,9 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
 ## HIGH
 
-### 1. Extract comma-separated list builder (`visitors.ts`)
+### ~~1. Extract comma-separated list builder (`visitors.ts`)~~
 
-**Lines 110-276.** ObjectExpression, ArrayExpression, CallExpression, and PipeSequence all repeat a pattern of `flatMap` over children followed by popping the trailing comma. Extract a shared helper that builds comma-separated output segments.
+~~**Lines 110-276.** ObjectExpression, ArrayExpression, CallExpression, and PipeSequence all repeat a pattern of `flatMap` over children followed by popping the trailing comma. Extract a shared helper that builds comma-separated output segments.~~
 
 ### 2. Extract magic strings to constants (`compiler.ts`, `visitors.ts`)
 

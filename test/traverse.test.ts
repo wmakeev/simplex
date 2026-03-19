@@ -367,7 +367,10 @@ suite('traverse offsets', () => {
       ['get(scope,"%")', '%'],
       ['])', 'add(%)'],
       ['})(scope)}', 'add(%)'],
-      [',', 'add(%)'],
+      [
+        ',',
+        '( -1+ 2 *4) | add(%) | (if % > 2 then "1" else "2")'
+      ],
       [
         '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         'if % > 2 then "1" else "2"'
@@ -447,7 +450,10 @@ suite('traverse offsets', () => {
       ['"-baz"', '"-baz"'],
       ['])', 'append(%, "-baz")'],
       ['})(scope)}', 'append(%, "-baz")'],
-      [',', 'append(%, "-baz")'],
+      [
+        ',',
+        '(\n  if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"\n)\n  | append(%, "-baz")\n  | % & c'
+      ],
       [
         '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         '% & c'
