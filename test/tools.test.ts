@@ -8,7 +8,6 @@ import {
   castToBoolean,
   castToString,
   typeOf,
-  unbox,
   ensureRelationalComparable
 } from '../src/index.js'
 
@@ -39,25 +38,6 @@ suite('tools', () => {
       })
     })
 
-    test('unbox', () => {
-      const obj = {}
-      const arr = [] as unknown
-
-      const cases = [
-        [1, 1],
-        ['foo', 'foo'],
-        [true, true],
-        [new Number(42), 42],
-        [new String('foo'), 'foo'],
-        [new Boolean(true), true],
-        [obj, obj],
-        [arr, arr]
-      ]
-
-      cases.forEach(([from, to]) => {
-        assert.equal(unbox(from), to, `${typeOf(from)} unboxed to ${to}`)
-      })
-    })
   })
 
   suite('cast', () => {
@@ -106,9 +86,9 @@ suite('tools', () => {
         [ NaN              , 'NaN'       ],
         [ Infinity         , 'Infinity'  ],
         [ -Infinity        , '-Infinity' ],
-        [ new Number(42)   , '42'        ],
-        [ new String('foo'), 'foo'       ],
-        [ new Boolean(true), 'true'      ],
+        [ new Number(42)   , '[object Number]'  ],
+        [ new String('foo'), '[object String]'  ],
+        [ new Boolean(true), '[object Boolean]' ],
 
         // not castable
         [ {}               , '[object Object]'   ],
@@ -144,7 +124,7 @@ suite('tools', () => {
     test('ensureNumber', () => {
       assert.equal(ensureNumber(1), 1)
       assert.equal(ensureNumber(12345n), 12345n)
-      assert.equal(ensureNumber(new Number(42)), 42)
+      assert.throws(() => ensureNumber(new Number(42)))
 
       assert.throws(() => {
         ensureNumber(NaN)
@@ -183,8 +163,8 @@ suite('tools', () => {
         [ new Error('foo') , false ]
       ]
 
-      assert.equal(ensureRelationalComparable(new Number(42)), 42)
-      assert.equal(ensureRelationalComparable(new String('foo')), 'foo')
+      assert.throws(() => ensureRelationalComparable(new Number(42)))
+      assert.throws(() => ensureRelationalComparable(new String('foo')))
 
       cases.forEach(([from, to]) => {
         if (to === true) {
@@ -242,9 +222,9 @@ suite('tools', () => {
         [NaN              , true  ],
         [Infinity         , true  ],
         [-Infinity        , true  ],
-        [new Number(42)   , true  ],
-        [new String('foo'), true  ],
-        [new Boolean(true), true  ],
+        [new Number(42)   , false ],
+        [new String('foo'), false ],
+        [new Boolean(true), false ],
 
         [{}               , false ],
         [[]               , false ],

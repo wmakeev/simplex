@@ -7,25 +7,6 @@ import { UnexpectedTypeError } from '../errors.js'
 export const objToStringAlias = Object.prototype.toString
 
 /**
- * Converts instances of Number, String and Boolean to primitives
- */
-export function unbox(val: unknown) {
-  if (typeof val !== 'object' || val === null) return val
-
-  const objConstructor = val.constructor
-
-  if (
-    objConstructor === Number ||
-    objConstructor === String ||
-    objConstructor === Boolean
-  ) {
-    return val.valueOf()
-  }
-
-  return val
-}
-
-/**
  * The method is needed to obtain the most specific readable data type.
  *
  * *Usage note:* Type handling, from a performance perspective, should be done
@@ -56,15 +37,11 @@ export function isObject(val: unknown): val is object {
   return objToStringAlias.call(val) === '[object Object]'
 }
 
-// TODO Для разных случаев может потребоваться отдельный вариант `isSimpleValue` проверки.
-// Вероятно стоит сделать несколько исходя из конкретной практической потребности.
-
+// Boxed primitives (new String, etc.) are intentionally not handled — they
+// cannot originate from SimplEx expressions and are not worth the overhead.
 export function isSimpleValue(
   val: unknown
 ): val is number | string | boolean | bigint | null | undefined {
-  // TODO Разделять на функции удобно, но приходится делать лишние вызовы и
-  // дополнительные проверки в performance critical функции.
-  val = unbox(val)
 
   const type = typeof val
 
@@ -84,13 +61,13 @@ export function isSimpleValue(
 
 // --- Cast ---
 
+// Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
 export function castToBoolean(val: unknown): boolean {
-  return Boolean(unbox(val))
+  return Boolean(val)
 }
 
+// Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
 export function castToString(val: unknown): string {
-  val = unbox(val)
-
   const type = typeof val
 
   if (type === 'string') return val as string
@@ -117,10 +94,7 @@ export function ensureNumber(val: unknown): number | bigint {
     return val
   }
 
-  if (typeof val === 'object' && val instanceof Number) {
-    return ensureNumber(val.valueOf())
-  }
-
+  // Boxed primitives (new Number, etc.) are intentionally not handled — see isSimpleValue comment.
   throw new UnexpectedTypeError(['number', 'bigint'], val)
 }
 
@@ -132,8 +106,7 @@ export function ensureFunction(val: unknown): Function {
 export function ensureRelationalComparable(
   val: unknown
 ): number | string | bigint {
-  val = unbox(val)
-
+  // Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
   const type = typeof val
 
   if (

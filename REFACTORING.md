@@ -48,17 +48,9 @@ Resolved: `TraverseContext` interface threads the expression string through `tra
 
 ---
 
-### [ ] 5. `tools/index.ts:65` — Overhead of `unbox()` call in `isSimpleValue`
+### [x] 5. Remove `unbox()` from all internal calls
 
-```js
-// TODO Splitting into functions is convenient but causes extra calls and
-// additional checks in a performance-critical function.
-val = unbox(val)
-```
-
-**Problem:** `isSimpleValue` calls `unbox(val)` — an extra function call on the hot path (used in `defaultGetProperty` on every property access). For primitive values (the vast majority of cases), `unbox` is unnecessary work.
-
-**What to do:** Consider inline optimization: check `typeof val` before calling `unbox`, and only call `unbox` for boxed primitives (`new String(...)`, `new Number(...)`, etc.). Alternatively, create a specialized version without `unbox` for contexts where boxed primitives are impossible.
+Resolved: `unbox()` function deleted entirely. Boxed primitives (`new String`, `new Number`, `new Boolean`) cannot originate from SimplEx expressions, so the overhead was unnecessary. All internal callers (`isSimpleValue`, `castToBoolean`, `castToString`, `ensureNumber`, `ensureRelationalComparable`) no longer handle boxed primitives.
 
 ---
 
@@ -131,18 +123,12 @@ Cons of `...args`: rest parameters are traditionally slower in V8 (though the ga
 
 ---
 
-### [ ] 9. `tools/index.ts:59` — Specialized `isSimpleValue` variants for different cases
-
-```js
-// TODO Different cases may require a separate isSimpleValue check variant.
-// It's probably worth creating several based on specific practical needs.
-```
+### [ ] 9. Specialized `isSimpleValue` variants for different cases
 
 **Unclear:** Which specific "different cases" are meant?
 
 Currently `isSimpleValue` is used in only one place — `defaultGetProperty` for key validation. Possible variants:
-- **(a)** A version without `unbox` — for hot paths where boxed primitives are impossible.
-- **(b)** A version with a different set of types — e.g., including `symbol` (for Map keys) or excluding `bigint`.
-- **(c)** A version that additionally checks `NaN`, `Infinity`, `-0` and other edge-case numbers.
+- **(a)** A version with a different set of types — e.g., including `symbol` (for Map keys) or excluding `bigint`.
+- **(b)** A version that additionally checks `NaN`, `Infinity`, `-0` and other edge-case numbers.
 
 **Question to author:** Were there specific situations where the current `isSimpleValue` implementation was insufficient? Or is this a "just in case" note without a concrete case?
