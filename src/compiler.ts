@@ -42,12 +42,12 @@ interface ContextHelpers<Data, Globals> {
     globals: Globals,
     data: Data
   ): unknown
-  getProperty(this: void, obj: unknown, key: unknown): unknown
+  getProperty(this: void, obj: unknown, key: unknown, extension: boolean): unknown
   callFunction(this: void, fn: unknown, args: unknown[] | null): unknown
   pipe(
     this: void,
     head: unknown,
-    tail: { opt: boolean; next: (topic: unknown) => unknown }[]
+    tail: { opt: boolean; fwd: boolean; next: (topic: unknown) => unknown }[]
   ): unknown
 }
 
@@ -79,7 +79,19 @@ function defaultGetIdentifierValue(
   throw new Error(`Unknown identifier - ${identifierName}`)
 }
 
-function defaultGetProperty(obj: unknown, key: unknown): unknown {
+function defaultGetProperty(
+  obj: unknown,
+  key: unknown,
+  extension: boolean
+): unknown {
+  if (extension) {
+    throw new ExpressionError(
+      'Extension member expression (::) is reserved and not implemented',
+      '',
+      null
+    )
+  }
+
   if (obj == null) return undefined
 
   const typeofObj = typeof obj
@@ -118,10 +130,17 @@ function defaultCallFunction(fn: unknown, args: unknown[] | null): unknown {
 
 function defaultPipe(
   head: unknown,
-  tail: { opt: boolean; next: (topic: unknown) => unknown }[]
+  tail: { opt: boolean; fwd: boolean; next: (topic: unknown) => unknown }[]
 ): unknown {
   var result = head
   for (const it of tail) {
+    if (it.fwd) {
+      throw new ExpressionError(
+        'Pipe forward operator (|>) is reserved and not implemented',
+        '',
+        null
+      )
+    }
     if (it.opt && result == null) return result
     result = it.next(result)
   }

@@ -169,7 +169,10 @@ const visitors: {
       ? visit(property)
       : [codePart(JSON.stringify(property.name), property)]
 
-    return wrapCall(GEN.prop, node, visit(object), propertyPart)
+    const extension = !computed && node.extension === true
+    return wrapCall(GEN.prop, node, visit(object), propertyPart, [
+      codePart(String(extension), node)
+    ])
   },
 
   CallExpression: (node, visit) => {
@@ -233,9 +236,10 @@ const visitors: {
 
     const items = node.tail.map(t => {
       const opt = t.operator === '|?'
+      const fwd = t.operator === '|>'
       return [
         codePart(
-          `{opt:${opt},next:(${GEN.scope}=>topic=>{${GEN.scope}=[["${TOPIC_TOKEN}"],[topic],${GEN.scope}];return `,
+          `{opt:${opt},fwd:${fwd},next:(${GEN.scope}=>topic=>{${GEN.scope}=[["${TOPIC_TOKEN}"],[topic],${GEN.scope}];return `,
           t.expression
         ),
         ...visit(t.expression),

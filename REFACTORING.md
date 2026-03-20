@@ -50,8 +50,8 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
 - [x] **11. Test coverage balance**
 
-  Added dedicated tests for visitor edge cases (parameterless lambdas, string object keys, unknown node types, duplicate let names) and compiler customization points (custom logical operators, getProperty, callFunction, pipe, castToBoolean, mapRuntimeError edge cases). Reserved `::` extension syntax and `|>` pipe as todo tests pending concept design.
+  Added dedicated tests for visitor edge cases (parameterless lambdas, string object keys, unknown node types, duplicate let names) and compiler customization points (custom logical operators, getProperty, callFunction, pipe, castToBoolean, mapRuntimeError edge cases).
 
-- [ ] **12. Design `::` extension syntax and `|>` pipe operator**
+- [x] **12. Reserve `::` extension syntax and `|>` pipe operator**
 
-  Both `::` (extension member expression) and `|>` (pipeline operator) are parsed but lack a distinct semantic concept. Need to decide how they differ from `.` and `|` respectively, then implement and test.
+  Both `::` and `|>` now throw `ExpressionError` at runtime by default. The `extension` flag is passed through codegen to `getProperty`, and a `fwd` flag is passed to `pipe` for `|>` steps. Users can override `getProperty` and `pipe` via `CompileOptions` to implement custom semantics.

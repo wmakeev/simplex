@@ -167,8 +167,10 @@ suite('compile', () => {
       globals: {
         f: (a: number, b: number) => a + b
       },
-      callFunction: (fn, args) =>
-        args === null ? (fn as Function)() : `intercepted:${(fn as Function)(...args)}`
+      callFunction: (fn, args) => {
+        if (args === null) return (fn as Function)() as unknown
+        return `intercepted:${String((fn as Function)(...args))}`
+      }
     })
 
     assert.equal(fn(), 'intercepted:3')

@@ -171,6 +171,12 @@ suite('operators', () => {
     assert.throws(() => compile('"abc"["foo"]')(), {
       name: 'ExpressionError'
     })
+
+    // extension member expression throws by default
+    assert.throws(() => compile('a::b')({ a: { b: 1 } }), {
+      name: 'ExpressionError',
+      message: /Extension member expression.*not implemented/
+    })
   })
 
   test('index access', () => {
@@ -187,12 +193,16 @@ suite('operators', () => {
       12
     )
 
-    assert.equal(
-      compile('a |> b')({
-        a: 11,
-        b: 12
-      }),
-      12
+    assert.throws(
+      () =>
+        compile('a |> b')({
+          a: 11,
+          b: 12
+        }),
+      {
+        name: 'ExpressionError',
+        message: /Pipe forward operator.*not implemented/
+      }
     )
 
     assert.throws(() => {

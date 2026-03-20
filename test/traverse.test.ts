@@ -58,9 +58,12 @@ suite('traverse code', () => {
 
   test('property access', () => {
     assert.equal(getCode('a'), 'get(scope,"a")')
-    assert.equal(getCode('a.b'), 'prop(get(scope,"a"),"b")')
-    assert.equal(getCode('a.b["c"]'), 'prop(prop(get(scope,"a"),"b"),"c")')
-    assert.equal(getCode('a["c"]'), 'prop(get(scope,"a"),"c")')
+    assert.equal(getCode('a.b'), 'prop(get(scope,"a"),"b",false)')
+    assert.equal(
+      getCode('a.b["c"]'),
+      'prop(prop(get(scope,"a"),"b",false),"c",false)'
+    )
+    assert.equal(getCode('a["c"]'), 'prop(get(scope,"a"),"c",false)')
   })
 
   test('object', () => {
@@ -93,31 +96,34 @@ suite('traverse code', () => {
   test('call', () => {
     assert.equal(getCode('a()'), 'call(get(scope,"a"),null)')
 
-    assert.equal(getCode('a.b()'), 'call(prop(get(scope,"a"),"b"),null)')
+    assert.equal(
+      getCode('a.b()'),
+      'call(prop(get(scope,"a"),"b",false),null)'
+    )
 
     assert.equal(
       getCode('a.b()()'),
-      'call(call(prop(get(scope,"a"),"b"),null),null)'
+      'call(call(prop(get(scope,"a"),"b",false),null),null)'
     )
 
     assert.equal(
       getCode('a.b().c'),
-      'prop(call(prop(get(scope,"a"),"b"),null),"c")'
+      'prop(call(prop(get(scope,"a"),"b",false),null),"c",false)'
     )
 
     assert.equal(
       getCode('a.b()[1]'),
-      'prop(call(prop(get(scope,"a"),"b"),null),1)'
+      'prop(call(prop(get(scope,"a"),"b",false),null),1,false)'
     )
 
     assert.equal(
       getCode('a.b()[1].c'),
-      'prop(prop(call(prop(get(scope,"a"),"b"),null),1),"c")'
+      'prop(prop(call(prop(get(scope,"a"),"b",false),null),1,false),"c",false)'
     )
 
     assert.equal(
       getCode('a.b()["foo"]'),
-      'prop(call(prop(get(scope,"a"),"b"),null),"foo")'
+      'prop(call(prop(get(scope,"a"),"b",false),null),"foo",false)'
     )
 
     assert.equal(
@@ -146,32 +152,32 @@ suite('traverse code', () => {
   test('pipe', () => {
     assert.equal(
       getCode('1 | a'),
-      'pipe(1,[{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return get(scope,"a")})(scope)}])'
+      'pipe(1,[{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return get(scope,"a")})(scope)}])'
     )
 
     assert.equal(
       getCode('1 | %'),
-      'pipe(1,[{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return get(scope,"%")})(scope)}])'
+      'pipe(1,[{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return get(scope,"%")})(scope)}])'
     )
 
     assert.equal(
       getCode('1 |? a(%)'),
-      'pipe(1,[{opt:true,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"a"),[get(scope,"%")])})(scope)}])'
+      'pipe(1,[{opt:true,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"a"),[get(scope,"%")])})(scope)}])'
     )
 
     assert.equal(
       getCode('1 + a | b(%)'),
-      'pipe(bop["+"](1,get(scope,"a")),[{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"b"),[get(scope,"%")])})(scope)}])'
+      'pipe(bop["+"](1,get(scope,"a")),[{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"b"),[get(scope,"%")])})(scope)}])'
     )
 
     assert.equal(
       getCode('1 | a(%) | b(2, %)'),
-      'pipe(1,[{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"a"),[get(scope,"%")])})(scope)},{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"b"),[2,get(scope,"%")])})(scope)}])'
+      'pipe(1,[{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"a"),[get(scope,"%")])})(scope)},{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"b"),[2,get(scope,"%")])})(scope)}])'
     )
 
     assert.equal(
       getCode('null |? add2(%) | a * %'),
-      'pipe(null,[{opt:true,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"add2"),[get(scope,"%")])})(scope)},{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return bop["*"](get(scope,"a"),get(scope,"%"))})(scope)}])'
+      'pipe(null,[{opt:true,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return call(get(scope,"add2"),[get(scope,"%")])})(scope)},{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return bop["*"](get(scope,"a"),get(scope,"%"))})(scope)}])'
     )
   })
 
@@ -204,9 +210,17 @@ suite('traverse code', () => {
     )
   })
 
-  test('extension member expression', { todo: 'reserved, concept needs design' })
+  test('extension member expression', () => {
+    assert.equal(getCode('a::b'), 'prop(get(scope,"a"),"b",true)')
+    assert.equal(getCode('a.b'), 'prop(get(scope,"a"),"b",false)')
+  })
 
-  test('pipe |>', { todo: 'reserved, concept needs design' })
+  test('pipe |>', () => {
+    const fwdCode = getCode('a |> % + 1')
+    assert.ok(fwdCode.includes('fwd:true'))
+    const pipeCode = getCode('a | % + 1')
+    assert.ok(pipeCode.includes('fwd:false'))
+  })
 
   test('unknown node type', () => {
     const tree = parse('1') as ExpressionStatement
@@ -394,7 +408,7 @@ suite('traverse offsets', () => {
       [')', '-1+ 2 *4'],
       [',[', '( -1+ 2 *4) | add(%) | (if % > 2 then "1" else "2")'],
       [
-        '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
+        '{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         'add(%)'
       ],
       ['call(', 'add(%)'],
@@ -408,7 +422,7 @@ suite('traverse offsets', () => {
         '( -1+ 2 *4) | add(%) | (if % > 2 then "1" else "2")'
       ],
       [
-        '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
+        '{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         'if % > 2 then "1" else "2"'
       ],
       ['(bool(', 'if % > 2 then "1" else "2"'],
@@ -475,7 +489,7 @@ suite('traverse offsets', () => {
         '(\n  if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"\n)\n  | append(%, "-baz")\n  | % & c'
       ],
       [
-        '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
+        '{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         'append(%, "-baz")'
       ],
       ['call(', 'append(%, "-baz")'],
@@ -491,7 +505,7 @@ suite('traverse offsets', () => {
         '(\n  if -a > 1 + x then\n    "foo" & b\n  else\n    "bar"\n)\n  | append(%, "-baz")\n  | % & c'
       ],
       [
-        '{opt:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
+        '{opt:false,fwd:false,next:(scope=>topic=>{scope=[["%"],[topic],scope];return ',
         '% & c'
       ],
       ['bop["&"](', '% & c'],

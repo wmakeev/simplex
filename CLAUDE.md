@@ -78,7 +78,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 
 - **Dot:** `obj.prop`, `obj.nested.deep`
 - **Computed:** `obj["key"]`, `arr[0]`, `str[0]`
-- **Extension:** `obj::method` (MemberExpression with `extension: true`)
+- **Extension:** `obj::method` — **reserved**, throws `ExpressionError` by default. Override `getProperty` in `CompileOptions` to implement custom semantics.
 - Null-safe: `null.prop` → `undefined` (no error)
 - Strings: only numeric index access; `"str".foo` → error
 
@@ -110,7 +110,7 @@ Boolean coercion: falsy = `0`, `""`, `false`, `null`, `undefined`, `NaN`. Everyt
 
 - `|` — standard pipe: `5 | % + 1` → `6`
 - `|?` — optional pipe: short-circuits on `null`/`undefined` (returns them as-is)
-- `|>` — parsed but same mechanism as `|`
+- `|>` — **reserved**, throws `ExpressionError` by default. Override `pipe` in `CompileOptions` to implement custom semantics.
 
 Example: `1 | add(%, 2) | % * 4` → `12`
 
