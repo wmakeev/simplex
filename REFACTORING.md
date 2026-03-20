@@ -2,7 +2,7 @@
 
 ## Clear TODOs (detailed reformulation)
 
-### [ ] 1. `visitors.ts:139-140` — Validate object key type at parse time
+### [ ] 1. `visitors.ts:145-146` — Validate object key type at parse time
 
 ```js
 } else {
@@ -20,20 +20,9 @@
 
 ---
 
-### [ ] 2. `compiler.ts:62` — Detect `%` usage outside pipe at compile time
+### [x] 2. Detect `%` usage outside pipe at compile time
 
-> Implementation deferred. Proposed plan: [plans/002-topic-ref-compile-time.md](plans/002-topic-ref-compile-time.md)
-
-```js
-// TODO Should test on parse time?
-if (identifierName === TOPIC_TOKEN) {
-  throw new Error(`Topic reference "%" is unbound; ...`)
-}
-```
-
-**Problem:** The "% used outside pipe" error currently fires at runtime — when the compiled function is called, inside `defaultGetIdentifierValue`. This can be detected earlier.
-
-**What to do:** Detect `%` usage outside a pipe context during AST traversal (traverse/visitors) or parsing. If a `TopicExpression` appears outside a `PipeSequence`, throw a `CompileError` with location. This surfaces the error at `compile()` time rather than at invocation.
+Resolved: `TraverseContext.insidePipe` flag is set in the `PipeSequence` visitor (tail only). The `TopicReference` visitor throws `CompileError` with source location when `insidePipe` is false. The runtime check in `defaultGetIdentifierValue` was removed.
 
 ---
 
@@ -53,23 +42,9 @@ export const defaultLogicalOperators = {
 
 ---
 
-### [ ] 4. `compiler.ts:369` — Pass `expression` to CompileError via class instead of catch+assign
+### [x] 4. Pass `expression` to CompileError via context object instead of catch+assign
 
-```js
-try {
-  traverseResult = traverse(tree)
-} catch (err) {
-  // TODO Use class to access expression from visitors?
-  if (err instanceof CompileError) {
-    err.expression = expression
-  }
-  throw err
-}
-```
-
-**Problem:** Visitors during code generation have no access to the original expression string. When a visitor throws a `CompileError`, the `expression` property is patched after the fact in `compile()` via catch. This is a fragile pattern.
-
-**What to do:** Pass context (the original expression) to visitors via a wrapper class or context object so visitors can populate `expression` in errors themselves. This eliminates the need to catch errors just to set one field.
+Resolved: `TraverseContext` interface threads the expression string through `traverse()` → `visit()` → visitors. Visitors now set `expression` directly in `CompileError`. The try/catch workaround in `compile()` was removed.
 
 ---
 
@@ -89,7 +64,7 @@ val = unbox(val)
 
 ## Ambiguous / needs clarification TODOs
 
-### [ ] 6. `visitors.ts:136` — "look for ECMA spec" for object key serialization
+### [ ] 6. `visitors.ts:142` — "look for ECMA spec" for object key serialization
 
 ```js
 } else if (p.key.type === 'Literal') {
@@ -109,7 +84,7 @@ Possible interpretations:
 
 ---
 
-### [ ] 7. `visitors.ts:166` — Pass `computed` to `getProperty`
+### [ ] 7. `visitors.ts:172` — Pass `computed` to `getProperty`
 
 ```js
 // TODO Pass computed to prop?
@@ -131,7 +106,7 @@ Possible interpretations:
 
 ---
 
-### [ ] 8. `visitors.ts:279` — `...args` vs named parameters in lambdas
+### [ ] 8. `visitors.ts:297` — `...args` vs named parameters in lambdas
 
 ```js
 // TODO Is "...args" more performant?

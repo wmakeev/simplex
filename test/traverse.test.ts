@@ -12,7 +12,7 @@ import {
 
 const getCode = (expression: string) => {
   const tree = parse(expression) as ExpressionStatement
-  const { code } = traverse(tree)
+  const { code } = traverse(tree, expression)
   return code
 }
 
@@ -226,14 +226,15 @@ suite('traverse code', () => {
     const tree = parse('1') as ExpressionStatement
     // @ts-expect-error synthetic unknown node type
     tree.expression.type = 'Unknown'
-    assert.throws(() => traverse(tree), {
+    assert.throws(() => traverse(tree, '1'), {
       message: 'No handler for node type - Unknown'
     })
   })
 
   test('duplicate names in let', () => {
-    const tree = parse('let a = 1, a = 2, a') as ExpressionStatement
-    assert.throws(() => traverse(tree), err => {
+    const expression = 'let a = 1, a = 2, a'
+    const tree = parse(expression) as ExpressionStatement
+    assert.throws(() => traverse(tree, expression), err => {
       assert.ok(err instanceof CompileError)
       assert.match(err.message, /repeated/)
       return true
@@ -255,7 +256,7 @@ suite('traverse code', () => {
 
 const getTraverse = (expression: string) => {
   const tree = parse(expression) as ExpressionStatement
-  return traverse(tree)
+  return traverse(tree, expression)
 }
 
 const mapCode = (expression: string, traverseResult: VisitResult) => {

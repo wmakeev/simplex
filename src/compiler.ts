@@ -2,7 +2,7 @@
 
 // eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
-import { CompileError, ExpressionError, UnexpectedTypeError } from './errors.js'
+import { ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
   BinaryExpression,
   ExpressionStatement,
@@ -23,7 +23,6 @@ import {
 import { traverse } from './visitors.js'
 import type { SourceLocation, VisitResult } from './visitors.js'
 import {
-  TOPIC_TOKEN,
   GEN,
   SCOPE_NAMES,
   SCOPE_VALUES,
@@ -59,13 +58,6 @@ function defaultGetIdentifierValue(
   globals: Record<string, unknown>,
   data: Record<string, unknown>
 ): unknown {
-  // TODO Should test on parse time?
-  if (identifierName === TOPIC_TOKEN) {
-    throw new Error(
-      `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body.`
-    )
-  }
-
   if (identifierName === 'undefined') return undefined
 
   if (globals != null && Object.hasOwn(globals, identifierName)) {
@@ -361,17 +353,7 @@ export function compile<
   options?: CompileOptions<Data, Globals>
 ): (data?: Data) => unknown {
   const tree = parse(expression) as ExpressionStatement
-  let traverseResult
-
-  try {
-    traverseResult = traverse(tree)
-  } catch (err) {
-    // TODO Use class to access expression from visitors?
-    if (err instanceof CompileError) {
-      err.expression = expression
-    }
-    throw err
-  }
+  const traverseResult = traverse(tree, expression)
 
   const { code: expressionCode, offsets } = traverseResult
 

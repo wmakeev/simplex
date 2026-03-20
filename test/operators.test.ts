@@ -1,6 +1,7 @@
 import { test, suite } from 'node:test'
 import {
   compile,
+  CompileError,
   defaultBinaryOperators,
   defaultLogicalOperators
 } from '../src/index.js'
@@ -205,9 +206,34 @@ suite('operators', () => {
       }
     )
 
-    assert.throws(() => {
-      compile('%')()
-    }, /is unbound/)
+    assert.throws(
+      () => compile('%'),
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.match(err.message, /unbound/)
+        return true
+      }
+    )
+
+    // % in binary expression outside pipe
+    assert.throws(
+      () => compile('1 + %'),
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.match(err.message, /unbound/)
+        return true
+      }
+    )
+
+    // % in pipe head (head is NOT inside pipe context)
+    assert.throws(
+      () => compile('% | 1'),
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.match(err.message, /unbound/)
+        return true
+      }
+    )
 
     assert.throws(() => {
       compile('% => 2')

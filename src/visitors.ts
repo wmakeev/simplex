@@ -17,6 +17,11 @@ export interface VisitResult {
   offsets: SourceLocation[]
 }
 
+export interface TraverseContext {
+  expression: string
+  insidePipe: boolean
+}
+
 type Visit = (node: Expression) => VisitResult[]
 
 const codePart = (
@@ -79,7 +84,8 @@ const thunk = (
 const visitors: {
   [P in keyof ExpressionByType]: (
     node: ExpressionByType[P],
-    visit: Visit
+    visit: Visit,
+    context: TraverseContext
   ) => VisitResult[]
 } = {
   Literal: node => {
@@ -231,8 +237,11 @@ const visitors: {
     return parts
   },
 
-  PipeSequence: (node, visit) => {
+  PipeSequence: (node, visit, context) => {
     const headCode = visit(node.head)
+
+    const prevInsidePipe = context.insidePipe
+    context.insidePipe = true
 
     const items = node.tail.map(t => {
       const opt = t.operator === '|?'
@@ -247,6 +256,8 @@ const visitors: {
       ]
     })
 
+    context.insidePipe = prevInsidePipe
+
     return [
       codePart(`${GEN.pipe}(`, node),
       ...headCode,
@@ -256,7 +267,14 @@ const visitors: {
     ]
   },
 
-  TopicReference: node => {
+  TopicReference: (node, _visit, context) => {
+    if (!context.insidePipe) {
+      throw new CompileError(
+        `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body`,
+        context.expression,
+        node.location
+      )
+    }
     const parts: VisitResult[] = [
       codePart(`${GEN.get}(${GEN.scope},"${TOPIC_TOKEN}")`, node)
     ]
@@ -306,14 +324,14 @@ const visitors: {
     }
   },
 
-  LetExpression: (node, visit) => {
+  LetExpression: (node, visit, context) => {
     const declarationsNamesSet = new Set()
 
     for (const d of node.declarations) {
       if (declarationsNamesSet.has(d.id.name)) {
         throw new CompileError(
           `"${d.id.name}" name defined inside let expression was repeated`,
-          '',
+          context.expression,
           d.id.location
         )
       }
@@ -355,10 +373,11 @@ const visitors: {
   }
 }
 
-const visit: (
+const visit = (
   node: Expression,
-  parentNode: Expression | null
-) => VisitResult[] = node => {
+  _parentNode: Expression | null,
+  context: TraverseContext
+): VisitResult[] => {
   const nodeTypeVisitor = visitors[node.type]
 
   if (nodeTypeVisitor === undefined) {
@@ -366,13 +385,17 @@ const visit: (
   }
 
   const innerVisit: Visit = (childNode: Expression) => {
-    return visit(childNode, node)
+    return visit(childNode, node, context)
   }
 
   // @ts-expect-error skip node is never
-  return nodeTypeVisitor(node, innerVisit)
+  return nodeTypeVisitor(node, innerVisit, context)
 }
 
-export function traverse(tree: ExpressionStatement): VisitResult {
-  return combineVisitResults(visit(tree.expression, null))
+export function traverse(
+  tree: ExpressionStatement,
+  expression: string
+): VisitResult {
+  const context: TraverseContext = { expression, insidePipe: false }
+  return combineVisitResults(visit(tree.expression, null, context))
 }
