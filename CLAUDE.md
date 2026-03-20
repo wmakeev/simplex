@@ -196,11 +196,13 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - Node.js built-in test runner (`node:test`) with `assert`
 - Tests run from compiled JS in `build/` (compile first, then run)
 - All documentation and project `.md` files must be written in English
+- Task lists in `.md` files must use `[ ]` / `[x]` checkbox format for easy tracking
 
 ## Project Files
 
-- **`REFACTORING.md`** — Prioritized refactoring opportunities (HIGH/MEDIUM/LOW). Consult before refactoring tasks.
+- **`REFACTORING.md`** — Remaining TODO comments in the codebase with descriptions and line references.
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
+- **`plans/`** — Saved implementation plans for deferred tasks (numbered to match task IDs in REFACTORING.md/TODO.md).
 - **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
 ## Workflow
