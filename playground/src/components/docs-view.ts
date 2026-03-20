@@ -24,15 +24,15 @@ export function DocsView() {
             <tr><th>Prec</th><th>Operators</th><th>Notes</th></tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td><code class="docs-code">+x</code> <code class="docs-code">-x</code> <code class="docs-code">not x</code> <code class="docs-code">typeof x</code></td><td>Unary</td></tr>
+            <tr><td>1</td><td><code class="docs-code">+x</code> <code class="docs-code">-x</code> <code class="docs-code">not x</code> <code class="docs-code">typeof x</code></td><td>Unary. <code class="docs-code">not</code> returns boolean</td></tr>
             <tr><td>2</td><td><code class="docs-code">^</code></td><td>Exponentiation, right-associative</td></tr>
             <tr><td>3</td><td><code class="docs-code">*</code> <code class="docs-code">/</code> <code class="docs-code">mod</code></td><td>Multiplicative</td></tr>
             <tr><td>4</td><td><code class="docs-code">+</code> <code class="docs-code">-</code></td><td>Additive (numbers only)</td></tr>
-            <tr><td>5</td><td><code class="docs-code">${'&'}</code></td><td>String concatenation</td></tr>
-            <tr><td>6</td><td><code class="docs-code">${'<'}</code> <code class="docs-code">${'<'}=</code> <code class="docs-code">${'>'}</code> <code class="docs-code">${'>'}=</code> <code class="docs-code">in</code></td><td>Relational</td></tr>
+            <tr><td>5</td><td><code class="docs-code">${'&'}</code></td><td>String concatenation (coerces to string)</td></tr>
+            <tr><td>6</td><td><code class="docs-code">${'<'}</code> <code class="docs-code">${'<'}=</code> <code class="docs-code">${'>'}</code> <code class="docs-code">${'>'}=</code> <code class="docs-code">in</code></td><td>Relational. <code class="docs-code">in</code> checks key membership</td></tr>
             <tr><td>7</td><td><code class="docs-code">==</code> <code class="docs-code">!=</code></td><td>Equality (strict)</td></tr>
-            <tr><td>8</td><td><code class="docs-code">and</code> <code class="docs-code">&&</code></td><td>Logical AND (short-circuit)</td></tr>
-            <tr><td>9</td><td><code class="docs-code">or</code> <code class="docs-code">||</code></td><td>Logical OR (short-circuit)</td></tr>
+            <tr><td>8</td><td><code class="docs-code">and</code> <code class="docs-code">&&</code></td><td>Logical AND (short-circuit, returns boolean)</td></tr>
+            <tr><td>9</td><td><code class="docs-code">or</code> <code class="docs-code">||</code></td><td>Logical OR (short-circuit, returns boolean)</td></tr>
             <tr><td>10</td><td><code class="docs-code">??</code></td><td>Nullish coalescing</td></tr>
             <tr><td>11</td><td><code class="docs-code">|</code> <code class="docs-code">|?</code> <code class="docs-code">|${'>'}</code></td><td>Pipe operators</td></tr>
           </tbody>
@@ -52,8 +52,9 @@ export function DocsView() {
         <ul>
           <li><strong>Dot:</strong> <code class="docs-code">obj.prop</code>, <code class="docs-code">obj.nested.deep</code></li>
           <li><strong>Computed:</strong> <code class="docs-code">obj["key"]</code>, <code class="docs-code">arr[0]</code>, <code class="docs-code">str[0]</code></li>
-          <li><strong>Extension:</strong> <code class="docs-code">obj::method</code></li>
+          <li><strong>Extension:</strong> <code class="docs-code">obj::method</code> — <em>reserved</em>, throws error by default. Override <code class="docs-code">getProperty</code> in compile options to implement.</li>
           <li>Null-safe: <code class="docs-code">null.prop</code> → <code class="docs-code">undefined</code></li>
+          <li>Strings: only numeric index access; <code class="docs-code">"str".foo</code> → error</li>
         </ul>
       </div>
 
@@ -87,7 +88,7 @@ if condition then consequent              // else → undefined</code></pre>
         <ul>
           <li><code class="docs-code">|</code> — standard pipe: <code class="docs-code">5 | % + 1</code> → <code class="docs-code">6</code></li>
           <li><code class="docs-code">|?</code> — optional pipe: short-circuits on <code class="docs-code">null</code>/<code class="docs-code">undefined</code></li>
-          <li><code class="docs-code">|${'>'}</code> — same mechanism as <code class="docs-code">|</code></li>
+          <li><code class="docs-code">|${'>'}</code> — <em>reserved</em>, throws error by default. Override <code class="docs-code">pipe</code> in compile options to implement.</li>
         </ul>
         <pre class="docs-code-block"><code>1 | add(%, 2) | % * 4    // → 12</code></pre>
       </div>
@@ -114,6 +115,11 @@ let a = 1, b = a + 1, a + b   // → 3 (sequential binding)</code></pre>
           <li>Single-line: <code class="docs-code">// comment</code></li>
           <li>Multi-line: <code class="docs-code">/* comment */</code></li>
         </ul>
+      </div>
+
+      <div class="docs-section">
+        <h3>Reserved Words</h3>
+        <p><code class="docs-code">if</code>, <code class="docs-code">then</code>, <code class="docs-code">else</code>, <code class="docs-code">and</code>, <code class="docs-code">or</code>, <code class="docs-code">not</code>, <code class="docs-code">in</code>, <code class="docs-code">mod</code>, <code class="docs-code">typeof</code>, <code class="docs-code">let</code>, <code class="docs-code">true</code>, <code class="docs-code">false</code>, <code class="docs-code">null</code> — cannot be used as identifiers.</p>
       </div>
 
       <div class="docs-section">
