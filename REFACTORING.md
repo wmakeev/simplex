@@ -48,6 +48,10 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   10 TODO comments across `compiler.ts`, `visitors.ts`, and `tools/index.ts` covering parse-time validation, computed properties, and performance improvements.
 
-- [ ] **11. Test coverage balance**
+- [x] **11. Test coverage balance**
 
-  `parser.test.ts` is 2457 lines (~55% of all test code). Visitor and compiler behavior could use expanded dedicated tests.
+  Added dedicated tests for visitor edge cases (parameterless lambdas, string object keys, unknown node types, duplicate let names) and compiler customization points (custom logical operators, getProperty, callFunction, pipe, castToBoolean, mapRuntimeError edge cases). Reserved `::` extension syntax and `|>` pipe as todo tests pending concept design.
+
+- [ ] **12. Design `::` extension syntax and `|>` pipe operator**
+
+  Both `::` (extension member expression) and `|>` (pipeline operator) are parsed but lack a distinct semantic concept. Need to decide how they differ from `.` and `|` respectively, then implement and test.

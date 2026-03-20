@@ -3,6 +3,7 @@ import { parse } from '../parser/index.js'
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
 import {
+  CompileError,
   ExpressionStatement,
   Location,
   traverse,
@@ -188,6 +189,41 @@ suite('traverse code', () => {
       getCode('a => (b) => a + b + c'),
       '((scope,params)=>function(p0){scope=[params,[p0],scope];return ((scope,params)=>function(p0){scope=[params,[p0],scope];return bop["+"](bop["+"](get(scope,"a"),get(scope,"b")),get(scope,"c"))})(scope,["b"])})(scope,["a"])'
     )
+  })
+
+  test('lambda without parameters', () => {
+    assert.equal(getCode('() => 42'), '(()=>42)')
+    assert.equal(getCode('() => a + b'), '(()=>bop["+"](get(scope,"a"),get(scope,"b")))')
+  })
+
+  test('object with string key', () => {
+    assert.equal(getCode('{"a-b": 1}'), '{"a-b":1}')
+    assert.equal(
+      getCode('{"foo bar": x, b: 2}'),
+      '{"foo bar":get(scope,"x"),b:2}'
+    )
+  })
+
+  test('extension member expression', { todo: 'reserved, concept needs design' })
+
+  test('pipe |>', { todo: 'reserved, concept needs design' })
+
+  test('unknown node type', () => {
+    const tree = parse('1') as ExpressionStatement
+    // @ts-expect-error synthetic unknown node type
+    tree.expression.type = 'Unknown'
+    assert.throws(() => traverse(tree), {
+      message: 'No handler for node type - Unknown'
+    })
+  })
+
+  test('duplicate names in let', () => {
+    const tree = parse('let a = 1, a = 2, a') as ExpressionStatement
+    assert.throws(() => traverse(tree), err => {
+      assert.ok(err instanceof CompileError)
+      assert.match(err.message, /repeated/)
+      return true
+    })
   })
 
   test('let', () => {

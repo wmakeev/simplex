@@ -2,8 +2,11 @@ import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
 import {
   compile,
+  CompileError,
   defaultBinaryOperators,
-  defaultUnaryOperators
+  defaultLogicalOperators,
+  defaultUnaryOperators,
+  ExpressionError
 } from '../src/index.js'
 
 suite('compile', () => {
@@ -127,5 +130,108 @@ suite('compile', () => {
     })
 
     assert.equal(fn({ a: 5, b: 10 }), (-5 + 1) * 10 - 2)
+  })
+
+  test('CompileError with expression', () => {
+    assert.throws(
+      () => compile('let a = 1, a = 2, a'),
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.equal(err.expression, 'let a = 1, a = 2, a')
+        return true
+      }
+    )
+  })
+
+  test('custom logical operator', () => {
+    const fn = compile('a and b', {
+      logicalOperators: {
+        ...defaultLogicalOperators,
+        'and': (left, right) => [left(), right()]
+      }
+    })
+
+    assert.deepEqual(fn({ a: 1, b: 2 }), [1, 2])
+  })
+
+  test('custom getProperty', () => {
+    const fn = compile('a.b', {
+      getProperty: (_obj, key) => `custom:${String(key)}`
+    })
+
+    assert.equal(fn({ a: { b: 'real' } }), 'custom:b')
+  })
+
+  test('custom callFunction', () => {
+    const fn = compile('f(1, 2)', {
+      globals: {
+        f: (a: number, b: number) => a + b
+      },
+      callFunction: (fn, args) =>
+        args === null ? (fn as Function)() : `intercepted:${(fn as Function)(...args)}`
+    })
+
+    assert.equal(fn(), 'intercepted:3')
+  })
+
+  test('custom pipe', () => {
+    const fn = compile('1 | % + 1', {
+      pipe: (head, tail) => {
+        let result = head
+        for (const t of tail) {
+          result = `piped:${t.next(result)}`
+        }
+        return result
+      }
+    })
+
+    assert.equal(fn(), 'piped:2')
+  })
+
+  test('custom castToBoolean', () => {
+    const fn = compile('if a then "yes" else "no"', {
+      castToBoolean: val => val === 'truthy'
+    })
+
+    assert.equal(fn({ a: 'truthy' }), 'yes')
+    assert.equal(fn({ a: true }), 'no')
+  })
+
+  test('mapRuntimeError: offset beyond code range', () => {
+    // When an error comes from a global function, it should still
+    // propagate as ExpressionError if the stack frame matches eval
+    const fn = compile('func()', {
+      globals: {
+        func: () => {
+          throw new Error('boom')
+        }
+      }
+    })
+
+    assert.throws(() => fn(), err => {
+      assert.ok(err instanceof ExpressionError)
+      assert.equal(err.message, 'boom')
+      assert.equal(err.expression, 'func()')
+      return true
+    })
+  })
+
+  test('mapRuntimeError: adjustedCol < 0 returns original error', () => {
+    // Create a function that throws an error with a crafted stack trace
+    // where the column points into the bootstrap code area (col < bootstrapCodeHeadLen)
+    const fn = compile('func()', {
+      globals: {
+        func: () => {
+          const err = new Error('bootstrap area')
+          err.stack =
+            'Error: bootstrap area\n    at eval (<anonymous>:3:1)\n    at Object.<anonymous> (/foo.js:1:1)'
+          throw err
+        }
+      }
+    })
+
+    assert.throws(() => fn(), {
+      message: 'bootstrap area'
+    })
   })
 })
