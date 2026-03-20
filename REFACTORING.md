@@ -22,6 +22,8 @@
 
 ### [ ] 2. `compiler.ts:62` — Detect `%` usage outside pipe at compile time
 
+> Implementation deferred. Proposed plan: [plans/002-topic-ref-compile-time.md](plans/002-topic-ref-compile-time.md)
+
 ```js
 // TODO Should test on parse time?
 if (identifierName === TOPIC_TOKEN) {
@@ -33,11 +35,9 @@ if (identifierName === TOPIC_TOKEN) {
 
 **What to do:** Detect `%` usage outside a pipe context during AST traversal (traverse/visitors) or parsing. If a `TopicExpression` appears outside a `PipeSequence`, throw a `CompileError` with location. This surfaces the error at `compile()` time rather than at invocation.
 
-> Implementation deferred. Proposed plan: [plans/002-topic-ref-compile-time.md](plans/002-topic-ref-compile-time.md)
-
 ---
 
-### [ ] 3. `compiler.ts:256` — `castToBoolean` in logical operators ignores compile options
+### [x] 3. `castToBoolean` in logical operators ignores compile options
 
 ```js
 export const defaultLogicalOperators = {
@@ -53,7 +53,7 @@ export const defaultLogicalOperators = {
 
 ---
 
-### [ ] 4. `compiler.ts:365` — Pass `expression` to CompileError via class instead of catch+assign
+### [ ] 4. `compiler.ts:369` — Pass `expression` to CompileError via class instead of catch+assign
 
 ```js
 try {

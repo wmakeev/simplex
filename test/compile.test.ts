@@ -199,6 +199,43 @@ suite('compile', () => {
     assert.equal(fn({ a: true }), 'no')
   })
 
+  test('custom castToBoolean affects logical operators', () => {
+    const opts = { castToBoolean: (val: unknown) => val === 'truthy' }
+
+    const fnAnd = compile('a and b', opts)
+    assert.equal(fnAnd({ a: 'truthy', b: 'truthy' }), true)
+    assert.equal(fnAnd({ a: 'truthy', b: true }), false)
+    assert.equal(fnAnd({ a: true, b: 'truthy' }), false)
+
+    const fnOr = compile('a or b', opts)
+    assert.equal(fnOr({ a: 'truthy', b: false }), true)
+    assert.equal(fnOr({ a: false, b: 'truthy' }), true)
+    assert.equal(fnOr({ a: true, b: false }), false)
+  })
+
+  test('custom castToBoolean affects not operator', () => {
+    const fn = compile('not a', {
+      castToBoolean: (val: unknown) => val === 'truthy'
+    })
+
+    assert.equal(fn({ a: 'truthy' }), false)
+    assert.equal(fn({ a: true }), true)
+  })
+
+  test('custom castToBoolean + custom logicalOperators', () => {
+    const fn = compile('a and b', {
+      castToBoolean: (val: unknown) => val === 'truthy',
+      logicalOperators: {
+        'and': (a, b) => [a(), b()],
+        '&&': (a, b) => [a(), b()],
+        'or': (a, b) => a() ?? b(),
+        '||': (a, b) => a() ?? b()
+      }
+    })
+
+    assert.deepEqual(fn({ a: 1, b: 2 }), [1, 2])
+  })
+
   test('mapRuntimeError: offset beyond code range', () => {
     // When an error comes from a global function, it should still
     // propagate as ExpressionError if the stack frame matches eval

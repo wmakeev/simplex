@@ -164,12 +164,19 @@ type ExpressionUnaryOperators = Record<
   (val: unknown) => unknown
 >
 
-export const defaultUnaryOperators: ExpressionUnaryOperators = {
-  '+': val => ensureNumber(val),
-  '-': val => -ensureNumber(val),
-  'not': val => !castToBoolean(val),
-  'typeof': val => typeof val
+export function createDefaultUnaryOperators(
+  bool: (val: unknown) => boolean
+): ExpressionUnaryOperators {
+  return {
+    '+': val => ensureNumber(val),
+    '-': val => -ensureNumber(val),
+    'not': val => !bool(val),
+    'typeof': val => typeof val
+  }
 }
+
+export const defaultUnaryOperators: ExpressionUnaryOperators =
+  createDefaultUnaryOperators(castToBoolean)
 
 type ExpressionBinaryOperators = Record<
   BinaryExpression['operator'],
@@ -246,19 +253,16 @@ type ExpressionLogicalOperators = Record<
   LogicalOperatorFunction
 >
 
-const logicalAndOperatorFn: LogicalOperatorFunction = (a, b) =>
-  castToBoolean(a()) && castToBoolean(b())
-
-const logicalOrOperatorFn: LogicalOperatorFunction = (a, b) =>
-  castToBoolean(a()) || castToBoolean(b())
-
-export const defaultLogicalOperators: ExpressionLogicalOperators = {
-  // TODO Use castToBoolean from compile options?
-  'and': logicalAndOperatorFn,
-  '&&': logicalAndOperatorFn,
-  'or': logicalOrOperatorFn,
-  '||': logicalOrOperatorFn
+export function createDefaultLogicalOperators(
+  bool: (val: unknown) => boolean
+): ExpressionLogicalOperators {
+  const and: LogicalOperatorFunction = (a, b) => bool(a()) && bool(b())
+  const or: LogicalOperatorFunction = (a, b) => bool(a()) || bool(b())
+  return { 'and': and, '&&': and, 'or': or, '||': or }
 }
+
+export const defaultLogicalOperators: ExpressionLogicalOperators =
+  createDefaultLogicalOperators(castToBoolean)
 
 interface ExpressionOperators {
   unaryOperators: Record<UnaryExpression['operator'], (val: unknown) => unknown>
@@ -373,13 +377,19 @@ export function compile<
 
   const functionCode = bootstrapCodeHead + expressionCode + '}'
 
+  const resolvedBool = options?.castToBoolean ?? castToBoolean
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defaultOptions: CompileOptions<Data, Globals> = {
     ...defaultContextHelpers,
     ...{
-      unaryOperators: defaultUnaryOperators,
+      unaryOperators: options?.castToBoolean
+        ? createDefaultUnaryOperators(resolvedBool)
+        : defaultUnaryOperators,
       binaryOperators: defaultBinaryOperators,
-      logicalOperators: defaultLogicalOperators
+      logicalOperators: options?.castToBoolean
+        ? createDefaultLogicalOperators(resolvedBool)
+        : defaultLogicalOperators
     },
     ...(options as any)
   }
