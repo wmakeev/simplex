@@ -6,17 +6,17 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
 - [x] **1. Extract comma-separated list builder (`visitors.ts`)**
 
-  **Lines 110-276.** ObjectExpression, ArrayExpression, CallExpression, and PipeSequence all repeat a pattern of `flatMap` over children followed by popping the trailing comma. Extract a shared helper that builds comma-separated output segments.
+  Extracted a shared helper that builds comma-separated output segments, replacing repeated `flatMap` + trailing comma pop patterns in ObjectExpression, ArrayExpression, CallExpression, and PipeSequence.
 
 - [x] **2. Extract magic strings to constants (`compiler.ts`, `visitors.ts`)**
 
-  Bootstrap variable names (`"bool"`, `"bop"`, `"lop"`, `"uop"`, `"get"`, `"call"`, `"pipe"`), scope index patterns (`_scope[0]`, `_scope[1]`, `_scope[2]`), and the topic token `"%"` are hardcoded across `compiler.ts` (lines 278-307) and `visitors.ts` (lines 9, 253, 279). Centralize into a shared constants module.
+  Centralized bootstrap variable names and the topic token into a shared constants module.
 
 ## MEDIUM
 
-- [x] **3. Simplify operator definitions (`compiler.ts` lines 131-228)**
+- [x] **3. Simplify operator definitions (`compiler.ts`)**
 
-  16 binary operators repeat `ensureNumber()` guards and identical `// eslint-disable` / `@ts-expect-error` comments. A factory function would cut the duplication significantly. Additionally, `'and'`/`'&&'` and `'or'`/`'||'` are exact duplicates (lines 240-252).
+  Reduced duplication in binary operator definitions with a factory function. Eliminated duplicate `'and'`/`'&&'` and `'or'`/`'||'` entries.
 
 - [x] **4. Consolidate small utility files (`src/tools/`)**
 
@@ -26,7 +26,7 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   Repeated patterns for wrapping visitor output in `uop[]()`, `bop[]()`, `lop[]()`, and `call()` calls. Could be extracted into visitor builder utilities.
 
-- [x] **6. Reduce error class boilerplate (`errors.ts` lines 4-47)**
+- [x] **6. Reduce error class boilerplate (`errors.ts`)**
 
   `ExpressionError` and `CompileError` have nearly identical constructors (name assignment, message formatting, location handling). Extract a shared base class or factory.
 
@@ -34,9 +34,9 @@ Categorized list of refactoring opportunities for the simplex-lang codebase.
 
   Extracted `mapRuntimeError()` function with early returns, replaced `assert` calls with graceful bail-outs, simplified the catch block to a single line.
 
-- [ ] **8. Extract context helpers (`compiler.ts` lines 58-132)**
+- [x] **8. Extract context helpers (`compiler.ts`)**
 
-  The large `defaultContextHelpers` object mixes type checking, error throwing, and complex logic. Extract individual helper functions to improve readability and testability.
+  Extracted `defaultGetIdentifierValue`, `defaultGetProperty`, `defaultCallFunction`, and `defaultPipe` as standalone functions. The `defaultContextHelpers` object is now a clean mapping.
 
 ## LOW
 

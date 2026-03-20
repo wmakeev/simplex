@@ -54,80 +54,90 @@ interface ContextHelpers<Data, Globals> {
 var hasOwn = Object.hasOwn
 var ERROR_STACK_REGEX = /<anonymous>:(?<row>\d+):(?<col>\d+)/g
 
+function defaultGetIdentifierValue(
+  identifierName: string,
+  globals: Record<string, unknown>,
+  data: Record<string, unknown>
+): unknown {
+  // TODO Should test on parse time?
+  if (identifierName === TOPIC_TOKEN) {
+    throw new Error(
+      `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body.`
+    )
+  }
+
+  if (identifierName === 'undefined') return undefined
+
+  if (globals != null && Object.hasOwn(globals, identifierName)) {
+    return globals[identifierName]
+  }
+
+  if (data != null && Object.hasOwn(data, identifierName)) {
+    return data[identifierName]
+  }
+
+  throw new Error(`Unknown identifier - ${identifierName}`)
+}
+
+function defaultGetProperty(obj: unknown, key: unknown): unknown {
+  if (obj == null) return undefined
+
+  const typeofObj = typeof obj
+
+  if (typeofObj === 'string' && typeof key === 'number') {
+    return (obj as string)[key]
+  }
+
+  if (typeofObj !== 'object') {
+    throw new UnexpectedTypeError(['object'], obj)
+  }
+
+  if (isSimpleValue(key) === false) {
+    throw new UnexpectedTypeError(['simple type object key'], key)
+  }
+
+  if (hasOwn(obj, key as any)) {
+    // @ts-expect-error Type cannot be used as an index type
+    return obj[key] as unknown
+  }
+
+  if (obj instanceof Map) {
+    return obj.get(key) as unknown
+  }
+
+  return undefined
+}
+
+function defaultCallFunction(fn: unknown, args: unknown[] | null): unknown {
+  return fn == null
+    ? undefined
+    : ((args === null
+        ? ensureFunction(fn)()
+        : ensureFunction(fn).apply(null, args)) as unknown)
+}
+
+function defaultPipe(
+  head: unknown,
+  tail: { opt: boolean; next: (topic: unknown) => unknown }[]
+): unknown {
+  var result = head
+  for (const it of tail) {
+    if (it.opt && result == null) return result
+    result = it.next(result)
+  }
+  return result
+}
+
 const defaultContextHelpers: ContextHelpers<
   Record<string, unknown>,
   Record<string, unknown>
 > = {
   castToBoolean,
-
   ensureFunction,
-
-  getIdentifierValue: (identifierName, globals, data) => {
-    // TODO Should test on parse time?
-    if (identifierName === TOPIC_TOKEN) {
-      throw new Error(
-        `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body.`
-      )
-    }
-
-    if (identifierName === 'undefined') return undefined
-
-    if (globals != null && Object.hasOwn(globals, identifierName)) {
-      return globals[identifierName]
-    }
-
-    if (data != null && Object.hasOwn(data, identifierName)) {
-      return data[identifierName]
-    }
-
-    throw new Error(`Unknown identifier - ${identifierName}`)
-  },
-
-  getProperty(obj, key) {
-    if (obj == null) return undefined
-
-    const typeofObj = typeof obj
-
-    if (typeofObj === 'string' && typeof key === 'number') {
-      return (obj as string)[key]
-    }
-
-    if (typeofObj !== 'object') {
-      throw new UnexpectedTypeError(['object'], obj)
-    }
-
-    if (isSimpleValue(key) === false) {
-      throw new UnexpectedTypeError(['simple type object key'], key)
-    }
-
-    if (hasOwn(obj, key as any)) {
-      // @ts-expect-error Type cannot be used as an index type
-      return obj[key] as unknown
-    }
-
-    if (obj instanceof Map) {
-      return obj.get(key) as unknown
-    }
-
-    return undefined
-  },
-
-  callFunction(fn, args) {
-    return fn == null
-      ? undefined
-      : ((args === null
-          ? ensureFunction(fn)()
-          : ensureFunction(fn).apply(null, args)) as unknown)
-  },
-
-  pipe(head, tail) {
-    var result = head
-    for (const it of tail) {
-      if (it.opt && result == null) return result
-      result = it.next(result)
-    }
-    return result
-  }
+  getIdentifierValue: defaultGetIdentifierValue,
+  getProperty: defaultGetProperty,
+  callFunction: defaultCallFunction,
+  pipe: defaultPipe
 }
 
 type ExpressionUnaryOperators = Record<
