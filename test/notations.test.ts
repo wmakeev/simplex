@@ -13,11 +13,61 @@ suite('notations', () => {
     assert.deepEqual(compile("'\\\n456'")(), '456')
     assert.deepEqual(compile('"\\b\\f\\n\\r\\t\\v"')(), '\b\f\n\r\t\x0B')
     assert.deepEqual(compile('"\\xFF"')(), '\xFF')
+
+    // Null character
+    assert.deepEqual(compile('"\\0"')(), '\0')
+
+    // Backslash escape
+    assert.deepEqual(compile('"\\\\text"')(), '\\text')
+
+    // Quote escapes
+    assert.deepEqual(compile("'it\\'s'")(), "it's")
+    assert.deepEqual(compile('"say \\"hi\\""')(), 'say "hi"')
+
+    // Hex escapes
+    assert.deepEqual(compile('"\\x41"')(), 'A')
+    assert.deepEqual(compile('"\\x00"')(), '\x00')
+
+    // NonEscapeCharacter (backslash + non-special char → char itself)
+    assert.deepEqual(compile('"\\q"')(), 'q')
+    assert.deepEqual(compile('"\\z"')(), 'z')
+
+    // Multiple unicode escapes
+    assert.deepEqual(compile('"\\u0041\\u0042"')(), 'AB')
+
+    // Mixed escapes
+    assert.deepEqual(compile('"\\n\\u0041\\xFF"')(), '\nA\xFF')
   })
 
   test('unicode', () => {
-    assert.deepEqual(compile('\u01C5')({ '\u01C5': 42 }), 42)
     assert.deepEqual(compile('"\\u0041"')(), 'A')
+
+    // Unicode identifier categories
+    assert.deepEqual(compile('\u01C5')({ '\u01C5': 42 }), 42) // Lt (titlecase)
+    assert.deepEqual(compile('привет')({ привет: 1 }), 1) // Ll (lowercase)
+    assert.deepEqual(compile('Σ')({ Σ: 2 }), 2) // Lu (uppercase)
+    assert.deepEqual(compile('x\u02B0')({ 'x\u02B0': 3 }), 3) // Lm (modifier) in part
+    assert.deepEqual(compile('中')({ 中: 4 }), 4) // Lo (other letter)
+    assert.deepEqual(compile('\u2160')({ '\u2160': 5 }), 5) // Nl (letter number, Ⅰ)
+    assert.deepEqual(compile('e\u0301')({ 'e\u0301': 6 }), 6) // Mn (combining mark) in part
+    assert.deepEqual(compile('x\u0660')({ 'x\u0660': 7 }), 7) // Nd (digit) in part
+    assert.deepEqual(compile('x\uFE33y')({ 'x\uFE33y': 8 }), 8) // Pc (connector) in part
+    assert.deepEqual(compile('a\u200Cb')({ 'a\u200Cb': 9 }), 9) // ZWNJ in part
+    assert.deepEqual(compile('a\u200Db')({ 'a\u200Db': 10 }), 10) // ZWJ in part
+    assert.deepEqual(compile('$x')({ $x: 11 }), 11) // $ as IdentifierStart
+  })
+
+  test('unicode whitespace', () => {
+    assert.deepEqual(compile('\u20001 + 2')(), 3) // En Quad
+    assert.deepEqual(compile('1\u2003+\u20032')(), 3) // Em Space
+    assert.deepEqual(compile('\u30001')(), 1) // Ideographic Space
+    assert.deepEqual(compile('1\u202F+\u202F2')(), 3) // Narrow No-Break Space
+    assert.deepEqual(compile('1\u205F+ 2')(), 3) // Medium Mathematical Space
+  })
+
+  test('line separators', () => {
+    assert.deepEqual(compile('1 +\u20282')(), 3) // Line Separator
+    assert.deepEqual(compile('1 +\u20292')(), 3) // Paragraph Separator
   })
 
   test('number', () => {

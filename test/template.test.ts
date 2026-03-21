@@ -122,6 +122,14 @@ suite('template literal', () => {
     assert.equal(compile('`\\u0041`')(), 'A')
   })
 
+  test('template escape sequences', () => {
+    assert.equal(compile('`\\0`')(), '\0') // null character
+    assert.equal(compile('`\\\\path`')(), '\\path') // backslash
+    assert.equal(compile('`\\q`')(), 'q') // NonEscapeCharacter
+    assert.equal(compile('`\\n\\u0041`')(), '\nA') // mixed escapes
+    assert.equal(compile('`\\xFF`')(), '\xFF') // hex escape
+  })
+
   test('lone dollar sign is literal text', () => {
     assert.equal(compile('`cost: $5`')(), 'cost: $5')
   })
