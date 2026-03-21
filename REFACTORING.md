@@ -95,15 +95,3 @@ Possible interpretations:
 - **(c)** This is a leftover note and the distinction is not needed in practice (the key is already computed).
 
 **Question to author:** Is there a concrete use case where a custom `getProperty` should distinguish dot-access from bracket-access? Or is this a "food for thought" note?
-
----
-
-### [ ] 8. Specialized `isSimpleValue` variants for different cases
-
-**Unclear:** Which specific "different cases" are meant?
-
-Currently `isSimpleValue` is used in only one place — `defaultGetProperty` for key validation. Possible variants:
-- **(a)** A version with a different set of types — e.g., including `symbol` (for Map keys) or excluding `bigint`.
-- **(b)** A version that additionally checks `NaN`, `Infinity`, `-0` and other edge-case numbers.
-
-**Question to author:** Were there specific situations where the current `isSimpleValue` implementation was insufficient? Or is this a "just in case" note without a concrete case?
