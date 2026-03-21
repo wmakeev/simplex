@@ -7,6 +7,8 @@ import {
   Location
 } from './simplex-tree.js'
 
+// --- Visitor Helpers ---
+
 export interface SourceLocation {
   len: number
   location: Location
@@ -80,6 +82,8 @@ const thunk = (
   node: { location: Location },
   parts: VisitResult[]
 ): VisitResult[] => [codePart('()=>(', node), ...parts, codePart(')', node)]
+
+// --- AST Visitors ---
 
 const visitors: {
   [P in keyof ExpressionByType]: (
@@ -221,10 +225,7 @@ const visitors: {
       }
 
       return parts
-    }
-
-    //
-    else {
+    } else {
       const parts: VisitResult[] = [
         codePart(`${GEN.call}(`, node),
         ...visit(node.callee),
@@ -378,6 +379,8 @@ const visitors: {
   }
 }
 
+// --- Traverse ---
+
 const visit = (
   node: Expression,
   _parentNode: Expression | null,
@@ -397,6 +400,7 @@ const visit = (
   return nodeTypeVisitor(node, innerVisit, context)
 }
 
+/** Walk the AST and produce generated JS code with source location offsets. */
 export function traverse(
   tree: ExpressionStatement,
   expression: string

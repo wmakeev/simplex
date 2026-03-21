@@ -31,7 +31,7 @@ suite('errors', () => {
     assert.equal(err3.receivedValue, val3)
   })
 
-  test('simple', () => {
+  test('unknown identifier includes source location', () => {
     const fn = compile('a')
 
     try {
@@ -55,7 +55,7 @@ suite('errors', () => {
     }
   })
 
-  test('simple one line', () => {
+  test('error location points to failing identifier in expression', () => {
     const fn = compile('a + b')
 
     try {
@@ -90,7 +90,7 @@ suite('errors', () => {
     }
   })
 
-  test('simple multi line', () => {
+  test('multiline expression error location spans correct lines', () => {
     const expression =
       // prettier-ignore
       [
@@ -137,7 +137,7 @@ suite('errors', () => {
     }
   })
 
-  test('complex multi line', () => {
+  test('nested multiline expression pinpoints error in inner expression', () => {
     const expression =
       // prettier-ignore
       [

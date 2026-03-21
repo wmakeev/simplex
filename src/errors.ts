@@ -1,6 +1,7 @@
 import { Location } from './simplex-tree.js'
 import { typeOf } from './tools/index.js'
 
+/** Base error with source expression and location info. */
 export class SimplexError extends Error {
   constructor(
     message: string,
@@ -13,10 +14,13 @@ export class SimplexError extends Error {
   }
 }
 
+/** Runtime error thrown when expression evaluation fails (e.g. unknown identifier). */
 export class ExpressionError extends SimplexError {}
 
+/** Error thrown during compilation (e.g. duplicate let bindings, invalid keys). */
 export class CompileError extends SimplexError {}
 
+/** TypeError with expected-vs-actual type info (e.g. "Expected number, but got string"). */
 export class UnexpectedTypeError extends TypeError {
   I18N_STRING = 'UNEXPECTED_TYPE'
 

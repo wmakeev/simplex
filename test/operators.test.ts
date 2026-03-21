@@ -57,7 +57,7 @@ suite('operators', () => {
       },
       {
         message:
-          'Wrong "in" operator usage - key value should to be safe integer'
+          'Wrong "in" operator usage - key value must be a safe integer'
       }
     )
     assert.throws(
@@ -66,7 +66,7 @@ suite('operators', () => {
       },
       {
         message:
-          'Wrong "in" operator usage - key value should to be safe integer'
+          'Wrong "in" operator usage - key value must be a safe integer'
       }
     )
     assert.throws(

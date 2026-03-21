@@ -32,6 +32,8 @@ import {
 export type { SourceLocation, VisitResult }
 export { traverse }
 
+// --- Context Helpers ---
+
 interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
   ensureFunction(this: void, val: unknown): Function
@@ -53,6 +55,7 @@ interface ContextHelpers<Data, Globals> {
 var hasOwn = Object.hasOwn
 var ERROR_STACK_REGEX = /<anonymous>:(?<row>\d+):(?<col>\d+)/g
 
+/** Look up an identifier in globals first, then data; throw on miss. */
 function defaultGetIdentifierValue(
   identifierName: string,
   globals: Record<string, unknown>,
@@ -71,6 +74,7 @@ function defaultGetIdentifierValue(
   throw new Error(`Unknown identifier - ${identifierName}`)
 }
 
+/** Resolve property access on an object, Map, or string (null-safe). */
 function defaultGetProperty(
   obj: unknown,
   key: unknown,
@@ -112,6 +116,7 @@ function defaultGetProperty(
   return undefined
 }
 
+/** Call a function value; null/undefined silently returns undefined. */
 function defaultCallFunction(fn: unknown, args: unknown[] | null): unknown {
   return fn == null
     ? undefined
@@ -120,6 +125,7 @@ function defaultCallFunction(fn: unknown, args: unknown[] | null): unknown {
         : ensureFunction(fn).apply(null, args)) as unknown)
 }
 
+/** Execute a pipe sequence, threading each result through the next step. */
 function defaultPipe(
   head: unknown,
   tail: { opt: boolean; fwd: boolean; next: (topic: unknown) => unknown }[]
@@ -151,11 +157,14 @@ const defaultContextHelpers: ContextHelpers<
   pipe: defaultPipe
 }
 
+// --- Operators ---
+
 type ExpressionUnaryOperators = Record<
   UnaryExpression['operator'],
   (val: unknown) => unknown
 >
 
+/** Create the default unary operator map (+, -, not, typeof). */
 export function createDefaultUnaryOperators(
   bool: (val: unknown) => boolean
 ): ExpressionUnaryOperators {
@@ -203,7 +212,7 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
   '>=': (a, b) =>
     ensureRelationalComparable(a) >= ensureRelationalComparable(b),
 
-  // Is some container has specified key
+  // Check if key exists in container (Object/Array/Map)
   'in': (a, b) => {
     const bType = objToStringAlias.call(b)
 
@@ -218,7 +227,7 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
           return a in b
         } else {
           throw new TypeError(
-            `Wrong "in" operator usage - key value should to be safe integer`
+            `Wrong "in" operator usage - key value must be a safe integer`
           )
         }
       }
@@ -245,6 +254,7 @@ type ExpressionLogicalOperators = Record<
   LogicalOperatorFunction
 >
 
+/** Create the default logical operator map (and/&&, or/||). */
 export function createDefaultLogicalOperators(
   bool: (val: unknown) => boolean
 ): ExpressionLogicalOperators {
@@ -268,6 +278,9 @@ interface ExpressionOperators {
   >
 }
 
+// --- Error Mapping ---
+
+/** Map a runtime error from generated code back to source expression location. */
 function mapRuntimeError(
   err: unknown,
   expression: string,
@@ -310,6 +323,8 @@ function getExpressionErrorLocation(
   return null
 }
 
+// --- Bootstrap Code ---
+
 const bootstrapCodeHead =
   `
     var ${GEN.bool}=ctx.castToBoolean;
@@ -341,10 +356,13 @@ const bootstrapCodeHead =
 
 const bootstrapCodeHeadLen = bootstrapCodeHead.length
 
+// --- Compile ---
+
 export type CompileOptions<Data, Globals> = Partial<
   ContextHelpers<Data, Globals> & ExpressionOperators & { globals: Globals }
 >
 
+/** Compile a SimplEx expression string into an executable function. */
 export function compile<
   Data = Record<string, unknown>,
   Globals = Record<string, unknown>

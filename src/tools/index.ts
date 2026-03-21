@@ -33,6 +33,7 @@ export function typeOf(val: unknown) {
 
 // --- Guards ---
 
+/** Check if value is a plain object (not Array, Map, etc.). */
 export function isObject(val: unknown): val is object {
   return objToStringAlias.call(val) === '[object Object]'
 }
@@ -42,7 +43,6 @@ export function isObject(val: unknown): val is object {
 export function isSimpleValue(
   val: unknown
 ): val is number | string | boolean | bigint | null | undefined {
-
   const type = typeof val
 
   if (
@@ -61,15 +61,17 @@ export function isSimpleValue(
 
 // --- Cast ---
 
-// Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
+/** Coerce any value to boolean (standard JS truthiness). */
 export function castToBoolean(val: unknown): boolean {
+  // Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
   return Boolean(val)
 }
 
-// Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
+/** Coerce value to string; objects use Object.prototype.toString. */
 export function castToString(val: unknown): string {
   const type = typeof val
 
+  // Boxed primitives (new String, etc.) are intentionally not handled — see isSimpleValue comment.
   if (type === 'string') return val as string
   if (
     val == null ||
@@ -85,6 +87,7 @@ export function castToString(val: unknown): string {
 
 // --- Ensure ---
 
+/** Validate that value is a finite number or bigint; throw UnexpectedTypeError otherwise. */
 export function ensureNumber(val: unknown): number | bigint {
   if (typeof val === 'number' && Number.isFinite(val)) {
     return val
@@ -98,11 +101,13 @@ export function ensureNumber(val: unknown): number | bigint {
   throw new UnexpectedTypeError(['number', 'bigint'], val)
 }
 
+/** Validate that value is a function; throw UnexpectedTypeError otherwise. */
 export function ensureFunction(val: unknown): Function {
   if (typeof val === 'function') return val
   throw new UnexpectedTypeError(['function'], val)
 }
 
+/** Validate that value is comparable (<, >, <=, >=); must be number, bigint, or string. */
 export function ensureRelationalComparable(
   val: unknown
 ): number | string | bigint {
