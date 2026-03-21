@@ -139,6 +139,7 @@ const visitors: {
       if (p.key.type === 'Identifier') {
         key = codePart(p.key.name, p)
       } else if (p.key.type === 'Literal') {
+        // JSON.stringify(Infinity) returns "null", producing wrong key
         if (typeof p.key.value === 'number' && !Number.isFinite(p.key.value)) {
           throw new CompileError(
             `Invalid object key: ${p.key.value}`,
@@ -148,6 +149,7 @@ const visitors: {
         }
         key = codePart(JSON.stringify(p.key.value), p)
       } else {
+        // Unreachable: grammar restricts keys to Identifier and Literal
         throw new CompileError(
           `Unsupported object key type: ${p.key.type}`,
           context.expression,

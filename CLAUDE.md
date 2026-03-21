@@ -200,14 +200,12 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 
 ## Project Files
 
-- **`REFACTORING.md`** — Remaining TODO comments in the codebase with descriptions and line references.
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
-- **`plans/`** — Saved implementation plans for deferred tasks (numbered to match task IDs in REFACTORING.md/TODO.md).
 - **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
 ## Workflow
 
-- After implementing a task from a TODO or REFACTORING file, mark it as done before committing. Also update line number references in remaining (uncompleted) tasks if they were affected by the changes. Remove line number references from completed tasks (they become stale and misleading).
+- After implementing a task from TODO.md, mark it as done before committing.
 - After completing and testing a plan implementation, always offer to commit the changes.
 - After a commit is made, always offer to push to the remote.
 - After a push, always check CI status (`gh run list`).

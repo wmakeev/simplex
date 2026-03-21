@@ -364,6 +364,8 @@ export function compile<
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defaultOptions: CompileOptions<Data, Globals> = {
     ...defaultContextHelpers,
+    // Recreate operators with custom castToBoolean so compile options
+    // are honored by logical (and/or) and unary (not) operators
     ...{
       unaryOperators: options?.castToBoolean
         ? createDefaultUnaryOperators(resolvedBool)
