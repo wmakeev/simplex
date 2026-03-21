@@ -10,6 +10,18 @@
 
 - [x] Добавить template literal - ```fn(`My column name ${foo}`)```
 
+- [x] Добавить реализацию по умолчанию для `::`
+
+  ```simplex
+  items | map(%, add(#, 10)) | filter(%, gt(#, 15)) // without "::"
+  ```
+
+  ```simplex
+  items::map(add(#, 10))::filter(gt(#, 15))         // with "::"
+  ```
+
+- [ ] Добавить оператор `!` как runtime strict not null assert - `a.b!.c.d!`, `foo!(a)`. Сделать примечание в документации, что в отличии от JS у нас явный optional chaining, но явный not null check (как-бы наизнанку, что практичнее для языка выражений при работе с опциональными структурами данных).
+
 - [x] Добавить tag function - ```$`My column ${ name }` == 42```
 
 - [ ] (?) Прямой доступ к глобальным переменным - ` #"My var" `, ` #'My "value"' `, ``` #`other${x}` ```

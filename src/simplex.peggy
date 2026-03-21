@@ -607,6 +607,16 @@ CallExpression
             type: "MemberExpression",
             property: property,
             computed: false,
+            extension: false,
+            location: getLocation(location())
+          };
+        }
+      / __ "::" __ property:IdentifierName {
+          return {
+            type: "MemberExpression",
+            property: property,
+            computed: false,
+            extension: true,
             location: getLocation(location())
           };
         }

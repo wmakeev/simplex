@@ -78,7 +78,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 
 - **Dot:** `obj.prop`, `obj.nested.deep`
 - **Computed:** `obj["key"]`, `arr[0]`, `str[0]`
-- **Extension:** `obj::method` — **reserved**, throws `ExpressionError` by default. Override `getProperty` in `CompileOptions` to implement custom semantics.
+- **Extension:** `obj::method(args)` — calls an extension method. Requires `extensions` option in `CompileOptions`. The extension method receives `obj` as first argument: `obj::map(fn)` → `extensionMap.map(obj, fn)`. Throws `ExpressionError` if no extensions configured, type not found, or method not found. Null-safe: `null::method()` → `undefined`.
 - Null-safe: `null.prop` → `undefined` (no error)
 - Strings: only numeric index access; `"str".foo` → error
 
@@ -198,6 +198,7 @@ compile('x', { globals: { x: 1 } })({ x: 2 })      // 1
 ```typescript
 compile<Data, Globals>(expression: string, options?: {
   globals?: Record<string, unknown>
+  extensions?: Map<string | object | Function, Record<string, Function>>
   getIdentifierValue?: (name: string, globals: Globals, data: Data) => unknown
   unaryOperators?: Record<string, (val: unknown) => unknown>
   binaryOperators?: Record<string, (left: unknown, right: unknown) => unknown>
@@ -206,6 +207,8 @@ compile<Data, Globals>(expression: string, options?: {
 ```
 
 All operators and context helpers can be overridden at compile time.
+
+`extensions` maps types to method bags for `::` syntax. Keys: `string` (`"string"`, `"number"`) for `typeof` matching, or class/constructor (`Array`, `Map`) for `instanceof` matching. Values: objects mapping method names to functions where the first argument is always the receiver object.
 
 ## Code Generation Strategy
 

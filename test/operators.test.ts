@@ -174,11 +174,113 @@ suite('operators', () => {
       name: 'ExpressionError'
     })
 
-    // extension member expression throws by default
+    // extension member expression throws by default (no extensions option)
     assert.throws(() => compile('a::b')({ a: { b: 1 } }), {
       name: 'ExpressionError',
       message: /Extension member expression.*not implemented/
     })
+  })
+
+  test('extension methods with class-based keys', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [
+        Array,
+        {
+          map: (arr: unknown[], fn: Function) =>
+            arr.map(v => fn(v) as unknown),
+          filter: (arr: unknown[], fn: Function) =>
+            arr.filter(v => fn(v) as unknown),
+          sum: (arr: number[]) => arr.reduce((a, b) => a + b, 0)
+        }
+      ]
+    ])
+
+    // basic extension call
+    assert.deepEqual(
+      compile('[1, 2, 3]::map(x => x + 10)', { extensions })(),
+      [11, 12, 13]
+    )
+
+    // chained extensions
+    assert.deepEqual(
+      compile('[1, 2, 3]::map(x => x + 10)::filter(x => x > 11)', {
+        extensions
+      })(),
+      [12, 13]
+    )
+
+    // extension with no args
+    assert.equal(compile('[1, 2, 3]::sum()', { extensions })(), 6)
+
+    // extension with currying
+    assert.deepEqual(
+      compile('items::map(add(#, 10))::filter(gt(#, 15))', {
+        extensions,
+        globals: {
+          add: (a: number, b: number) => a + b,
+          gt: (a: number, b: number) => a > b
+        }
+      })({ items: [1, 5, 10] }),
+      [20]
+    )
+  })
+
+  test('extension methods with typeof-based keys', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [
+        'string',
+        {
+          upper: (s: string) => s.toUpperCase(),
+          reverse: (s: string) => s.split('').reverse().join('')
+        }
+      ]
+    ])
+
+    assert.equal(compile('"hello"::upper()', { extensions })(), 'HELLO')
+    assert.equal(compile('"hello"::reverse()', { extensions })(), 'olleh')
+  })
+
+  test('extension method not found throws', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [Array, { map: (a: unknown[], f: Function) => a.map(v => f(v) as unknown) }]
+    ])
+
+    assert.throws(
+      () => compile('[1]::filter(x => x)', { extensions })(),
+      {
+        name: 'ExpressionError',
+        message: /Extension method "filter" is not defined/
+      }
+    )
+  })
+
+  test('extension type not found throws', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [Array, { map: (a: unknown[], f: Function) => a.map(v => f(v) as unknown) }]
+    ])
+
+    assert.throws(
+      () => compile('"hello"::upper()', { extensions })(),
+      {
+        name: 'ExpressionError',
+        message: /No extension methods defined for type "string"/
+      }
+    )
+  })
+
+  test('extension on null returns undefined', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [Array, { map: (a: unknown[], f: Function) => a.map(v => f(v) as unknown) }]
+    ])
+
+    assert.equal(
+      compile('x::map(x => x)', { extensions })({ x: null }),
+      undefined
+    )
+    assert.equal(
+      compile('x::map(x => x)', { extensions })({ x: undefined }),
+      undefined
+    )
   })
 
   test('index access', () => {

@@ -24,12 +24,7 @@ import {
 } from './tools/index.js'
 import { traverse } from './visitors.js'
 import type { SourceLocation, VisitResult } from './visitors.js'
-import {
-  GEN,
-  SCOPE_NAMES,
-  SCOPE_VALUES,
-  SCOPE_PARENT
-} from './constants.js'
+import { GEN, SCOPE_NAMES, SCOPE_VALUES, SCOPE_PARENT } from './constants.js'
 
 export type { SourceLocation, VisitResult }
 export { traverse }
@@ -48,7 +43,12 @@ export interface ContextHelpers<Data, Globals> {
     globals: Globals,
     data: Data
   ): unknown
-  getProperty(this: void, obj: unknown, key: unknown, extension: boolean): unknown
+  getProperty(
+    this: void,
+    obj: unknown,
+    key: unknown,
+    extension: boolean
+  ): unknown
   callFunction(this: void, fn: unknown, args: unknown[] | null): unknown
   pipe(
     this: void,
@@ -79,12 +79,54 @@ function defaultGetIdentifierValue(
   throw new Error(`Unknown identifier - ${identifierName}`)
 }
 
+/** Look up an extension method for the given object type and bind obj as first argument. */
+function getExtensionMethod(
+  obj: unknown,
+  key: unknown,
+  extensionMap: Map<string | object | Function, Record<string, Function>>,
+  classesKeys: (object | Function)[],
+  classesValues: Record<string, Function>[]
+): Function {
+  var typeofObj = typeof obj
+  var methods: Record<string, Function> | undefined
+
+  if (typeofObj === 'object') {
+    for (var i = 0; i < classesKeys.length; i++) {
+      // @ts-expect-error supports objects with Symbol.hasInstance
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (obj instanceof classesKeys[i]!) {
+        methods = classesValues[i]
+        break
+      }
+    }
+  } else {
+    methods = extensionMap.get(typeofObj)
+  }
+
+  if (methods === undefined) {
+    throw new TypeError(
+      `No extension methods defined for type "${typeofObj}"`
+    )
+  }
+
+  var method = methods[key as string]
+  if (method === undefined) {
+    throw new TypeError(
+      `Extension method "${String(key)}" is not defined for type "${typeofObj}"`
+    )
+  }
+
+  return method.bind(null, obj) as Function
+}
+
 /** Resolve property access on an object, Map, or string (null-safe). */
 function defaultGetProperty(
   obj: unknown,
   key: unknown,
   extension: boolean
 ): unknown {
+  if (obj == null) return undefined
+
   if (extension) {
     throw new ExpressionError(
       'Extension member expression (::) is reserved and not implemented',
@@ -93,9 +135,7 @@ function defaultGetProperty(
     )
   }
 
-  if (obj == null) return undefined
-
-  const typeofObj = typeof obj
+  var typeofObj = typeof obj
 
   if (typeofObj === 'string' && typeof key === 'number') {
     return (obj as string)[key]
@@ -193,8 +233,11 @@ export type ExpressionBinaryOperators = Record<
 >
 
 const numericOp =
-  (fn: (a: number, b: number) => number): ((a: unknown, b: unknown) => unknown) =>
-  (a, b) => fn(ensureNumber(a) as number, ensureNumber(b) as number)
+  (
+    fn: (a: number, b: number) => number
+  ): ((a: unknown, b: unknown) => unknown) =>
+  (a, b) =>
+    fn(ensureNumber(a) as number, ensureNumber(b) as number)
 
 export const defaultBinaryOperators: ExpressionBinaryOperators = {
   '!=': (a, b) => a !== b,
@@ -370,7 +413,11 @@ const bootstrapCodeHeadLen = bootstrapCodeHead.length
 // --- Compile ---
 
 export type CompileOptions<Data, Globals> = Partial<
-  ContextHelpers<Data, Globals> & ExpressionOperators & { globals: Globals }
+  ContextHelpers<Data, Globals> &
+    ExpressionOperators & {
+      globals: Globals
+      extensions: Map<string | object | Function, Record<string, Function>>
+    }
 >
 
 /** Compile a SimplEx expression string into an executable function. */
@@ -404,6 +451,32 @@ export function compile<
         : defaultLogicalOperators
     },
     ...(options as any)
+  }
+
+  if (options?.extensions && options.extensions.size > 0 && !options.getProperty) {
+    const extensionMap = options.extensions
+    const classesKeys: (object | Function)[] = []
+    const classesValues: Record<string, Function>[] = []
+
+    for (const [key, methods] of extensionMap) {
+      if (typeof key !== 'string') {
+        classesKeys.push(key)
+        classesValues.push(methods)
+      }
+    }
+
+    defaultOptions.getProperty = (obj, key, extension) => {
+      if (obj == null) return undefined
+      if (extension)
+        return getExtensionMethod(
+          obj,
+          key,
+          extensionMap,
+          classesKeys,
+          classesValues
+        )
+      return defaultGetProperty(obj, key, false)
+    }
   }
 
   const func = new Function('ctx', functionCode)(defaultOptions) as (
