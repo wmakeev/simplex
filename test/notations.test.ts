@@ -1,7 +1,7 @@
 /* eslint-disable no-sparse-arrays */
 
 import { test, suite } from 'node:test'
-import { compile } from '../src/index.js'
+import { compile, CompileError } from '../src/index.js'
 import assert from 'node:assert/strict'
 import { evalExp } from './helpers.js'
 
@@ -37,6 +37,15 @@ suite('notations', () => {
 
     // TODO
     // assert.deepEqual(compile('{ ["foo"]: "bar" }')(), { foo: 'bar' })
+
+    assert.throws(
+      () => compile('{1e999: "v"}'),
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.match(err.message, /Invalid object key/)
+        return true
+      }
+    )
   })
 
   test('array', () => {

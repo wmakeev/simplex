@@ -2,7 +2,7 @@
 
 ## Clear TODOs (detailed reformulation)
 
-### [ ] 1. `visitors.ts:145-146` — Validate object key type at parse time
+### [ ] 1. `visitors.ts:150-152` — Validate object key type at parse time
 
 ```js
 } else {
@@ -56,23 +56,9 @@ Resolved: `unbox()` function deleted entirely. Boxed primitives (`new String`, `
 
 ## Ambiguous / needs clarification TODOs
 
-### [ ] 6. `visitors.ts:142` — "look for ECMA spec" for object key serialization
+### [x] 6. `visitors.ts:142` — "look for ECMA spec" for object key serialization
 
-```js
-} else if (p.key.type === 'Literal') {
-  // TODO look for ECMA spec
-  key = codePart(JSON.stringify(p.key.value), p)
-}
-```
-
-**Unclear:** What exactly needs to be checked in the specification?
-
-Possible interpretations:
-- **(a)** Verify whether `JSON.stringify` correctly handles all valid literal key values (numbers, strings) — there may be edge cases where `JSON.stringify` produces an invalid JS property key (e.g., `NaN`, `Infinity`, `-0`).
-- **(b)** Check which literal types are valid as object keys per the ECMA-262 specification to constrain the grammar.
-- **(c)** Confirm that the generated JS (`{42: val}` vs `{"42": val}`) is behaviorally equivalent.
-
-**Question to author:** Which aspect of the ECMA spec was intended? The `JSON.stringify` edge-case issue, valid key types, or correctness of generated code?
+Resolved: `JSON.stringify` is correct for string keys (adds quotes, escapes) and finite numeric keys. The only edge case is `Infinity` (from e.g. `1e999`), where `JSON.stringify(Infinity)` returns `"null"`. Now the `ObjectExpression` visitor throws `CompileError` with source location for non-finite numeric keys.
 
 ## In mind
 

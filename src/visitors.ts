@@ -133,13 +133,19 @@ const visitors: {
     return parts
   },
 
-  ObjectExpression: (node, visit) => {
+  ObjectExpression: (node, visit, context) => {
     const items = node.properties.map(p => {
       let key: VisitResult
       if (p.key.type === 'Identifier') {
         key = codePart(p.key.name, p)
       } else if (p.key.type === 'Literal') {
-        // TODO look for ECMA spec
+        if (typeof p.key.value === 'number' && !Number.isFinite(p.key.value)) {
+          throw new CompileError(
+            `Invalid object key: ${p.key.value}`,
+            context.expression,
+            p.key.location
+          )
+        }
         key = codePart(JSON.stringify(p.key.value), p)
       } else {
         // TODO Restrict on parse step
