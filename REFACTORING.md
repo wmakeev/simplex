@@ -74,9 +74,11 @@ Possible interpretations:
 
 **Question to author:** Which aspect of the ECMA spec was intended? The `JSON.stringify` edge-case issue, valid key types, or correctness of generated code?
 
----
+## In mind
 
-### [ ] 7. `visitors.ts:172` — Pass `computed` to `getProperty`
+Ideas without a clear use case yet. Revisit when a concrete need arises.
+
+### `visitors.ts:172` — Pass `computed` to `getProperty`
 
 ```js
 // TODO Pass computed to prop?
@@ -85,13 +87,4 @@ const propertyPart = computed
   : [codePart(JSON.stringify(property.name), property)]  // obj.name — property = string
 ```
 
-**Unclear:** Why would `getProperty` need a `computed` flag?
-
-Current signature: `getProperty(obj, key, extension)`. An already-computed key is passed — for `.prop` it's the string `"prop"`, for `[expr]` it's the result of `expr`. In both cases `getProperty` receives a ready-made key value.
-
-Possible interpretations:
-- **(a)** `computed` is needed to distinguish semantics: `obj.foo` (name lookup) vs `obj[foo]` (value lookup) — could be useful for custom `getProperty` implementations (e.g., to differentiate property access from index access).
-- **(b)** `computed` is needed for optimization: if not computed, the key is guaranteed to be a string — type checks can be skipped.
-- **(c)** This is a leftover note and the distinction is not needed in practice (the key is already computed).
-
-**Question to author:** Is there a concrete use case where a custom `getProperty` should distinguish dot-access from bracket-access? Or is this a "food for thought" note?
+Current signature: `getProperty(obj, key, extension)`. The key is already computed in both cases. A `computed` flag could let custom `getProperty` implementations distinguish `obj.foo` (name lookup) from `obj[foo]` (value lookup), but no concrete use case exists yet.
