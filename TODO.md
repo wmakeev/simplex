@@ -4,6 +4,10 @@
 
 - [x] Добавить computed property names - `{ ["foo"]: "bar" }`, `{ [foo]: "bar" }`
 
+- [x] Добавить object spread - `{ ...obj, a: 1 }`
+
+- [x] Добавить array spread - `[1, ...arr, 4]`
+
 - [ ] Добавить template literal - ```fn(`My column name ${foo}`)```
 
 - [ ] Добавить tag function - ```$`My column name` == 42```

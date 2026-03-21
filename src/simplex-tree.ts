@@ -59,15 +59,21 @@ export interface PropertyAssignment {
   location: Location
 }
 
+export interface SpreadElement {
+  type: 'SpreadElement'
+  argument: Expression
+  location: Location
+}
+
 export interface ObjectExpression {
   type: 'ObjectExpression'
-  properties: PropertyAssignment[]
+  properties: (PropertyAssignment | SpreadElement)[]
   location: Location
 }
 
 export interface ArrayExpression {
   type: 'ArrayExpression'
-  elements: (Expression | null)[]
+  elements: (Expression | SpreadElement | null)[]
   location: Location
 }
 

@@ -72,6 +72,14 @@ suite('traverse code', () => {
       getCode('{ a: 1, c: 1 + x }'),
       '{a:1,c:bop["+"](1,get(scope,"x"))}'
     )
+    assert.equal(
+      getCode('{ ...a }'),
+      '{...ensObj(get(scope,"a"))}'
+    )
+    assert.equal(
+      getCode('{ a: 1, ...b }'),
+      '{a:1,...ensObj(get(scope,"b"))}'
+    )
   })
 
   test('array', () => {
@@ -79,6 +87,11 @@ suite('traverse code', () => {
     assert.equal(
       getCode('[1, 2, , { a: 1 }, x]'),
       '[1,2,,{a:1},get(scope,"x")]'
+    )
+    assert.equal(getCode('[1, ...a]'), '[1,...ensArr(get(scope,"a"))]')
+    assert.equal(
+      getCode('[...a, ...b]'),
+      '[...ensArr(get(scope,"a")),...ensArr(get(scope,"b"))]'
     )
   })
 

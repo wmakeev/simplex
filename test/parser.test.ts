@@ -950,6 +950,37 @@ suite('parser', () => {
     assert.equal(prop.value.value, 1)
   })
 
+  test('ObjectExpression with spread', () => {
+    const result = parse('{ ...a }')
+    assert.equal(result.type, 'ExpressionStatement')
+    const obj = result.expression as { type: string; properties: unknown[] }
+    assert.equal(obj.type, 'ObjectExpression')
+    assert.equal(obj.properties.length, 1)
+    const spread = obj.properties[0] as {
+      type: string
+      argument: { type: string; name: string }
+    }
+    assert.equal(spread.type, 'SpreadElement')
+    assert.equal(spread.argument.type, 'Identifier')
+    assert.equal(spread.argument.name, 'a')
+
+    const result2 = parse('{ a: 1, ...b, c: 2 }')
+    const obj2 = result2.expression as { type: string; properties: unknown[] }
+    assert.equal(obj2.properties.length, 3)
+    assert.equal(
+      (obj2.properties[0] as { type: string }).type,
+      'Property'
+    )
+    assert.equal(
+      (obj2.properties[1] as { type: string }).type,
+      'SpreadElement'
+    )
+    assert.equal(
+      (obj2.properties[2] as { type: string }).type,
+      'Property'
+    )
+  })
+
   test('ArrayExpression', () => {
     assert.deepEqual(parse('[]'), {
       type: 'ExpressionStatement',
@@ -1040,6 +1071,17 @@ suite('parser', () => {
         }
       }
     })
+  })
+
+  test('ArrayExpression with spread', () => {
+    const result = parse('[1, ...a]') as any
+    const elements = result.expression.elements
+    assert.equal(elements.length, 2)
+    assert.equal(elements[0].type, 'Literal')
+    assert.equal(elements[0].value, 1)
+    assert.equal(elements[1].type, 'SpreadElement')
+    assert.equal(elements[1].argument.type, 'Identifier')
+    assert.equal(elements[1].argument.name, 'a')
   })
 
   test('MemberExpression', () => {

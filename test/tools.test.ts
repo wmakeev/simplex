@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import {
   ensureFunction,
   ensureNumber,
+  ensureArray,
+  ensureObject,
   isObject,
   isSimpleValue,
   castToBoolean,
@@ -179,6 +181,32 @@ suite('tools', () => {
           })
         }
       })
+    })
+
+    test('ensureObject', () => {
+      const obj = { a: 1 }
+      assert.equal(ensureObject(obj), obj)
+      assert.deepEqual(ensureObject({}), {})
+
+      assert.throws(() => ensureObject(null))
+      assert.throws(() => ensureObject(undefined))
+      assert.throws(() => ensureObject(42))
+      assert.throws(() => ensureObject('str'))
+      assert.throws(() => ensureObject([1, 2]))
+      assert.throws(() => ensureObject(true))
+    })
+
+    test('ensureArray', () => {
+      const arr = [1, 2]
+      assert.equal(ensureArray(arr), arr)
+      assert.deepEqual(ensureArray([]), [])
+
+      assert.throws(() => ensureArray(null))
+      assert.throws(() => ensureArray(undefined))
+      assert.throws(() => ensureArray(42))
+      assert.throws(() => ensureArray('str'))
+      assert.throws(() => ensureArray({ a: 1 }))
+      assert.throws(() => ensureArray(true))
     })
   })
 

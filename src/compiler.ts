@@ -15,6 +15,8 @@ import {
   castToString,
   ensureFunction,
   ensureNumber,
+  ensureArray,
+  ensureObject,
   ensureRelationalComparable,
   isSimpleValue,
   objToStringAlias,
@@ -37,6 +39,8 @@ export { traverse }
 interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
   ensureFunction(this: void, val: unknown): Function
+  ensureObject(this: void, val: unknown): object
+  ensureArray(this: void, val: unknown): unknown[]
   getIdentifierValue(
     this: void,
     identifierName: string,
@@ -151,6 +155,8 @@ const defaultContextHelpers: ContextHelpers<
 > = {
   castToBoolean,
   ensureFunction,
+  ensureObject,
+  ensureArray,
   getIdentifierValue: defaultGetIdentifierValue,
   getProperty: defaultGetProperty,
   callFunction: defaultCallFunction,
@@ -332,6 +338,8 @@ const bootstrapCodeHead =
     var ${GEN.lop}=ctx.logicalOperators;
     var ${GEN.uop}=ctx.unaryOperators;
     var ${GEN.call}=ctx.callFunction;
+    var ${GEN.ensObj}=ctx.ensureObject;
+    var ${GEN.ensArr}=ctx.ensureArray;
     var ${GEN.getIdentifierValue}=ctx.getIdentifierValue;
     var ${GEN.prop}=ctx.getProperty;
     var ${GEN.pipe}=ctx.pipe;

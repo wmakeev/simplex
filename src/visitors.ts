@@ -139,6 +139,13 @@ const visitors: {
 
   ObjectExpression: (node, visit, context) => {
     const items = node.properties.map(p => {
+      if (p.type === 'SpreadElement') {
+        return [
+          codePart(`...${GEN.ensObj}(`, p),
+          ...visit(p.argument),
+          codePart(')', p)
+        ]
+      }
       let keyParts: VisitResult[]
       if (p.computed) {
         keyParts = [codePart('[', p), ...visit(p.key), codePart(']', p)]
@@ -173,7 +180,17 @@ const visitors: {
   },
 
   ArrayExpression: (node, visit) => {
-    const items = node.elements.map(el => (el === null ? [] : visit(el)))
+    const items = node.elements.map(el => {
+      if (el === null) return []
+      if (el.type === 'SpreadElement') {
+        return [
+          codePart(`...${GEN.ensArr}(`, el),
+          ...visit(el.argument),
+          codePart(')', el)
+        ]
+      }
+      return visit(el)
+    })
 
     return [
       codePart('[', node),

@@ -40,6 +40,36 @@ suite('notations', () => {
     assert.deepEqual(compile('{ [1 + 1]: "two" }')(), { 2: 'two' })
     assert.deepEqual(compile('{ a: 1, ["b"]: 2 }')(), { a: 1, b: 2 })
 
+    // Spread
+    assert.deepEqual(compile('{ ...{ a: 1 } }')(), { a: 1 })
+    assert.deepEqual(
+      compile('let b = { b: "bar" }, { a: "foo", ...b, c: 42 }')(),
+      { a: 'foo', b: 'bar', c: 42 }
+    )
+    assert.deepEqual(compile('{ a: 1, ...{ a: 2 } }')(), { a: 2 })
+    assert.deepEqual(compile('{ ...{ a: 1 }, a: 2 }')(), { a: 2 })
+    assert.throws(() => compile('{ ...null }')(), {
+      message: 'Expected object, but got Null instead'
+    })
+    assert.throws(() => compile('{ ...42 }')(), {
+      message: 'Expected object, but got number instead'
+    })
+    assert.throws(() => compile('{ ...[1, 2] }')(), {
+      message: 'Expected object, but got Array instead'
+    })
+    assert.throws(() => compile('{ ..."str" }')(), {
+      message: 'Expected object, but got string instead'
+    })
+    assert.deepEqual(compile('{ a: 1, ...{ b: 2 }, c: 3 }')(), {
+      a: 1,
+      b: 2,
+      c: 3
+    })
+    assert.deepEqual(compile('{ ...{ a: 1 }, ...{ b: 2 } }')(), {
+      a: 1,
+      b: 2
+    })
+
     assert.throws(
       () => compile('{1e999: "v"}'),
       err => {
@@ -60,6 +90,24 @@ suite('notations', () => {
       true,
       5 - 2
     ])
+
+    // Spread
+    assert.deepEqual(compile('[1, ...[2, 3]]')(), [1, 2, 3])
+    assert.deepEqual(compile('let a = [2, 3], [1, ...a, 4]')(), [1, 2, 3, 4])
+    assert.deepEqual(compile('[...[1], ...[2]]')(), [1, 2])
+    assert.deepEqual(compile('[...[]]')(), [])
+    assert.throws(() => compile('[...42]')(), {
+      message: 'Expected Array, but got number instead'
+    })
+    assert.throws(() => compile('[...null]')(), {
+      message: 'Expected Array, but got Null instead'
+    })
+    assert.throws(() => compile('[..."str"]')(), {
+      message: 'Expected Array, but got string instead'
+    })
+    assert.throws(() => compile('[...{a: 1}]')(), {
+      message: 'Expected Array, but got Object instead'
+    })
   })
 
   test('condition', () => {

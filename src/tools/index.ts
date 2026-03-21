@@ -107,6 +107,18 @@ export function ensureFunction(val: unknown): Function {
   throw new UnexpectedTypeError(['function'], val)
 }
 
+/** Validate that value is a plain object; throw UnexpectedTypeError otherwise. */
+export function ensureObject(val: unknown): object {
+  if (isObject(val)) return val as object
+  throw new UnexpectedTypeError(['object'], val)
+}
+
+/** Validate that value is an array; throw UnexpectedTypeError otherwise. */
+export function ensureArray(val: unknown): unknown[] {
+  if (Array.isArray(val)) return val
+  throw new UnexpectedTypeError(['Array'], val)
+}
+
 /** Validate that value is comparable (<, >, <=, >=); must be number, bigint, or string. */
 export function ensureRelationalComparable(
   val: unknown

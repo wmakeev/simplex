@@ -410,12 +410,12 @@ ArrayLiteral
 
 ElementList
   = head:(
-      elision:(Elision __)? element:Expression {
+      elision:(Elision __)? element:(SpreadElement / Expression) {
         return optionalList(extractOptional(elision, 0)).concat(element);
       }
     )
     tail:(
-      __ "," __ elision:(Elision __)? element:Expression {
+      __ "," __ elision:(Elision __)? element:(SpreadElement / Expression) {
         return optionalList(extractOptional(elision, 0)).concat(element);
       }
     )*
@@ -452,8 +452,18 @@ PropertyNameAndValueList
       return buildList(head, tail, 3);
     }
 
+SpreadElement
+  = "..." __ argument:Expression {
+      return {
+        type: "SpreadElement",
+        argument: argument,
+        location: getLocation(location())
+      };
+    }
+
 PropertyAssignment
-  = key:PropertyName __ ":" __ value:Expression {
+  = SpreadElement
+  / key:PropertyName __ ":" __ value:Expression {
       return {
         type: "Property",
         key: key,
