@@ -1,8 +1,11 @@
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import nodePlugin from 'eslint-plugin-n'
+// defineConfig() — ESLint core API (v9.22+), replaces deprecated tseslint.config()
+// https://eslint.org/docs/latest/use/configure/configuration-files#defining-a-configuration
+import { defineConfig } from 'eslint/config'
 
-export default tseslint.config(
+export default defineConfig(
   eslint.configs.recommended,
   nodePlugin.configs['flat/recommended-script'],
   tseslint.configs.strictTypeChecked,
