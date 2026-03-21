@@ -148,9 +148,11 @@ const visitors: {
         }
         key = codePart(JSON.stringify(p.key.value), p)
       } else {
-        // TODO Restrict on parse step
-        // TODO Error with locations
-        throw new TypeError(`Incorrect object key type ${p.key.type}`)
+        throw new CompileError(
+          `Unsupported object key type: ${p.key.type}`,
+          context.expression,
+          p.key.location
+        )
       }
       return [key, codePart(':', node), ...visit(p.value)]
     })

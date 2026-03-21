@@ -2,21 +2,9 @@
 
 ## Clear TODOs (detailed reformulation)
 
-### [ ] 1. `visitors.ts:150-152` — Validate object key type at parse time
+### [x] 1. Validate object key type at parse time
 
-```js
-} else {
-  // TODO Restrict on parse step
-  // TODO Error with locations
-  throw new TypeError(`Incorrect object key type ${p.key.type}`)
-}
-```
-
-**Problem:** If an ObjectExpression AST node receives a key whose type is neither `Identifier` nor `Literal`, the error is thrown during code generation (in visitors) as a plain `TypeError` without source location info.
-
-**What to do:**
-- Move this check to the PEG grammar or a post-parse validation step so invalid keys are rejected earlier.
-- The error should be a `CompileError` with `location` (line/column in the source expression), not a bare `TypeError`.
+Resolved: The grammar already restricts keys to `IdentifierName`, `StringLiteral`, and `NumericLiteral`, so the `else` branch is unreachable in normal use. Replaced `TypeError` with `CompileError` including source location as a defensive measure.
 
 ---
 
