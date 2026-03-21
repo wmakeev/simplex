@@ -149,6 +149,17 @@ Syntax: `let name1 = init1, name2 = init2, bodyExpr`
 - Multiline content is allowed (unlike regular strings)
 - A lone `$` without `{` is treated as literal text
 
+### Tagged Template Literals
+
+`` tag`Hello ${name}` `` — any expression before a template literal calls it as a tag function.
+
+- Tag function receives `(strings, ...values)` — array of static parts and interpolated values
+- Interpolated values are NOT coerced to string — passed as-is
+- Tag function can return any type (not limited to strings)
+- Tag can be any expression: identifier (`tag`...``), member expression (`obj.tag`...``), or call result (`fn()`...``)
+- Null/undefined tag returns `undefined` (same as calling null as function)
+- Example: `` $`column ${name}` `` where `$` is a global tag function
+
 ### Comments
 
 - Single-line: `// comment`

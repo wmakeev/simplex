@@ -204,6 +204,7 @@ export interface TemplateElement {
 
 export interface TemplateLiteralExpression {
   type: 'TemplateLiteral'
+  tag: Expression | null
   quasis: TemplateElement[]
   expressions: Expression[]
   location: Location

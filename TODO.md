@@ -10,7 +10,7 @@
 
 - [x] Добавить template literal - ```fn(`My column name ${foo}`)```
 
-- [ ] Добавить tag function - ```$`My column name` == 42```
+- [x] Добавить tag function - ```$`My column ${ name }` == 42```
 
 - [ ] (?) Прямой доступ к глобальным переменным - ` #"My var" `, ` #'My "value"' `, ``` #`other${x}` ```
 

@@ -350,7 +350,25 @@ const visitors: {
   },
 
   TemplateLiteral: (node, visit) => {
-    const { quasis, expressions } = node
+    const { quasis, expressions, tag } = node
+
+    // --- Tagged template literal ---
+    if (tag !== null) {
+      const quasisItems = quasis.map(q => [codePart(JSON.stringify(q.value), q)])
+      const quasisArray: VisitResult[] = [
+        codePart('[', node),
+        ...commaSeparated(quasisItems, node),
+        codePart(']', node)
+      ]
+      const allArgs = [quasisArray, ...expressions.map(e => visit(e))]
+      return [
+        codePart(`${GEN.call}(`, node),
+        ...visit(tag),
+        codePart(',[', node),
+        ...commaSeparated(allArgs, node),
+        codePart('])', node)
+      ]
+    }
 
     // No interpolations → emit as plain string literal
     if (expressions.length === 0) {

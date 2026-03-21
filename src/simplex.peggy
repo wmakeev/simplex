@@ -291,6 +291,7 @@ TemplateLiteral "template literal"
 
       return {
         type: "TemplateLiteral",
+        tag: null,
         quasis: quasis,
         expressions: expressions,
         location: getLocation(location())
@@ -550,9 +551,19 @@ MemberExpression
             property: property, computed: false, extension: true, location: getLocation(location())
           };
         }
+      / __ template:TemplateLiteral {
+          return {
+            tagged: true, template: template, location: getLocation(location())
+          };
+        }
     )*
     {
       return tail.reduce(function(result, element) {
+        if (element.tagged) {
+          element.template.tag = result;
+          element.template.location = getLocation(location());
+          return element.template;
+        }
         return {
           type: "MemberExpression",
           object: result,
@@ -599,9 +610,19 @@ CallExpression
             location: getLocation(location())
           };
         }
+      / __ template:TemplateLiteral {
+          return {
+            tagged: true, template: template, location: getLocation(location())
+          };
+        }
     )*
     {
       return tail.reduce(function(result, element) {
+        if (element.tagged) {
+          element.template.tag = result;
+          element.template.location = getLocation(location());
+          return element.template;
+        }
         element[TYPES_TO_PROPERTY_NAMES[element.type]] = result;
 
         return element;
