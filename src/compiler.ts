@@ -37,6 +37,7 @@ export interface ContextHelpers<Data, Globals> {
   ensureFunction(this: void, val: unknown): Function
   ensureObject(this: void, val: unknown): object
   ensureArray(this: void, val: unknown): unknown[]
+  nonNullAssert(this: void, val: unknown): unknown
   getIdentifierValue(
     this: void,
     identifierName: string,
@@ -170,6 +171,19 @@ function defaultCallFunction(fn: unknown, args: unknown[] | null): unknown {
         : ensureFunction(fn).apply(null, args)) as unknown)
 }
 
+/** Assert that a value is not null or undefined; throw on null/undefined. */
+function defaultNonNullAssert(val: unknown): unknown {
+  if (val == null) {
+    throw new ExpressionError(
+      'Non-null assertion failed: value is ' +
+        (val === null ? 'null' : 'undefined'),
+      '',
+      null
+    )
+  }
+  return val
+}
+
 /** Execute a pipe sequence, threading each result through the next step. */
 function defaultPipe(
   head: unknown,
@@ -199,6 +213,7 @@ const defaultContextHelpers: ContextHelpers<
   ensureFunction,
   ensureObject,
   ensureArray,
+  nonNullAssert: defaultNonNullAssert,
   getIdentifierValue: defaultGetIdentifierValue,
   getProperty: defaultGetProperty,
   callFunction: defaultCallFunction,
@@ -389,6 +404,7 @@ const bootstrapCodeHead =
     var ${GEN.getIdentifierValue}=ctx.getIdentifierValue;
     var ${GEN.prop}=ctx.getProperty;
     var ${GEN.pipe}=ctx.pipe;
+    var ${GEN.nna}=ctx.nonNullAssert;
     var ${GEN.globals}=ctx.globals??null;
 
     function ${GEN._get}(${GEN._scope},name){

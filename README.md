@@ -185,6 +185,11 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 | `arr[0]` | Index access |
 | `obj.nested.deep` | Chaining |
 | `null.anything` | `undefined` (null-safe, no error) |
+| `expr!` | Non-null assert — throws if `null`/`undefined` |
+| `a.b!.c.d!` | Chainable non-null assertions |
+| `foo!(args)` | Assert non-null, then call |
+
+> **Note:** Unlike JavaScript (which has optional chaining `?.` and no runtime `!`), SimplEx has null-safe member access by default but explicit non-null assertion via `!`. This is inverted from JS — more practical for an expression language working with optional data structures.
 
 **Extension operator** (`::`) is reserved for custom semantics. By default it throws an error — override `getProperty` to implement your own behavior.
 

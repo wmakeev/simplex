@@ -7,6 +7,7 @@ export type Expression =
   | LogicalExpression
   | LiteralExpression
   | MemberExpression
+  | NonNullAssertExpression
   | ObjectExpression
   | NullishCoalescingExpression
   | PipeSequence
@@ -199,6 +200,12 @@ export interface LetExpression {
 
 export interface TemplateElement {
   value: string
+  location: Location
+}
+
+export interface NonNullAssertExpression {
+  type: 'NonNullAssertExpression'
+  expression: Expression
   location: Location
 }
 

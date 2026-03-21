@@ -199,6 +199,9 @@ const visitors: {
     ]
   },
 
+  NonNullAssertExpression: (node, visit) =>
+    wrapCall(GEN.nna, node, visit(node.expression)),
+
   MemberExpression: (node, visit) => {
     const { computed, object, property } = node
 

@@ -79,6 +79,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 - **Dot:** `obj.prop`, `obj.nested.deep`
 - **Computed:** `obj["key"]`, `arr[0]`, `str[0]`
 - **Extension:** `obj::method(args)` — calls an extension method. Requires `extensions` option in `CompileOptions`. The extension method receives `obj` as first argument: `obj::map(fn)` → `extensionMap.map(obj, fn)`. Throws `ExpressionError` if no extensions configured, type not found, or method not found. Null-safe: `null::method()` → `undefined`.
+- **Non-null assert:** `expr!` — runtime assert that value is not `null`/`undefined`. Throws `ExpressionError` if it is. No whitespace before `!`. Chainable: `a.b!.c.d!`, `foo!(args)`. Unlike JavaScript (which has optional chaining `?.` and no `!`), SimplEx has null-safe member access by default but explicit non-null assertion via `!` — inverted from JS, which is more practical for an expression language working with optional data structures.
 - Null-safe: `null.prop` → `undefined` (no error)
 - Strings: only numeric index access; `"str".foo` → error
 

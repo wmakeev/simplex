@@ -556,6 +556,11 @@ MemberExpression
             tagged: true, template: template, location: getLocation(location())
           };
         }
+      / "!" !"=" {
+          return {
+            nonNullAssert: true, location: getLocation(location())
+          };
+        }
     )*
     {
       return tail.reduce(function(result, element) {
@@ -563,6 +568,13 @@ MemberExpression
           element.template.tag = result;
           element.template.location = getLocation(location());
           return element.template;
+        }
+        if (element.nonNullAssert) {
+          return {
+            type: "NonNullAssertExpression",
+            expression: result,
+            location: element.location
+          };
         }
         return {
           type: "MemberExpression",
@@ -625,6 +637,11 @@ CallExpression
             tagged: true, template: template, location: getLocation(location())
           };
         }
+      / "!" !"=" {
+          return {
+            nonNullAssert: true, location: getLocation(location())
+          };
+        }
     )*
     {
       return tail.reduce(function(result, element) {
@@ -632,6 +649,13 @@ CallExpression
           element.template.tag = result;
           element.template.location = getLocation(location());
           return element.template;
+        }
+        if (element.nonNullAssert) {
+          return {
+            type: "NonNullAssertExpression",
+            expression: result,
+            location: element.location
+          };
         }
         element[TYPES_TO_PROPERTY_NAMES[element.type]] = result;
 
