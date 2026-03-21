@@ -72,7 +72,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 ### Collections
 
 - **Arrays:** `[1, 2, 3]`, `[1, , 3]` (sparse), trailing comma OK
-- **Objects:** `{a: 1, "b-c": 2}`, trailing comma OK
+- **Objects:** `{a: 1, "b-c": 2}`, trailing comma OK. Computed keys: `{["a" & "b"]: 42}`
 
 ### Property Access
 

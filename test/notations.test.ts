@@ -35,8 +35,10 @@ suite('notations', () => {
       { a: 1, b: 'foo', c: 1 + 2, d: true, e: { a: 3 }, f: [1, 2] }
     )
 
-    // TODO
-    // assert.deepEqual(compile('{ ["foo"]: "bar" }')(), { foo: 'bar' })
+    assert.deepEqual(compile('{ ["foo"]: "bar" }')(), { foo: 'bar' })
+    assert.deepEqual(compile('{ ["a" & "b"]: 42 }')(), { ab: 42 })
+    assert.deepEqual(compile('{ [1 + 1]: "two" }')(), { 2: 'two' })
+    assert.deepEqual(compile('{ a: 1, ["b"]: 2 }')(), { a: 1, b: 2 })
 
     assert.throws(
       () => compile('{1e999: "v"}'),

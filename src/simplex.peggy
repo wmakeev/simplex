@@ -458,6 +458,17 @@ PropertyAssignment
         type: "Property",
         key: key,
         value: value,
+        computed: false,
+        kind: "init",
+        location: getLocation(location())
+      };
+    }
+  / "[" __ key:Expression __ "]" __ ":" __ value:Expression {
+      return {
+        type: "Property",
+        key: key,
+        value: value,
+        computed: true,
         kind: "init",
         location: getLocation(location())
       };

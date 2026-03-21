@@ -898,6 +898,7 @@ suite('parser', () => {
                 }
               }
             },
+            computed: false,
             kind: 'init',
             location: {
               start: {
@@ -927,6 +928,26 @@ suite('parser', () => {
         }
       }
     })
+  })
+
+  test('ObjectExpression with computed property', () => {
+    const result = parse('{ ["key"]: 1 }')
+    assert.equal(result.type, 'ExpressionStatement')
+    const obj = result.expression as { type: string; properties: unknown[] }
+    assert.equal(obj.type, 'ObjectExpression')
+    assert.equal(obj.properties.length, 1)
+    const prop = obj.properties[0] as {
+      type: string
+      computed: boolean
+      key: { type: string; value: unknown }
+      value: { type: string; value: unknown }
+    }
+    assert.equal(prop.type, 'Property')
+    assert.equal(prop.computed, true)
+    assert.equal(prop.key.type, 'Literal')
+    assert.equal(prop.key.value, 'key')
+    assert.equal(prop.value.type, 'Literal')
+    assert.equal(prop.value.value, 1)
   })
 
   test('ArrayExpression', () => {

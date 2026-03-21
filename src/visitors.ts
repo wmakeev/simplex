@@ -139,9 +139,11 @@ const visitors: {
 
   ObjectExpression: (node, visit, context) => {
     const items = node.properties.map(p => {
-      let key: VisitResult
-      if (p.key.type === 'Identifier') {
-        key = codePart(p.key.name, p)
+      let keyParts: VisitResult[]
+      if (p.computed) {
+        keyParts = [codePart('[', p), ...visit(p.key), codePart(']', p)]
+      } else if (p.key.type === 'Identifier') {
+        keyParts = [codePart(p.key.name, p)]
       } else if (p.key.type === 'Literal') {
         // JSON.stringify(Infinity) returns "null", producing wrong key
         if (typeof p.key.value === 'number' && !Number.isFinite(p.key.value)) {
@@ -151,7 +153,7 @@ const visitors: {
             p.key.location
           )
         }
-        key = codePart(JSON.stringify(p.key.value), p)
+        keyParts = [codePart(JSON.stringify(p.key.value), p)]
       } else {
         // Unreachable: grammar restricts keys to Identifier and Literal
         throw new CompileError(
@@ -160,7 +162,7 @@ const visitors: {
           p.key.location
         )
       }
-      return [key, codePart(':', node), ...visit(p.value)]
+      return [...keyParts, codePart(':', node), ...visit(p.value)]
     })
 
     return [
