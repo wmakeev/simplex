@@ -127,6 +127,7 @@ suite('operators', () => {
         },
         logicalOperators: {
           ...defaultLogicalOperators,
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
           or: (a, b) => a() || b(),
           and: () => {
             assert.fail('operator "and" should not call')
