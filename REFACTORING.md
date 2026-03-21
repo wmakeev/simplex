@@ -98,32 +98,7 @@ Possible interpretations:
 
 ---
 
-### [ ] 8. `visitors.ts:297` — `...args` vs named parameters in lambdas
-
-```js
-// TODO Is "...args" more performant?
-// (params => function (p0, p1) {
-//   var scope = [params, [p0, p1], scope]
-//   return {{code}}
-// })(["a", "b"])
-```
-
-**Unclear:** What exactly is being compared and in which direction is the change intended?
-
-Current code generates `function(p0, p1)` with explicit names. Alternative:
-
-```js
-function(...args) { var scope = [params, args, scope]; return ... }
-```
-
-Pros of `...args`: one pattern for any number of parameters, less generated code.
-Cons of `...args`: rest parameters are traditionally slower in V8 (though the gap is shrinking); function `.length` is lost; no named parameters for debugging.
-
-**Question to author:** Was the intent "benchmark which is faster in V8" or "switch to `...args` to simplify code generation"? Priority — performance or simplicity of generated code?
-
----
-
-### [ ] 9. Specialized `isSimpleValue` variants for different cases
+### [ ] 8. Specialized `isSimpleValue` variants for different cases
 
 **Unclear:** Which specific "different cases" are meant?
 

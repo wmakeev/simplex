@@ -294,11 +294,6 @@ const visitors: {
       const fnParamsList = fnParams.join()
       const fnParamsNamesList = paramsNames.map(p => JSON.stringify(p)).join()
 
-      // TODO Is "...args" more performant?
-      // (params => function (p0, p1) {
-      //   var scope = [params, [p0, p1], scope]
-      //   return {{code}}
-      // })(["a", "b"])
       const parts: VisitResult[] = [
         codePart(
           `((${GEN.scope},params)=>function(${fnParamsList}){${GEN.scope}=[params,[${fnParamsList}],${GEN.scope}];return `,
