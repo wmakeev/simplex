@@ -20,6 +20,7 @@ export const GEN = {
   _varValues: '_varValues',
   ensObj: 'ensObj',
   ensArr: 'ensArr',
+  str: 'str',
 } as const
 
 // Semantic indices into the scope array [names, values, parent]

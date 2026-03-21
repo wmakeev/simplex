@@ -349,6 +349,47 @@ const visitors: {
     }
   },
 
+  TemplateLiteral: (node, visit) => {
+    const { quasis, expressions } = node
+
+    // No interpolations → emit as plain string literal
+    if (expressions.length === 0) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return [codePart(JSON.stringify(quasis[0]!.value), node)]
+    }
+
+    const parts: VisitResult[] = [codePart('(', node)]
+
+    for (let i = 0; i < quasis.length; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const quasi = quasis[i]!
+      const expr = expressions[i]
+
+      // Add "+" between parts (skip before the first part)
+      if (i > 0) {
+        parts.push(codePart('+', node))
+      }
+
+      // Emit the static string part
+      if (quasi.value !== '' || expr == null) {
+        parts.push(codePart(JSON.stringify(quasi.value), quasi))
+        if (expr != null) {
+          parts.push(codePart('+', node))
+        }
+      }
+
+      // Emit the interpolated expression wrapped in castToString
+      if (expr != null) {
+        parts.push(codePart(`${GEN.str}(`, node))
+        parts.push(...visit(expr))
+        parts.push(codePart(')', node))
+      }
+    }
+
+    parts.push(codePart(')', node))
+    return parts
+  },
+
   LetExpression: (node, visit, context) => {
     const declarationsNamesSet = new Set()
 

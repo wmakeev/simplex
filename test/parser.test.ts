@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
 import assert from 'node:assert/strict'
@@ -1074,7 +1073,7 @@ suite('parser', () => {
   })
 
   test('ArrayExpression with spread', () => {
-    const result = parse('[1, ...a]') as any
+    const result = parse('[1, ...a]')
     const elements = result.expression.elements
     assert.equal(elements.length, 2)
     assert.equal(elements[0].type, 'Literal')

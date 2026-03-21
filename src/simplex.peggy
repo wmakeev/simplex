@@ -271,6 +271,46 @@ SingleStringCharacter
   / "\\" sequence:EscapeSequence { return sequence; }
   / LineContinuation
 
+TemplateLiteral "template literal"
+  = "`" head:TemplateCharacter* parts:TemplatePart* "`" {
+      var quasis = [];
+      var expressions = [];
+
+      quasis.push({
+        value: head.join(""),
+        location: getLocation(location())
+      });
+
+      for (var i = 0; i < parts.length; i++) {
+        expressions.push(parts[i].expression);
+        quasis.push({
+          value: (parts[i].suffix || []).join(""),
+          location: getLocation(location())
+        });
+      }
+
+      return {
+        type: "TemplateLiteral",
+        quasis: quasis,
+        expressions: expressions,
+        location: getLocation(location())
+      };
+    }
+
+TemplatePart
+  = "${" __ expression:Expression __ "}" suffix:TemplateCharacter* {
+      return { expression: expression, suffix: suffix };
+    }
+
+TemplateCharacter
+  = "\\" sequence:TemplateEscapeSequence { return sequence; }
+  / !("`" / "${" / "\\") SourceCharacter { return text(); }
+
+TemplateEscapeSequence
+  = "`" { return "`"; }
+  / "$" { return "$"; }
+  / EscapeSequence
+
 LineContinuation
   = "\\" LineTerminatorSequence { return ""; }
 
@@ -381,6 +421,7 @@ PrimaryExpression
   = Identifier
   / Literal
   / TopicReference
+  / TemplateLiteral
   / ArrayLiteral
   / ObjectLiteral
   / "(" __ expression:Expression __ ")" { return expression; }

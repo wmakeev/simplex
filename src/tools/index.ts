@@ -109,7 +109,7 @@ export function ensureFunction(val: unknown): Function {
 
 /** Validate that value is a plain object; throw UnexpectedTypeError otherwise. */
 export function ensureObject(val: unknown): object {
-  if (isObject(val)) return val as object
+  if (isObject(val)) return val
   throw new UnexpectedTypeError(['object'], val)
 }
 

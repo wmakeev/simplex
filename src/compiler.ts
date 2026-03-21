@@ -38,6 +38,7 @@ export { traverse }
 
 interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
+  castToString(this: void, val: unknown): string
   ensureFunction(this: void, val: unknown): Function
   ensureObject(this: void, val: unknown): object
   ensureArray(this: void, val: unknown): unknown[]
@@ -154,6 +155,7 @@ const defaultContextHelpers: ContextHelpers<
   Record<string, unknown>
 > = {
   castToBoolean,
+  castToString,
   ensureFunction,
   ensureObject,
   ensureArray,
@@ -334,6 +336,7 @@ function getExpressionErrorLocation(
 const bootstrapCodeHead =
   `
     var ${GEN.bool}=ctx.castToBoolean;
+    var ${GEN.str}=ctx.castToString;
     var ${GEN.bop}=ctx.binaryOperators;
     var ${GEN.lop}=ctx.logicalOperators;
     var ${GEN.uop}=ctx.unaryOperators;
@@ -387,7 +390,6 @@ export function compile<
 
   const resolvedBool = options?.castToBoolean ?? castToBoolean
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const defaultOptions: CompileOptions<Data, Globals> = {
     ...defaultContextHelpers,
     // Recreate operators with custom castToBoolean so compile options

@@ -10,6 +10,7 @@ export type Expression =
   | ObjectExpression
   | NullishCoalescingExpression
   | PipeSequence
+  | TemplateLiteralExpression
   | TopicReference
   | UnaryExpression
   | LambdaExpression
@@ -193,5 +194,17 @@ export interface LetExpression {
   type: 'LetExpression'
   declarations: VariableDeclarator[]
   expression: Expression
+  location: Location
+}
+
+export interface TemplateElement {
+  value: string
+  location: Location
+}
+
+export interface TemplateLiteralExpression {
+  type: 'TemplateLiteral'
+  quasis: TemplateElement[]
+  expressions: Expression[]
   location: Location
 }
