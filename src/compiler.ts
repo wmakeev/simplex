@@ -36,7 +36,7 @@ export { traverse }
 
 // --- Context Helpers ---
 
-interface ContextHelpers<Data, Globals> {
+export interface ContextHelpers<Data, Globals> {
   castToBoolean(this: void, val: unknown): boolean
   castToString(this: void, val: unknown): string
   ensureFunction(this: void, val: unknown): Function
@@ -167,7 +167,7 @@ const defaultContextHelpers: ContextHelpers<
 
 // --- Operators ---
 
-type ExpressionUnaryOperators = Record<
+export type ExpressionUnaryOperators = Record<
   UnaryExpression['operator'],
   (val: unknown) => unknown
 >
@@ -187,7 +187,7 @@ export function createDefaultUnaryOperators(
 export const defaultUnaryOperators: ExpressionUnaryOperators =
   createDefaultUnaryOperators(castToBoolean)
 
-type ExpressionBinaryOperators = Record<
+export type ExpressionBinaryOperators = Record<
   BinaryExpression['operator'],
   (left: unknown, right: unknown) => unknown
 >
@@ -252,12 +252,12 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
   }
 }
 
-type LogicalOperatorFunction = (
+export type LogicalOperatorFunction = (
   left: () => unknown,
   right: () => unknown
 ) => unknown
 
-type ExpressionLogicalOperators = Record<
+export type ExpressionLogicalOperators = Record<
   LogicalExpression['operator'],
   LogicalOperatorFunction
 >
@@ -274,7 +274,7 @@ export function createDefaultLogicalOperators(
 export const defaultLogicalOperators: ExpressionLogicalOperators =
   createDefaultLogicalOperators(castToBoolean)
 
-interface ExpressionOperators {
+export interface ExpressionOperators {
   unaryOperators: Record<UnaryExpression['operator'], (val: unknown) => unknown>
   binaryOperators: Record<
     BinaryExpression['operator'],

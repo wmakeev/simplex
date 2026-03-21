@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] Экспортировать TypeScript типы для контекстов (глобальный и compile)
+- [x] Экспортировать TypeScript типы для контекстов (глобальный и compile)
 
 - [x] Добавить computed property names - `{ ["foo"]: "bar" }`, `{ [foo]: "bar" }`
 
