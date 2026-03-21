@@ -30,7 +30,7 @@ npm run compile:dev && node --test build/test/parser.test.js
 ## Architecture
 
 - **`src/simplex.peggy`** — PEG grammar defining the expression language (Peggy format). Generates `parser/index.js`.
-- **`src/simplex-tree.ts`** — AST node type definitions (Literal, Identifier, BinaryExpression, CallExpression, PipeSequence, LambdaExpression, LetExpression, etc.)
+- **`src/simplex-tree.ts`** — AST node type definitions (Literal, Identifier, BinaryExpression, CallExpression, PipeSequence, LambdaExpression, LetExpression, TemplateLiteralExpression, etc.)
 - **`src/visitors.ts`** — AST visitors: `visitors` object maps AST node types to JS code strings; `traverse()` walks the AST and produces generated code with source location offsets.
 - **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, bootstrap code generation, and runtime error mapping.
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
@@ -138,6 +138,17 @@ Syntax: `let name1 = init1, name2 = init2, bodyExpr`
 - Duplicate names → `CompileError`
 - The **last comma-separated expression** is the body (not a binding)
 
+### Template Literals
+
+`` `Hello ${name}, you have ${count} items` ``
+
+- Backtick-delimited strings with `${expression}` interpolations
+- Expressions inside `${}` can be any SimplEx expression (including nested template literals)
+- Static parts support same escape sequences as regular strings, plus `` \` `` and `\$`
+- Result is always a string (interpolated values are coerced via `castToString`)
+- Multiline content is allowed (unlike regular strings)
+- A lone `$` without `{` is treated as literal text
+
 ### Comments
 
 - Single-line: `// comment`
@@ -209,6 +220,7 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 - After completing and testing a plan implementation, always offer to commit the changes.
 - After a commit is made, always offer to push to the remote.
 - After a push, always check CI status (`gh run list`).
+- **`git stash` is unsafe** in this project: ESLint runs with `--fix` (via `npm run lint` / `npm run build`), so it auto-modifies files. If you stash changes, run lint, and then `stash pop`, the linter-modified files will conflict with stashed changes — potentially losing all unstaged work.
 
 ## Maintenance
 

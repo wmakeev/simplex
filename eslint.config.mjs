@@ -41,17 +41,13 @@ export default defineConfig(
         }
       ],
       '@typescript-eslint/ban-ts-comment': 'warn',
-      // '@typescript-eslint/no-unnecessary-condition': 'warn',
       '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'off',
-
-      // '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      // '@typescript-eslint/no-unsafe-call': 'warn',
-
       '@typescript-eslint/restrict-template-expressions': 'off',
 
-      // project scope
+      // project scope — compiler works with `any` from parser by design
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
       'n/no-unpublished-import': 'off',
