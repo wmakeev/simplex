@@ -1,1 +1,6 @@
+playground/
+.claude/
+CLAUDE.md
+TODO.md
+project-words.txt
 package-lock.json
