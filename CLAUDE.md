@@ -35,7 +35,7 @@ npm run compile:dev && node --test build/test/parser.test.js
 - **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, and bootstrap code generation.
 - **`src/error-mapping.ts`** — Error mapping strategy: `ErrorMapper` interface, built-in `v8ErrorMapper`, `registerErrorMapper()` / `getActiveErrorMapper()` registration mechanism, `getExpressionErrorLocation()` helper.
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
-- **`src/tools/`** — Runtime utilities: type guards (`guards.ts`), casting (`cast.ts`), type checking (`index.ts`), validation (`ensure.ts`)
+- **`src/tools/`** — Runtime utilities: type guards, casting, type checking, validation (all in `index.ts`)
 - **`src/index.ts`** — Public API re-exports
 - **`parser/`** — Auto-generated parser output (do not edit manually)
 - **`build/`** — Compiled JS output

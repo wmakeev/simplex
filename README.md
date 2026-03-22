@@ -191,7 +191,7 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 
 > **Note:** Unlike JavaScript (which has optional chaining `?.` and no runtime `!`), SimplEx has null-safe member access by default but explicit non-null assertion via `!`. This is inverted from JS — more practical for an expression language working with optional data structures.
 
-**Extension operator** (`::`) is reserved for custom semantics. By default it throws an error — override `getProperty` to implement your own behavior.
+**Extension methods** (`::`) — call methods registered via the `extensions` compile option. `obj::method(args)` calls `extensionMap.method(obj, args)`. Requires `extensions` in `CompileOptions`. Null-safe: `null::method()` returns `undefined`. Throws if no extension methods are defined for the type or the method is not found.
 
 ### Function Calls
 
@@ -325,7 +325,12 @@ Compiles a SimplEx expression string into a reusable function. The returned func
 
 ```ts
 type CompileOptions<Data, Globals> = Partial<
-  ContextHelpers<Data, Globals> & ExpressionOperators & { globals: Globals }
+  ContextHelpers<Data, Globals> &
+    ExpressionOperators & {
+      globals: Globals
+      extensions: Map<string | object | Function, Record<string, Function>>
+      errorMapper: ErrorMapper | null
+    }
 >
 ```
 
@@ -334,10 +339,13 @@ All fields are optional. You can override any combination of:
 | Option | Type | Description |
 |---|---|---|
 | `globals` | `Globals` | Compile-time constants and functions available to the expression |
+| `extensions` | `Map<string \| object \| Function, Record<string, Function>>` | Extension methods for `::` operator. Keys: `typeof` string or class/constructor. Values: method bags |
+| `errorMapper` | `ErrorMapper \| null` | Error mapping strategy. Default: auto-detected (V8). `null` disables mapping |
 | `getIdentifierValue` | `(name, globals, data) => unknown` | Custom identifier resolution |
-| `getProperty` | `(obj, key, extension) => unknown` | Custom property access (including `::`) |
+| `getProperty` | `(obj, key, extension) => unknown` | Custom property access. `extension` is `true` for `::` access |
 | `callFunction` | `(fn, args) => unknown` | Custom function call behavior |
 | `pipe` | `(head, tail) => unknown` | Custom pipe operator behavior |
+| `nonNullAssert` | `(val) => unknown` | Custom non-null assertion for `!` operator |
 | `castToBoolean` | `(val) => boolean` | Custom truthiness rules (affects `if`, `and`, `or`, `not`) |
 | `castToString` | `(val) => string` | Custom string coercion (affects `&` and template literals) |
 | `ensureFunction` | `(val) => Function` | Custom function validation |
@@ -425,7 +433,7 @@ const fn = compile('foo', {
 
 ```ts
 const fn = compile('a.b', {
-  getProperty: (obj, key) => `custom:${String(key)}`
+  getProperty: (obj, key, extension) => `custom:${String(key)}`
 })
 
 fn({ a: { b: 'real' } }) // "custom:b"

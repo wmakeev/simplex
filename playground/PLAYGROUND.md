@@ -45,10 +45,6 @@ import { traverse, compile } from 'simplex-lang' // via alias
 
 `traverse` and `compile` are re-exported through `src/index.ts → compiler.ts`.
 
-### assert shim
-
-`compiler.ts` uses `node:assert` in two places (lines 381, 385) — checks during error mapping. The shim in `shims/assert.ts` implements only `ok()` and `equal()`.
-
 ## Deployment
 
 Automatically deployed to GitHub Pages on push to `main` when `playground/`, `src/`, or `parser/` files change.
