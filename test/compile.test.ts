@@ -6,8 +6,12 @@ import {
   defaultBinaryOperators,
   defaultLogicalOperators,
   defaultUnaryOperators,
-  ExpressionError
+  ExpressionError,
+  getActiveErrorMapper,
+  v8ErrorMapper,
+  registerErrorMapper
 } from '../src/index.js'
+import type { ErrorMapper } from '../src/index.js'
 
 suite('compile', () => {
   test('without context', () => {
@@ -272,5 +276,87 @@ suite('compile', () => {
     assert.throws(() => fn(), {
       message: 'bootstrap area'
     })
+  })
+
+  test('errorMapper: null disables error mapping', () => {
+    const fn = compile('x', { errorMapper: null })
+
+    assert.throws(() => fn(), err => {
+      // Without error mapping, the raw Error is thrown (not ExpressionError)
+      assert.ok(!(err instanceof ExpressionError))
+      assert.ok(err instanceof Error)
+      return true
+    })
+  })
+
+  test('errorMapper: custom mapper receives correct arguments', () => {
+    var receivedArgs: unknown[] = []
+
+    const customMapper: ErrorMapper = {
+      probe: () => true,
+      mapError(err, expression, offsets, codeOffset) {
+        receivedArgs = [err, expression, offsets, codeOffset]
+        return new ExpressionError('custom mapped', expression, null)
+      }
+    }
+
+    const fn = compile('x', { errorMapper: customMapper })
+
+    assert.throws(() => fn(), err => {
+      assert.ok(err instanceof ExpressionError)
+      assert.equal(err.message, 'custom mapped')
+      // Verify arguments were passed correctly
+      assert.ok(receivedArgs[0] instanceof Error)
+      assert.equal(receivedArgs[1], 'x')
+      assert.ok(Array.isArray(receivedArgs[2]))
+      assert.equal(typeof receivedArgs[3], 'number')
+      assert.ok((receivedArgs[3] as number) > 0)
+      return true
+    })
+  })
+
+  test('errorMapper: custom mapper returning null re-throws original', () => {
+    const customMapper: ErrorMapper = {
+      probe: () => true,
+      mapError() {
+        return null
+      }
+    }
+
+    const fn = compile('x', { errorMapper: customMapper })
+
+    assert.throws(() => fn(), err => {
+      assert.ok(!(err instanceof ExpressionError))
+      assert.ok(err instanceof Error)
+      return true
+    })
+  })
+})
+
+suite('error mapper registration', () => {
+  test('getActiveErrorMapper returns v8ErrorMapper in Node.js', () => {
+    assert.equal(getActiveErrorMapper(), v8ErrorMapper)
+  })
+
+  test('v8ErrorMapper.probe() returns true in Node.js', () => {
+    assert.equal(v8ErrorMapper.probe(), true)
+  })
+
+  test('registerErrorMapper: idempotent for same mapper', () => {
+    // Re-registering the same active mapper should be a no-op
+    registerErrorMapper(v8ErrorMapper)
+    assert.equal(getActiveErrorMapper(), v8ErrorMapper)
+  })
+
+  test('registerErrorMapper: failing probe does not replace active', () => {
+    const failMapper: ErrorMapper = {
+      probe: () => false,
+      mapError() {
+        return null
+      }
+    }
+
+    registerErrorMapper(failMapper)
+    assert.equal(getActiveErrorMapper(), v8ErrorMapper)
   })
 })

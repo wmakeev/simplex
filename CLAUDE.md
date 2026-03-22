@@ -32,7 +32,8 @@ npm run compile:dev && node --test build/test/parser.test.js
 - **`src/simplex.peggy`** — PEG grammar defining the expression language (Peggy format). Generates `parser/index.js`.
 - **`src/simplex-tree.ts`** — AST node type definitions (Literal, Identifier, BinaryExpression, CallExpression, PipeSequence, LambdaExpression, LetExpression, TemplateLiteralExpression, etc.)
 - **`src/visitors.ts`** — AST visitors: `visitors` object maps AST node types to JS code strings; `traverse()` walks the AST and produces generated code with source location offsets.
-- **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, bootstrap code generation, and runtime error mapping.
+- **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, and bootstrap code generation.
+- **`src/error-mapping.ts`** — Error mapping strategy: `ErrorMapper` interface, built-in `v8ErrorMapper`, `registerErrorMapper()` / `getActiveErrorMapper()` registration mechanism, `getExpressionErrorLocation()` helper.
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
 - **`src/tools/`** — Runtime utilities: type guards (`guards.ts`), casting (`cast.ts`), type checking (`index.ts`), validation (`ensure.ts`)
 - **`src/index.ts`** — Public API re-exports
@@ -200,6 +201,7 @@ compile('x', { globals: { x: 1 } })({ x: 2 })      // 1
 compile<Data, Globals>(expression: string, options?: {
   globals?: Record<string, unknown>
   extensions?: Map<string | object | Function, Record<string, Function>>
+  errorMapper?: ErrorMapper | null
   getIdentifierValue?: (name: string, globals: Globals, data: Data) => unknown
   unaryOperators?: Record<string, (val: unknown) => unknown>
   binaryOperators?: Record<string, (left: unknown, right: unknown) => unknown>
@@ -210,6 +212,8 @@ compile<Data, Globals>(expression: string, options?: {
 All operators and context helpers can be overridden at compile time.
 
 `extensions` maps types to method bags for `::` syntax. Keys: `string` (`"string"`, `"number"`) for `typeof` matching, or class/constructor (`Array`, `Map`) for `instanceof` matching. Values: objects mapping method names to functions where the first argument is always the receiver object.
+
+`errorMapper` controls runtime error-to-source-location mapping. Default (`undefined`) uses the auto-detected mapper (V8 in Node.js). Pass `null` to disable mapping (original errors re-thrown). Pass a custom `ErrorMapper` for other engines. Use `registerErrorMapper()` to register a global mapper — each mapper has a `probe()` method for engine compatibility detection.
 
 ## Code Generation Strategy
 

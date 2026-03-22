@@ -4,9 +4,13 @@
 import { parse } from '../parser/index.js'
 import { ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
+  getActiveErrorMapper,
+  getExpressionErrorLocation
+} from './error-mapping.js'
+import type { ErrorMapper } from './error-mapping.js'
+import {
   BinaryExpression,
   ExpressionStatement,
-  Location,
   LogicalExpression,
   UnaryExpression
 } from './simplex-tree.js'
@@ -26,8 +30,8 @@ import { traverse } from './visitors.js'
 import type { SourceLocation, VisitResult } from './visitors.js'
 import { GEN, SCOPE_NAMES, SCOPE_VALUES, SCOPE_PARENT } from './constants.js'
 
-export type { SourceLocation, VisitResult }
-export { traverse }
+export type { SourceLocation, VisitResult, ErrorMapper }
+export { traverse, getExpressionErrorLocation }
 
 // --- Context Helpers ---
 
@@ -59,7 +63,6 @@ export interface ContextHelpers<Data, Globals> {
 }
 
 var hasOwn = Object.hasOwn
-var ERROR_STACK_REGEX = /<anonymous>:(?<row>\d+):(?<col>\d+)/g
 
 /** Look up an identifier in globals first, then data; throw on miss. */
 function defaultGetIdentifierValue(
@@ -344,51 +347,6 @@ export interface ExpressionOperators {
   >
 }
 
-// --- Error Mapping ---
-
-/** Map a runtime error from generated code back to source expression location. */
-function mapRuntimeError(
-  err: unknown,
-  expression: string,
-  offsets: SourceLocation[]
-): ExpressionError | null {
-  if (!(err instanceof Error)) return null
-
-  const evalRow = err.stack
-    ?.split('\n')
-    .map(r => r.trim())
-    .find(r => r.startsWith('at eval '))
-  if (!evalRow) return null
-
-  ERROR_STACK_REGEX.lastIndex = 0
-  const match = ERROR_STACK_REGEX.exec(evalRow)
-  const rowStr = match?.groups?.['row']
-  const colStr = match?.groups?.['col']
-  if (!rowStr || !colStr) return null
-
-  const row = Number.parseInt(rowStr)
-  if (row !== 3) return null
-
-  const col = Number.parseInt(colStr)
-  const adjustedCol = col - bootstrapCodeHeadLen
-  if (adjustedCol < 0) return null
-
-  const location = getExpressionErrorLocation(adjustedCol, offsets)
-  return new ExpressionError(err.message, expression, location, { cause: err })
-}
-
-function getExpressionErrorLocation(
-  colOffset: number,
-  locations: SourceLocation[]
-): Location | null {
-  var curCol = 0
-  for (const loc of locations) {
-    curCol += loc.len
-    if (curCol >= colOffset) return loc.location
-  }
-  return null
-}
-
 // --- Bootstrap Code ---
 
 const bootstrapCodeHead =
@@ -433,6 +391,7 @@ export type CompileOptions<Data, Globals> = Partial<
     ExpressionOperators & {
       globals: Globals
       extensions: Map<string | object | Function, Record<string, Function>>
+      errorMapper: ErrorMapper | null
     }
 >
 
@@ -499,11 +458,21 @@ export function compile<
     data?: Data
   ) => unknown
 
+  const errorMapper =
+    options?.errorMapper !== undefined
+      ? options.errorMapper
+      : getActiveErrorMapper()
+
+  if (errorMapper === null) return func
+
   return function (data?: Data) {
     try {
       return func(data)
     } catch (err) {
-      throw mapRuntimeError(err, expression, offsets) ?? err
+      throw (
+        errorMapper.mapError(err, expression, offsets, bootstrapCodeHeadLen) ??
+        err
+      )
     }
   }
 }
