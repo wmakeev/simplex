@@ -1,4 +1,3 @@
-// eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
 import assert from 'node:assert/strict'
 import { test, suite } from 'node:test'

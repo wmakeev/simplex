@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
-// eslint-disable-next-line n/no-missing-import
 import { parse } from '../parser/index.js'
 import { ExpressionError, UnexpectedTypeError } from './errors.js'
 import {
@@ -108,9 +105,7 @@ function getExtensionMethod(
   }
 
   if (methods === undefined) {
-    throw new TypeError(
-      `No extension methods defined for type "${typeofObj}"`
-    )
+    throw new TypeError(`No extension methods defined for type "${typeofObj}"`)
   }
 
   var method = methods[key as string]
@@ -131,6 +126,7 @@ function defaultGetProperty(
 ): unknown {
   if (obj == null) return undefined
 
+  // TODO Нужно ли это убрать отсюда? Вроде как сюда всегда передается false?
   if (extension) {
     throw new ExpressionError(
       'Extension member expression (::) is reserved and not implemented',
@@ -292,7 +288,7 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
 
       case '[object Array]': {
         if (Number.isSafeInteger(a)) {
-          // @ts-ignore
+          // @ts-expect-error a is checked as safe integer index
           return a in b
         } else {
           throw new TypeError(
@@ -302,7 +298,7 @@ export const defaultBinaryOperators: ExpressionBinaryOperators = {
       }
 
       case '[object Map]':
-        // @ts-ignore
+        // @ts-expect-error b is Map, has() exists
         return b.has(a) as boolean
 
       default:
@@ -428,7 +424,11 @@ export function compile<
     ...(options as any)
   }
 
-  if (options?.extensions && options.extensions.size > 0 && !options.getProperty) {
+  if (
+    options?.extensions &&
+    options.extensions.size > 0 &&
+    !options.getProperty
+  ) {
     const extensionMap = options.extensions
     const classesKeys: (object | Function)[] = []
     const classesValues: Record<string, Function>[] = []

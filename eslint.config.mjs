@@ -50,6 +50,7 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
+      'n/no-missing-import': 'off',
       'n/no-unpublished-import': 'off',
       '@typescript-eslint/no-implied-eval': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
