@@ -1,0 +1,90 @@
+// SimplEx syntax highlighting example
+
+/* Block comment
+   spanning multiple lines */
+
+// Literals
+42
+.5
+1.2e3
+0xFF
+"hello world"
+'single quotes'
+true
+false
+null
+undefined
+
+// Template literals
+`Hello ${name}, you have ${count + 1} items`
+`Nested: ${`inner ${value}`}`
+
+// Arithmetic
+a + b - c * d / e mod f ^ g
+
+// String concatenation
+firstName & " " & lastName
+
+// Comparison and equality
+x > 0 and x <= 100
+name == "test" or name != "prod"
+
+// Logical operators
+a && b || c
+not isEmpty
+
+// Nullish coalescing
+value ?? defaultValue
+
+// Pipe operators
+data | map(%, x => x + 1) | filter(%, x => x > 0)
+name |? trim(%)
+input |> transform
+
+// Lambda expressions
+x => x + 1
+(a, b) => a + b
+() => 42
+a => b => a + b
+
+// Let expressions
+let x = 5, x + 1
+let a = 1, b = a + 1, a + b
+
+// Conditional
+if x > 0 then "positive" else "non-positive"
+if isEmpty then null
+
+// Collections
+[1, 2, 3]
+[1, ...rest, 4]
+{a: 1, "b-c": 2}
+{...obj, key: value}
+{["computed" & "Key"]: 42}
+
+// Property access and extension methods
+obj.prop.nested
+arr[0]
+obj::map(x => x * 2)
+
+// Currying
+add(#, 3)
+fn(#, y, #)
+
+// Function calls
+func()
+func(a, b)
+obj.method(x)
+
+// typeof and in
+typeof x
+"key" in obj
+2 in [a, b, c]
+
+// Non-null assert
+value!.prop
+data.items!
+
+// Topic reference and placeholder
+data | % + 1
+map(#, 10)

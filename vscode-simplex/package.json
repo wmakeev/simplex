@@ -1,0 +1,36 @@
+{
+  "name": "simplex-lang",
+  "displayName": "SimplEx Language",
+  "description": "Syntax highlighting for the SimplEx expression language",
+  "version": "1.0.0",
+  "publisher": "simplex-lang",
+  "license": "ISC",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "simplex",
+        "aliases": [
+          "SimplEx",
+          "simplex"
+        ],
+        "extensions": [
+          ".simplex"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "simplex",
+        "scopeName": "source.simplex",
+        "path": "./syntaxes/simplex.tmLanguage.json"
+      }
+    ]
+  }
+}
