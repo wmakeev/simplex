@@ -283,6 +283,39 @@ suite('operators', () => {
     )
   })
 
+  test('extension methods with Object key for plain objects', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [
+        Object,
+        {
+          keys: (o: object) => Object.keys(o),
+          values: (o: object) => Object.values(o)
+        }
+      ]
+    ])
+
+    assert.deepEqual(
+      compile('{a: 1, b: 2}::keys()', { extensions })(),
+      ['a', 'b']
+    )
+    assert.deepEqual(
+      compile('{a: 1, b: 2}::values()', { extensions })(),
+      [1, 2]
+    )
+  })
+
+  test('extension methods with mixed class and typeof keys', () => {
+    const extensions = new Map<object | string, Record<string, Function>>([
+      [Array, { len: (a: unknown[]) => a.length }],
+      [Object, { len: (o: object) => Object.keys(o).length }],
+      ['string', { len: (s: string) => s.length }]
+    ])
+
+    assert.equal(compile('[1, 2, 3]::len()', { extensions })(), 3)
+    assert.equal(compile('{a: 1, b: 2}::len()', { extensions })(), 2)
+    assert.equal(compile('"hello"::len()', { extensions })(), 5)
+  })
+
   test('index access', () => {
     assert.equal(compile('[1, 2, 3][1]')(), 2)
     assert.equal(compile('"123"[1]')(), '2')

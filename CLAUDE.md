@@ -211,7 +211,7 @@ compile<Data, Globals>(expression: string, options?: {
 
 All operators and context helpers can be overridden at compile time.
 
-`extensions` maps types to method bags for `::` syntax. Keys: `string` (`"string"`, `"number"`) for `typeof` matching, or class/constructor (`Array`, `Map`) for `instanceof` matching. Values: objects mapping method names to functions where the first argument is always the receiver object.
+`extensions` maps types to method bags for `::` syntax. Keys: `string` (`"string"`, `"number"`) for `typeof` matching, or class/constructor (`Array`, `Map`) for `constructor` matching. Values: objects mapping method names to functions where the first argument is always the receiver object.
 
 `errorMapper` controls runtime error-to-source-location mapping. Default (`undefined`) uses the auto-detected mapper (V8 in Node.js). Pass `null` to disable mapping (original errors re-thrown). Pass a custom `ErrorMapper` for other engines. Use `registerErrorMapper()` to register a global mapper — each mapper has a `probe()` method for engine compatibility detection.
 

@@ -84,25 +84,12 @@ function defaultGetIdentifierValue(
 function getExtensionMethod(
   obj: unknown,
   key: unknown,
-  extensionMap: Map<string | object | Function, Record<string, Function>>,
-  classesKeys: (object | Function)[],
-  classesValues: Record<string, Function>[]
+  extensionMap: Map<string | object | Function, Record<string, Function>>
 ): Function {
   var typeofObj = typeof obj
-  var methods: Record<string, Function> | undefined
-
-  if (typeofObj === 'object') {
-    for (var i = 0; i < classesKeys.length; i++) {
-      // @ts-expect-error supports objects with Symbol.hasInstance
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (obj instanceof classesKeys[i]!) {
-        methods = classesValues[i]
-        break
-      }
-    }
-  } else {
-    methods = extensionMap.get(typeofObj)
-  }
+  var methods = extensionMap.get(
+    typeofObj === 'object' ? (obj as object).constructor : typeofObj
+  )
 
   if (methods === undefined) {
     throw new TypeError(`No extension methods defined for type "${typeofObj}"`)
@@ -430,26 +417,10 @@ export function compile<
     !options.getProperty
   ) {
     const extensionMap = options.extensions
-    const classesKeys: (object | Function)[] = []
-    const classesValues: Record<string, Function>[] = []
-
-    for (const [key, methods] of extensionMap) {
-      if (typeof key !== 'string') {
-        classesKeys.push(key)
-        classesValues.push(methods)
-      }
-    }
 
     defaultOptions.getProperty = (obj, key, extension) => {
       if (obj == null) return undefined
-      if (extension)
-        return getExtensionMethod(
-          obj,
-          key,
-          extensionMap,
-          classesKeys,
-          classesValues
-        )
+      if (extension) return getExtensionMethod(obj, key, extensionMap)
       return defaultGetProperty(obj, key, false)
     }
   }
