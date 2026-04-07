@@ -11,6 +11,16 @@
   ],
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/src/index.d.ts",
+      "default": "./build/src/index.js"
+    },
+    "./stdlib": {
+      "types": "./build/src/stdlib/index.d.ts",
+      "default": "./build/src/stdlib/index.js"
+    }
+  },
   "keywords": [
     "expression",
     "language",
@@ -45,7 +55,7 @@
     "release": "np"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "prettier": {
     "semi": false,

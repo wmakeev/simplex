@@ -289,7 +289,7 @@ suite('operators', () => {
         Object,
         {
           keys: (o: object) => Object.keys(o),
-          values: (o: object) => Object.values(o)
+          values: (o: object) => Object.values(o) as unknown[]
         }
       ]
     ])

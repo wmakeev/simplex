@@ -37,6 +37,7 @@ npm run compile:dev && node --test build/test/parser.test.js
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
 - **`src/tools/`** — Runtime utilities: type guards, casting, type checking, validation (all in `index.ts`)
 - **`src/index.ts`** — Public API re-exports
+- **`src/stdlib/`** — Standard library (`createStdlib()`). Separate entry point: `simplex-lang/stdlib`. Namespaced functions (Str, Num, Math, Arr, Obj, Json, Date) + top-level utilities (empty, exists, typeOf). Returns `{ globals, extensions }` for use with `compile()`. Conventions: NaN→null, immutable (toSorted/toReversed), tiered validation (NaN wrapper / semantic wrapper / input guard). See [`docs/stdlib.md`](docs/stdlib.md) for full API reference.
 - **`parser/`** — Auto-generated parser output (do not edit manually)
 - **`build/`** — Compiled JS output
 
