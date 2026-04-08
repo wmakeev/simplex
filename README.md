@@ -5,6 +5,8 @@
 ![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/wmakeev/simplex/main/badges/coverage.json)
 ![no dependencies](https://img.shields.io/badge/dependencies-no-green?style=flat-square)
 [![parser](https://img.shields.io/badge/parser-peggy-pink?style=flat-square)](https://peggyjs.org/)
+[![playground](https://img.shields.io/badge/playground-online-blue?style=flat-square)](https://wmakeev.github.io/simplex/)
+![VS Code](https://img.shields.io/badge/VS_Code-extension-grey?style=flat-square)
 
 > **SimplEx** — a zero-dependency TypeScript compiler that turns expression strings into safe, sandboxed JavaScript functions.
 
@@ -13,7 +15,7 @@
 - [Why SimplEx?](#why-simplex)
 - [Quick Start](#quick-start)
 - [Playground](#playground)
-- [Like JS, but...](#like-js-but)
+- [Like JS, but…](#like-js-but)
 - [Language Reference](#language-reference)
   - [Literals](#literals)
   - [Operators](#operators)
@@ -21,7 +23,7 @@
   - [Collections](#collections)
   - [Property Access](#property-access)
   - [Function Calls](#function-calls)
-  - [Currying with #](#currying-with-)
+  - [Currying with `#`](#currying-with-)
   - [Conditionals](#conditionals)
   - [Pipe Operators](#pipe-operators)
   - [Lambda Expressions](#lambda-expressions)
@@ -35,7 +37,9 @@
   - [CompileOptions](#compileoptions)
   - [Errors](#errors)
 - [Customization](#customization)
+- [Standard Library](#standard-library)
 - [Using External Functions](#using-external-functions)
+- [AI / LLM Integration](#ai--llm-integration)
 - [License](#license)
 
 ## Why SimplEx?
@@ -49,14 +53,9 @@ SimplEx is designed for scenarios where you need to evaluate user-provided expre
 
 **Why not just `eval()`?** SimplEx expressions run in a fully sandboxed environment with no access to the global scope, prototype chains, or Node.js/browser APIs. Users can only work with data and functions you explicitly provide.
 
-**Why not a full language?** SimplEx is expression-only — no statements, no assignments, no loops, no side effects. Every expression deterministically computes a single value. This makes expressions easy to reason about and safe to store in configs and databases.
+**Why not a full language?** Every expression computes a value — no statements, no assignments, no loops. This makes expressions easy to reason about and safe to store in configs and databases.
 
-**What you get:**
-
-- Familiar JS-like syntax — if you know JavaScript, you already know most of SimplEx
-- Runtime type safety — arithmetic rejects `NaN`/`Infinity`, clear errors with source locations
-- Fully customizable — override any operator, identifier resolution, property access, or pipe behavior
-- Zero dependencies, ESM-only, TypeScript-first
+**What you get:** Familiar JS syntax, runtime type safety, full customizability, zero dependencies.
 
 ## Quick Start
 
@@ -67,12 +66,16 @@ npm install simplex-lang
 ```ts
 import { compile } from 'simplex-lang'
 
-// Pass functions via globals, data at runtime
-const fn = compile('(a + b) * min(a, b) + 10', {
-  globals: { min: Math.min }
+compile('a + b')({ a: 2, b: 3 }) // 5
+```
+
+```ts
+// Pass custom functions via globals, data at runtime
+const fn = compile('clamp(score, 0, 100) * weight', {
+  globals: { clamp: (v, lo, hi) => Math.max(lo, Math.min(hi, v)) }
 })
 
-fn({ a: 2, b: 3 }) // 20
+fn({ score: 150, weight: 0.5 }) // 50
 ```
 
 ```ts
@@ -88,7 +91,7 @@ Try SimplEx in the browser — edit expressions, inspect the AST, and see result
 
 **[SimplEx Playground](https://wmakeev.github.io/simplex/)**
 
-## Like JS, but...
+## Like JS, but…
 
 SimplEx syntax is intentionally close to JavaScript. If you know JS, you can start writing SimplEx immediately. Here are the key differences:
 
@@ -174,6 +177,7 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 | `{ a: 1, b: 2 }` | Object literal |
 | `{ "special-key": 1 }` | Quoted key |
 | `{ [dynamic]: value }` | Computed key |
+| `{ x, y }` | Shorthand property (`{ x: x, y: y }`) |
 | `{ ...base, extra: true }` | Spread (objects only) |
 
 ### Property Access
@@ -192,6 +196,18 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 > **Note:** Unlike JavaScript (which has optional chaining `?.` and no runtime `!`), SimplEx has null-safe member access by default but explicit non-null assertion via `!`. This is inverted from JS — more practical for an expression language working with optional data structures.
 
 **Extension methods** (`::`) — call methods registered via the `extensions` compile option. `obj::method(args)` calls `extensionMap.method(obj, args)`. Requires `extensions` in `CompileOptions`. Null-safe: `null::method()` returns `undefined`. Throws if no extension methods are defined for the type or the method is not found.
+
+```ts
+const extensions = new Map([
+  ['string', {
+    capitalize: (s: string) => s[0].toUpperCase() + s.slice(1),
+    truncate: (s: string, len: number) => s.length > len ? s.slice(0, len) + '...' : s
+  }]
+])
+
+compile('"hello"::capitalize()', { extensions })() // "Hello"
+compile('"long text here"::truncate(8)', { extensions })() // "long tex..."
+```
 
 ### Function Calls
 
@@ -233,7 +249,7 @@ Pipes chain a value through a series of expressions. The `%` topic reference hol
 | `1 \| add(%, 2) \| % * 4` | `12` |
 | `value \|? toUpper(%)` | If `value` is `null`, returns `null` (`\|?` short-circuits) |
 
-**`|>` (forward pipe)** — reserved. Override `pipe` in compile options to implement custom semantics.
+**`|>` (forward pipe)** — reserved (not available by default). Override `pipe` in compile options to implement custom semantics.
 
 ### Lambda Expressions
 
@@ -480,74 +496,109 @@ fn({ a: 'truthy' }) // "yes"
 fn({ a: true })     // "no" — only the string "truthy" is truthy now
 ```
 
+## Standard Library
+
+SimplEx includes a built-in standard library with namespaced functions and extension methods:
+
+```ts
+import { compile } from 'simplex-lang'
+import { createStdlib } from 'simplex-lang/stdlib'
+
+const { globals, extensions } = createStdlib()
+
+compile('Math.abs(x) + Str.upper(name)', { globals, extensions })({
+  x: -5,
+  name: 'hello'
+}) // 5 + "HELLO" → uses Math and Str namespaces
+```
+
+**Namespaces:** `Str`, `Num`, `Math`, `Arr`, `Obj`, `Json`, `Date` + top-level utilities (`empty`, `exists`, `typeOf`).
+
+**Extension methods** let you use method-call syntax: `x::abs()`, `items::map(fn)`, `name::upper()`.
+
+**Key conventions:**
+
+- **NaN → null** — functions that would return `NaN` in JS return `null` instead. Use `??` to provide defaults: `Math.sqrt(x) ?? 0`
+- **Immutable** — array operations return new copies (no mutation)
+
+See [Standard Library Reference](docs/stdlib.md) for the full API.
+
 ## Using External Functions
 
-SimplEx expressions can call any function you provide via `globals`. This is the primary way to extend the language.
-
-**Basic usage — math and utilities:**
+Beyond the [Standard Library](#standard-library), you can provide any custom functions via `globals`. This is useful for domain-specific logic. To combine stdlib with your own functions, spread them together:
 
 ```ts
-const fn = compile('round(price * quantity * (1 - discount), 2)', {
-  globals: {
-    round: (val, decimals) => {
-      const factor = 10 ** decimals
-      return Math.round(val * factor) / factor
+import { createStdlib } from 'simplex-lang/stdlib'
+
+const { globals, extensions } = createStdlib()
+
+const fn = compile(
+  `price * quantity * (1 - discount)
+    | Math.round(%)
+    | formatPrice(%)`,
+  {
+    globals: {
+      ...globals,
+      formatPrice: (val) => `$${val.toFixed(2)}`
+    },
+    extensions
+  }
+)
+
+fn({ price: 19.99, quantity: 3, discount: 0.15 }) // "$51.00"
+```
+
+**Domain-specific helpers:**
+
+```ts
+const fn = compile(
+  `
+  if classify(score) == "A" then
+    bonus(salary)
+  else
+    salary
+  `,
+  {
+    globals: {
+      classify: (score) => (score >= 90 ? 'A' : score >= 70 ? 'B' : 'C'),
+      bonus: (salary) => salary * 1.2
     }
   }
-})
+)
 
-fn({ price: 19.99, quantity: 3, discount: 0.15 }) // 50.97
+fn({ score: 95, salary: 50000 }) // 60000
 ```
 
-**Function library — provide a set of utilities:**
+**Combining with currying:**
 
 ```ts
-const stdlib = {
-  min: Math.min,
-  max: Math.max,
-  abs: Math.abs,
-  round: Math.round,
-  floor: Math.floor,
-  ceil: Math.ceil,
-  lower: s => s.toLowerCase(),
-  upper: s => s.toUpperCase(),
-  trim: s => s.trim(),
-  len: s => s.length,
-  includes: (arr, val) => arr.includes(val),
-  map: (arr, fn) => arr.map(fn),
-  filter: (arr, fn) => arr.filter(fn),
-  reduce: (arr, fn, init) => arr.reduce(fn, init),
-  keys: obj => Object.keys(obj),
-  values: obj => Object.values(obj)
-}
-
-const fn = compile('items | filter(%, x => x.active) | map(%, x => x.name) | len(%)', {
-  globals: stdlib
-})
-
-fn({
-  items: [
-    { name: 'A', active: true },
-    { name: 'B', active: false },
-    { name: 'C', active: true }
-  ]
-}) // 2
-```
-
-**Combining lambdas with currying:**
-
-```ts
-const fn = compile('items | map(%, add(#, 10)) | filter(%, gt(#, 15))', {
+const fn = compile('items | map(%, mul(#, factor))', {
   globals: {
     map: (arr, fn) => arr.map(fn),
-    filter: (arr, fn) => arr.filter(fn),
-    add: (a, b) => a + b,
-    gt: (a, b) => a > b
+    mul: (a, b) => a * b
   }
 })
 
-fn({ items: [1, 5, 8, 12] }) // [15, 18, 22]
+fn({ items: [1, 2, 3], factor: 10 }) // [10, 20, 30]
 ```
+
+## AI / LLM Integration
+
+SimplEx is well-suited as a target language for AI-generated expressions:
+
+- **Safe by design** — no access to globals, filesystem, or network
+- **Deterministic** — same input always produces the same output
+- **Simple grammar** — LLMs can generate valid SimplEx with minimal prompting
+- **Validation** — compilation catches errors before runtime
+
+```ts
+// AI generates expression strings, SimplEx runs them safely
+const userFormula = aiResponse.expression // e.g., "price * quantity * (1 - discount)"
+const fn = compile(userFormula)
+fn(data) // safe execution
+```
+
+> Expressions are compiled once to native JS functions via `new Function()` — subsequent calls have near-native performance.
 
 ## License
 
