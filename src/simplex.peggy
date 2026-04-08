@@ -525,6 +525,17 @@ PropertyAssignment
         location: getLocation(location())
       };
     }
+  / key:Identifier {
+      return {
+        type: "Property",
+        key: key,
+        value: key,
+        computed: false,
+        shorthand: true,
+        kind: "init",
+        location: getLocation(location())
+      };
+    }
 
 PropertyName
   = IdentifierName

@@ -2515,4 +2515,35 @@ else
       }
     })
   })
+
+  test('shorthand property', () => {
+    const result = parse('{ b }')
+    const prop = result.expression.properties[0]
+    assert.equal(prop.type, 'Property')
+    assert.equal(prop.shorthand, true)
+    assert.equal(prop.computed, false)
+    assert.equal(prop.key.type, 'Identifier')
+    assert.equal(prop.key.name, 'b')
+    assert.equal(prop.value.type, 'Identifier')
+    assert.equal(prop.value.name, 'b')
+  })
+
+  test('mixed regular and shorthand properties', () => {
+    const result = parse('{ a: 1, b }')
+    const props = result.expression.properties
+    assert.equal(props.length, 2)
+    assert.equal(props[0].type, 'Property')
+    assert.equal(props[0].shorthand, undefined)
+    assert.equal(props[1].type, 'Property')
+    assert.equal(props[1].shorthand, true)
+    assert.equal(props[1].key.name, 'b')
+  })
+
+  test('shorthand property with trailing comma', () => {
+    const result = parse('{ a: 1, b, }')
+    const props = result.expression.properties
+    assert.equal(props.length, 2)
+    assert.equal(props[1].shorthand, true)
+    assert.equal(props[1].key.name, 'b')
+  })
 })

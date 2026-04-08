@@ -57,6 +57,7 @@ export interface PropertyAssignment {
   key: Expression
   value: Expression
   computed: boolean
+  shorthand?: boolean
   kind: 'init'
   location: Location
 }

@@ -120,6 +120,26 @@ suite('notations', () => {
       b: 2
     })
 
+    // Shorthand properties
+    assert.deepEqual(
+      compile('let b = 2, { a: 1, b }')(),
+      { a: 1, b: 2 }
+    )
+    assert.deepEqual(compile('{ a }')({ a: 42 }), { a: 42 })
+    assert.deepEqual(
+      compile('let x = 1, y = 2, { x, y }')(),
+      { x: 1, y: 2 }
+    )
+    assert.deepEqual(
+      compile('let c = 3, { a: 1, ...{ b: 2 }, c }')(),
+      { a: 1, b: 2, c: 3 }
+    )
+    assert.deepEqual(
+      compile('let b = 2, { a: 1, b, }')(),
+      { a: 1, b: 2 }
+    )
+    assert.throws(() => compile('{ true }'))
+
     assert.throws(
       () => compile('{1e999: "v"}'),
       err => {
