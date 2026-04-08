@@ -1,12 +1,21 @@
 import { parse } from '../../parser/index.js'
 import { traverse } from 'simplex-lang'
 import { compile } from 'simplex-lang'
+import { createStdlib } from 'simplex-lang/stdlib'
 import type { CompileResult } from './state'
+
+let stdlibCache: ReturnType<typeof createStdlib> | undefined
+
+function getStdlib() {
+  if (!stdlibCache) stdlibCache = createStdlib()
+  return stdlibCache
+}
 
 export function compileExpression(
   expr: string,
   globalsJsonStr: string,
-  dataJsonStr: string
+  dataJsonStr: string,
+  useStdlib = false
 ): CompileResult {
   if (!expr.trim()) {
     return {}
@@ -76,7 +85,13 @@ export function compileExpression(
   }
 
   try {
-    const fn = compile(expr, { globals })
+    const compileOpts: { globals: Record<string, unknown>; extensions?: Map<string | object | Function, Record<string, Function>> } = { globals }
+    if (useStdlib) {
+      const stdlib = getStdlib()
+      compileOpts.globals = { ...stdlib.globals, ...globals }
+      compileOpts.extensions = stdlib.extensions
+    }
+    const fn = compile(expr, compileOpts)
     const result = fn(data)
     return { result, generatedCode, ast }
   } catch (err: any) {

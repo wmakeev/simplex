@@ -5,6 +5,7 @@ export default defineConfig({
   base: '/simplex/',
   resolve: {
     alias: {
+      'simplex-lang/stdlib': path.resolve(__dirname, '../src/stdlib/index.ts'),
       'simplex-lang': path.resolve(__dirname, '../src/index.ts'),
       'node:assert': path.resolve(__dirname, 'src/shims/assert.ts')
     }

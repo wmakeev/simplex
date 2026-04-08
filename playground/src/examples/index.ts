@@ -5,6 +5,7 @@ export interface Example {
   expression: string
   globals?: string
   data?: string
+  useStdlib?: boolean
 }
 
 export const examples: Example[] = [
@@ -172,6 +173,51 @@ export const examples: Example[] = [
     name: 'Pipe Everything',
     category: 'Advanced',
     expression: 'let add = (a, b) => a + b, 1 | add(%, 2) | add(%, 3) | % * 10'
+  },
+
+  // Stdlib
+  {
+    id: 'stdlib-math',
+    name: 'Math Functions',
+    category: 'Stdlib',
+    expression: 'Math.abs(-5) & ", " & Math.round(3.7) & ", " & Math.sqrt(16)',
+    useStdlib: true
+  },
+  {
+    id: 'stdlib-strings',
+    name: 'String Functions',
+    category: 'Stdlib',
+    expression: 'Str.toUpperCase("hello") & " " & Str.slice("world", 0, 3)',
+    useStdlib: true
+  },
+  {
+    id: 'stdlib-arrays',
+    name: 'Array Functions',
+    category: 'Stdlib',
+    expression: 'Arr.map([1, 2, 3, 4, 5], x => x * x) | Arr.filter(%, x => x > 5) | Arr.sort(%)',
+    useStdlib: true
+  },
+  {
+    id: 'stdlib-extensions',
+    name: 'Extension Methods',
+    category: 'Stdlib',
+    expression: '"hello world"::toUpperCase()::split(" ")::join(" - ")',
+    useStdlib: true
+  },
+  {
+    id: 'stdlib-utilities',
+    name: 'Utility Functions',
+    category: 'Stdlib',
+    expression: '[empty(null), empty(""), empty([]), exists(0), exists(null), typeOf([1,2])]',
+    useStdlib: true
+  },
+  {
+    id: 'stdlib-data-pipeline',
+    name: 'Data Pipeline',
+    category: 'Stdlib',
+    expression: 'items::filter(x => x.price > 20)::map(x => x.name)::sort()::join(", ")',
+    data: '{ "items": [{ "name": "Apple", "price": 15 }, { "name": "Banana", "price": 25 }, { "name": "Cherry", "price": 30 }, { "name": "Date", "price": 10 }] }',
+    useStdlib: true
   }
 ]
 

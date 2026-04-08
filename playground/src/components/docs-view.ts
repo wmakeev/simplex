@@ -127,6 +127,174 @@ let a = 1, b = a + 1, a + b   // → 3 (sequential binding)</code></pre>
         <p>Identifier lookup order: local scope (lambda params, let bindings) → closure → globals → data → error.</p>
         <p>Globals are compile-time constants that override data. Data is the runtime parameter passed when calling the compiled function.</p>
       </div>
+
+      <h2 style="margin-top: 24px">Standard Library</h2>
+      <p>Enable the <code class="docs-code">stdlib</code> toggle in the header to use standard library functions. The stdlib provides namespaced functions and extension methods for common operations.</p>
+
+      <div class="docs-section">
+        <h3>Key Differences from JavaScript</h3>
+        <ul>
+          <li><strong>NaN → null:</strong> Functions that would produce <code class="docs-code">NaN</code> in JS return <code class="docs-code">null</code> instead. Use <code class="docs-code">??</code> for defaults: <code class="docs-code">Math.sqrt(x) ?? 0</code></li>
+          <li><strong>Immutable:</strong> <code class="docs-code">Arr.sort(a)</code>, <code class="docs-code">Arr.reverse(a)</code> return new arrays — originals unchanged</li>
+          <li><strong>Type guards:</strong> <code class="docs-code">Str.*</code> and <code class="docs-code">Arr.*</code> functions throw <code class="docs-code">UnexpectedTypeError</code> on wrong input type</li>
+          <li><strong>Standalone functions:</strong> <code class="docs-code">Str.toUpperCase("hello")</code> instead of <code class="docs-code">"hello".toUpperCase()</code></li>
+        </ul>
+      </div>
+
+      <div class="docs-section">
+        <h3>Dual Access: Namespaces and Extensions</h3>
+        <p>Every namespaced function is available in two styles:</p>
+        <pre class="docs-code-block"><code>Arr.map(items, x => x.name)     // namespace style
+items::map(x => x.name)          // extension style (chainable)
+
+// Extension chaining
+items::filter(x => x.active)::map(x => x.name)::sort()::join(", ")</code></pre>
+      </div>
+
+      <div class="docs-section">
+        <h3>Top-Level Utilities</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">empty(val)</code></td><td><code class="docs-code">true</code> for null, undefined, NaN, "", [], {}. <code class="docs-code">false</code> for 0, false.</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">exists(val)</code></td><td><code class="docs-code">true</code> if not null, undefined, or NaN. <code class="docs-code">true</code> for 0, "", false.</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">typeOf(val)</code></td><td>Returns type string: "number", "string", "Array", "Object", "Null", "NaN", etc.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Str (String Functions)</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>JS Equivalent</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">toString(val)</code></td><td>String(val)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">length(s)</code></td><td>s.length</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">toUpperCase(s)</code></td><td>s.toUpperCase()</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">toLowerCase(s)</code></td><td>s.toLowerCase()</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">trim(s)</code></td><td>s.trim()</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">split(s, sep)</code></td><td>s.split(sep)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">includes(s, query)</code></td><td>s.includes(query)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">startsWith(s, query)</code></td><td>s.startsWith(query)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">endsWith(s, query)</code></td><td>s.endsWith(query)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">slice(s, start, end?)</code></td><td>s.slice(start, end)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">replaceAll(s, from, to)</code></td><td>s.replaceAll(from, to)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">indexOf(s, query)</code></td><td>s.indexOf(query)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">padStart(s, len, fill?)</code></td><td>s.padStart(len, fill)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">padEnd(s, len, fill?)</code></td><td>s.padEnd(len, fill)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">repeat(s, count)</code></td><td>s.repeat(count)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">charAt(s, index)</code></td><td>s[index]</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Num (Number Functions)</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">toString(n, radix?)</code></td><td>n.toString(radix)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">parseInt(s, radix?)</code></td><td>Returns null instead of NaN</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">parseFloat(s)</code></td><td>Returns null instead of NaN</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">isFinite(n)</code></td><td>Same as Number.isFinite</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">isInteger(n)</code></td><td>Same as Number.isInteger</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">isNaN(n)</code></td><td>Same as Number.isNaN</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">toFixed(n, digits?)</code></td><td>n.toFixed(digits)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Math</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">abs(n)</code>, <code class="docs-code">round(n)</code>, <code class="docs-code">floor(n)</code>, <code class="docs-code">ceil(n)</code>, <code class="docs-code">trunc(n)</code></td><td>Rounding / absolute value</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">sqrt(n)</code>, <code class="docs-code">cbrt(n)</code></td><td>Square / cube root. Negative → null</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">pow(base, exp)</code></td><td>Exponentiation</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">log(n)</code>, <code class="docs-code">log2(n)</code>, <code class="docs-code">log10(n)</code></td><td>Logarithms. Negative → null</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">min(...args)</code>, <code class="docs-code">max(...args)</code></td><td>Any non-number → null</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">sin</code>, <code class="docs-code">cos</code>, <code class="docs-code">tan</code>, <code class="docs-code">asin</code>, <code class="docs-code">acos</code>, <code class="docs-code">atan</code>, <code class="docs-code">atan2</code></td><td>Trigonometric</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">clamp(n, min, max)</code></td><td>Clamp value to range</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">random()</code></td><td>Random number [0, 1)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">PI</code>, <code class="docs-code">E</code></td><td>Constants</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Arr (Array Functions)</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">length(a)</code></td><td>a.length</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">map(a, fn)</code>, <code class="docs-code">filter(a, fn)</code>, <code class="docs-code">find(a, fn)</code></td><td>Standard iterators</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">every(a, fn)</code>, <code class="docs-code">some(a, fn)</code></td><td>Boolean tests</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">reduce(a, fn)</code>, <code class="docs-code">fold(a, fn, init)</code></td><td>Reduce (fold has explicit init)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">flat(a, depth?)</code>, <code class="docs-code">flatMap(a, fn)</code></td><td>Flattening</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">includes(a, val)</code>, <code class="docs-code">indexOf(a, val)</code></td><td>Search</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">slice(a, start?, end?)</code></td><td>Subarray</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">join(a, sep?)</code></td><td>Join to string</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">sort(a, fn?)</code></td><td>Immutable sort (toSorted)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">reverse(a)</code></td><td>Immutable reverse (toReversed)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">concat(a, ...arrays)</code></td><td>Concatenation</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">from(val)</code>, <code class="docs-code">of(...args)</code></td><td>Factory (namespace only)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">at(a, index)</code></td><td>Supports negative indices</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Obj (Object Functions)</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">keys(o)</code>, <code class="docs-code">values(o)</code>, <code class="docs-code">entries(o)</code></td><td>Same as Object.keys/values/entries</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">fromEntries(entries)</code></td><td>Same as Object.fromEntries</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">assign(...objs)</code></td><td>Immutable — always returns new object</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">has(o, key)</code></td><td>Same as Object.hasOwn</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Json</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">parse(s)</code></td><td>JSON.parse(s)</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">stringify(val, replacer?, indent?)</code></td><td>JSON.stringify</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="docs-section">
+        <h3>Date (Minimal)</h3>
+        <table class="docs-table">
+          <thead>
+            <tr><th style="width:auto;text-align:left">Function</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="text-align:left"><code class="docs-code">now()</code></td><td>Unix timestamp in ms</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">parse(s)</code></td><td>Returns null for invalid dates</td></tr>
+            <tr><td style="text-align:left"><code class="docs-code">toString(ts)</code></td><td>ISO string from timestamp. Returns null for invalid input</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   `
 }

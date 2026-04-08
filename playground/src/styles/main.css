@@ -136,6 +136,21 @@ html, body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.stdlib-toggle {
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.stdlib-toggle.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.header .stdlib-toggle.active {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
 /* Main layout */
 .main-layout {
   display: grid;

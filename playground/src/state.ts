@@ -7,6 +7,7 @@ export const expression = signal('1 + 2')
 export const globalsJson = signal('{}')
 export const dataJson = signal('{}')
 export const activeTab = signal<OutputTab>('result')
+export const useStdlib = signal(localStorage.getItem('stdlib') === 'true')
 export const darkMode = signal(
   localStorage.getItem('theme')
     ? localStorage.getItem('theme') === 'dark'
@@ -33,7 +34,8 @@ export function runCompile() {
   compileResult.value = compileExpression(
     expression.value,
     globalsJson.value,
-    dataJson.value
+    dataJson.value,
+    useStdlib.value
   )
 }
 
@@ -43,21 +45,26 @@ effect(() => {
   localStorage.setItem('theme', theme)
 })
 
+effect(() => {
+  localStorage.setItem('stdlib', String(useStdlib.value))
+})
+
 // URL state encoding/decoding
 export function encodeState(): string {
-  const state = {
+  const state: Record<string, unknown> = {
     e: expression.value,
     g: globalsJson.value,
     d: dataJson.value
   }
+  if (useStdlib.value) state.s = true
   return btoa(encodeURIComponent(JSON.stringify(state)))
 }
 
-export function decodeState(hash: string): { expression: string; globals: string; data: string } | null {
+export function decodeState(hash: string): { expression: string; globals: string; data: string; stdlib?: boolean } | null {
   try {
     const json = decodeURIComponent(atob(hash))
-    const state = JSON.parse(json) as { e: string; g: string; d: string }
-    return { expression: state.e, globals: state.g, data: state.d }
+    const state = JSON.parse(json) as { e: string; g: string; d: string; s?: boolean }
+    return { expression: state.e, globals: state.g, data: state.d, stdlib: state.s }
   } catch {
     return null
   }
@@ -82,6 +89,7 @@ export function loadFromUrl(): boolean {
     expression.value = state.expression
     globalsJson.value = state.globals
     dataJson.value = state.data
+    if (state.stdlib) useStdlib.value = true
     return true
   }
   return false

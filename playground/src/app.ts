@@ -3,7 +3,7 @@ import { Header } from './components/header'
 import { ExpressionEditor } from './components/expression-editor'
 import { JsonEditors } from './components/json-editors'
 import { OutputPanel } from './components/output-panel'
-import { expression, globalsJson, dataJson, scheduleCompile, loadFromUrl } from './state'
+import { expression, globalsJson, dataJson, useStdlib, scheduleCompile, loadFromUrl } from './state'
 import { getExampleById } from './examples'
 import type { Example } from './examples'
 import { useEffect } from 'preact/hooks'
@@ -32,6 +32,7 @@ export function App() {
     expression.value = ex.expression
     globalsJson.value = ex.globals ?? '{}'
     dataJson.value = ex.data ?? '{}'
+    if (ex.useStdlib) useStdlib.value = true
     scheduleCompile()
   }
 

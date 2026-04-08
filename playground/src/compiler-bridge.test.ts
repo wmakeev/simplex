@@ -61,7 +61,8 @@ describe('all examples compile without errors', () => {
       const result = compileExpression(
         example.expression,
         example.globals ?? '{}',
-        example.data ?? '{}'
+        example.data ?? '{}',
+        example.useStdlib
       )
       expect(result.error).toBeUndefined()
     })
