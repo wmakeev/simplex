@@ -66,7 +66,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 | 7 | `==` `!=` | Equality (strict `===`/`!==`) |
 | 8 | `and` `&&` | Logical AND (short-circuit, returns boolean) |
 | 9 | `or` `\|\|` | Logical OR (short-circuit, returns boolean) |
-| 10 | `??` | Nullish coalescing (null/undefined only) |
+| 10 | `??` | Nullish coalescing (null/undefined/NaN) |
 | 11 | `\|` `\|?` `\|>` | Pipe operators |
 
 `in` operator: arrays — checks index (`2 in [a, b, c]`); objects — checks key (`"k" in {k: 1}`); Maps — checks key.
@@ -112,7 +112,7 @@ Boolean coercion: falsy = `0`, `""`, `false`, `null`, `undefined`, `NaN`. Everyt
 `expr | next | another` — chain values through expressions. `%` (topic reference) holds the piped value.
 
 - `|` — standard pipe: `5 | % + 1` → `6`
-- `|?` — optional pipe: short-circuits on `null`/`undefined` (returns them as-is)
+- `|?` — optional pipe: short-circuits on `null`/`undefined`/`NaN` (returns them as-is)
 - `|>` — **reserved**, throws `ExpressionError` by default. Override `pipe` in `CompileOptions` to implement custom semantics.
 
 Example: `1 | add(%, 2) | % * 4` → `12`
@@ -232,10 +232,12 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 ## Project Files
 
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
+- **`docs/design-decisions.md`** — Architectural decision log. Records non-obvious design choices (the *why* behind them). Consult before revisiting existing semantics; append a new entry when making a non-trivial design call.
 - **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
 ## Workflow
 
+- Do not make code changes or architectural decisions until you have at least 95% confidence in the task. Until then, ask clarifying questions instead of guessing or acting on assumptions.
 - After implementing a task from TODO.md, mark it as done before committing.
 - After completing and testing a plan implementation, always offer to commit the changes.
 - After a commit is made, always offer to push to the remote.

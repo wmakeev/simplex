@@ -145,6 +145,24 @@ suite('operators', () => {
     assert.equal(compile('0 ?? 1')(), 0)
     assert.equal(compile('false ?? 1')(), false)
     assert.equal(compile('"" ?? 1')(), '')
+
+    // NaN is treated as nullish
+    assert.equal(compile('(5 mod 0) ?? 1')(), 1)
+    assert.equal(compile('x ?? 1', { globals: { x: NaN } })(), 1)
+    assert.equal(compile('f() ?? 1', { globals: { f: () => NaN } })(), 1)
+    // chained: NaN ?? null ?? value
+    assert.equal(compile('(5 mod 0) ?? null ?? 2')(), 2)
+    // right operand stays lazy when left is non-nullish
+    let called = 0
+    compile('1 ?? side()', {
+      globals: {
+        side: () => {
+          called++
+          return 0
+        }
+      }
+    })()
+    assert.equal(called, 0)
   })
 
   test('property access', () => {
@@ -454,6 +472,24 @@ suite('operators', () => {
     // optional pipe with falsy non-null values
     assert.equal(compile('"" |? % & "x"')(), 'x')
     assert.equal(compile('0 |? % + 1')(), 1)
+
+    // NaN short-circuits |? and is returned as-is
+    assert.ok(Number.isNaN(compile('(5 mod 0) |? 42')()))
+    assert.ok(
+      Number.isNaN(compile('x |? 42', { globals: { x: NaN } })())
+    )
+    // next pipe step is not invoked
+    let calls = 0
+    compile('x |? track(%)', {
+      globals: {
+        x: NaN,
+        track: () => {
+          calls++
+          return 'side effect'
+        }
+      }
+    })()
+    assert.equal(calls, 0)
   })
 
   test('feature composition with pipes', () => {

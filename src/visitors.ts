@@ -260,11 +260,11 @@ const visitors: {
 
   NullishCoalescingExpression: (node, visit) => {
     const parts: VisitResult[] = [
-      codePart('(', node),
-      ...visit(node.left),
-      codePart('??', node),
+      codePart('((_v=>_v==null||_v!==_v?(', node),
       ...visit(node.right),
-      codePart(')', node)
+      codePart('):_v)(', node),
+      ...visit(node.left),
+      codePart('))', node)
     ]
 
     return parts

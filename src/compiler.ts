@@ -184,7 +184,7 @@ function defaultPipe(
         null
       )
     }
-    if (it.opt && result == null) return result
+    if (it.opt && (result == null || result !== result)) return result
     result = it.next(result)
   }
   return result

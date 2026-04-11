@@ -194,7 +194,10 @@ suite('traverse code', () => {
   })
 
   test('nullish coalescing', () => {
-    assert.equal(getCode('a ?? b'), '(get(scope,"a")??get(scope,"b"))')
+    assert.equal(
+      getCode('a ?? b'),
+      '((_v=>_v==null||_v!==_v?(get(scope,"b")):_v)(get(scope,"a")))'
+    )
   })
 
   test('lambda', () => {
