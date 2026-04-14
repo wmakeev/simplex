@@ -55,7 +55,7 @@
     "release": "np"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "prettier": {
     "semi": false,
