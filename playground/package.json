@@ -23,7 +23,7 @@
     "preact": "^10.25.4"
   },
   "devDependencies": {
-    "happy-dom": "^20.8.4",
+    "happy-dom": "^20.8.9",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vitest": "^4.1.0"
