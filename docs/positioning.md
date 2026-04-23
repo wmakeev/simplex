@@ -12,6 +12,7 @@ Complements — does not replace:
 
 - `design-decisions.md` — records specific implementation decisions (append-only log)
 - `stdlib.md` — the stdlib API reference
+- `alternatives.md` — criterion-by-criterion comparison matrices and side-by-side code samples vs alternative languages
 - `compiler-roadmap.md` — detailed cost map of current extensibility indirections and a proposed optimization roadmap
 
 ---
@@ -62,7 +63,7 @@ The argument that carries real weight is not "LLMs kill DSLs" but "why not adopt
 
 ## 4. Comparison to nearest alternatives
 
-Realistic alternatives for an embedded expression language in a Node.js ETL pipeline:
+Realistic alternatives for an embedded expression language in a Node.js ETL pipeline. For criterion-by-criterion matrices (safety, performance, ergonomics, ecosystem, stdlib) and side-by-side code samples, see `alternatives.md`. The narrative below summarizes.
 
 ### Common Expression Language (CEL)
 
