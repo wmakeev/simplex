@@ -232,6 +232,8 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 ## Project Files
 
 - **`TODO.md`** — Feature backlog. Consult when adding new language features.
+- **`docs/positioning.md`** — Strategic positioning and development vector: why the language exists, target deployment model, comparison to alternatives (CEL, QuickJS-WASM, JSONata), distinguishing features, non-goals, and open research questions. Consult before proposing structural changes or large feature work.
+- **`docs/compiler-roadmap.md`** — Compiler / codegen optimization roadmap. Cost map of current extensibility indirections (`bop`/`uop` dispatch, scope-chain lookups, pipe descriptor arrays) with per-item impact estimates and recommended order of attack. Consult before making non-trivial changes to `visitors.ts` / `compiler.ts` codegen.
 - **`docs/design-decisions.md`** — Architectural decision log. Records non-obvious design choices (the *why* behind them). Consult before revisiting existing semantics; append a new entry when making a non-trivial design call.
 - **`playground/`** — Interactive web playground (Preact + CodeMirror + Vite). Separate app with own `package.json`. See `playground/PLAYGROUND.md` for architecture, decisions, and testing plan.
 
