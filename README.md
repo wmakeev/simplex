@@ -14,6 +14,7 @@
 
 - [Why SimplEx?](#why-simplex)
 - [Quick Start](#quick-start)
+- [Typical Expression](#typical-expression)
 - [Playground](#playground)
 - [Like JS, but…](#like-js-but)
 - [Language Reference](#language-reference)
@@ -22,12 +23,14 @@
   - [String Concatenation](#string-concatenation)
   - [Collections](#collections)
   - [Property Access](#property-access)
+  - [Extension Methods (`::`)](#extension-methods-)
   - [Function Calls](#function-calls)
   - [Currying with `#`](#currying-with-)
   - [Conditionals](#conditionals)
   - [Pipe Operators](#pipe-operators)
   - [Lambda Expressions](#lambda-expressions)
   - [Let Expressions](#let-expressions)
+  - [Recursion](#recursion)
   - [Template Literals](#template-literals)
   - [Comments](#comments)
   - [Reserved Words](#reserved-words)
@@ -44,18 +47,9 @@
 
 ## Why SimplEx?
 
-SimplEx is designed for scenarios where you need to evaluate user-provided expressions safely:
+SimplEx evaluates user-provided expressions safely — for ETL pipelines, business rules, templates, and spreadsheet-like UIs. Expressions run in a fully sandboxed environment with no access to globals, prototype chains, or host APIs; users only see data and functions you explicitly provide.
 
-- **ETL/ELT pipelines** — calculated fields, data transformations, filtering rules
-- **Business rules engines** — config-driven formulas and conditions
-- **Template engines** — dynamic value computation
-- **Spreadsheet-like UIs** — user-defined formulas
-
-**Why not just `eval()`?** SimplEx expressions run in a fully sandboxed environment with no access to the global scope, prototype chains, or Node.js/browser APIs. Users can only work with data and functions you explicitly provide.
-
-**Why not a full language?** Every expression computes a value — no statements, no assignments, no loops. This makes expressions easy to reason about and safe to store in configs and databases.
-
-**What you get:** Familiar JS syntax, runtime type safety, full customizability, zero dependencies.
+Every expression computes a value — no statements, no assignments, no loops — so expressions are easy to reason about and safe to store in configs or databases. Familiar JS-like syntax, runtime type safety, full customizability, zero dependencies.
 
 ## Quick Start
 
@@ -84,6 +78,47 @@ const expr = compile('price * quantity * (1 - discount)')
 
 expr({ price: 100, quantity: 5, discount: 0.1 }) // 450
 ```
+
+## Typical Expression
+
+A canonical mid-sized example showing the common idioms — `let`-bindings, lambdas, the `::` extension operator, pipe with topic reference `%`, spread, and stdlib calls in both namespace and extension styles:
+
+```ts
+import { compile } from 'simplex-lang'
+import { createStdlib } from 'simplex-lang/stdlib'
+
+const { globals, extensions } = createStdlib()
+
+const fn = compile(
+  `
+  let visible = users::filter(u => u.enabled),
+      formatted = visible::map(u => {
+        ...u,
+        fullName: u.firstName & " " & u.lastName
+      }),
+  formatted
+    | Arr.map(%, u => u.fullName)
+    | Arr.join(%, ", ")
+  `,
+  { globals, extensions }
+)
+
+fn({
+  users: [
+    { firstName: 'Ada',  lastName: 'Lovelace', enabled: true },
+    { firstName: 'Alan', lastName: 'Turing',   enabled: false },
+    { firstName: 'Bob',  lastName: 'Smith',    enabled: true }
+  ]
+}) // "Ada Lovelace, Bob Smith"
+```
+
+A few things to notice:
+
+- `let` introduces local bindings; the **last** comma-separated expression is the body.
+- `users::filter(...)` is the same as `Arr.filter(users, ...)` — both styles are equivalent.
+- `u => { ...u, fullName: ... }` returns an object literal (no block syntax in SimplEx).
+- `|` chains the value through stages with `%` referring to the value at each step.
+- `&` is string concatenation; `+` is numeric addition only.
 
 ## Playground
 
@@ -178,7 +213,18 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 | `{ "special-key": 1 }` | Quoted key |
 | `{ [dynamic]: value }` | Computed key |
 | `{ x, y }` | Shorthand property (`{ x: x, y: y }`) |
-| `{ ...base, extra: true }` | Spread (objects only) |
+| `{ ...base, extra: true }` | Spread |
+
+**Spread is the primary form of object composition.** Use it whenever the field shape is known statically:
+
+| Expression | Description |
+| --- | --- |
+| `{ ...base, extra: true }` | Add or override one field |
+| `{ ...a, ...b }` | Merge two objects (later wins) |
+| `{ ...base, name: name & " (renamed)" }` | Compose a derived field |
+| `{ ...obj, [key]: value }` | Set a computed key |
+
+The standard library's `Obj.assign(...)` is for cases where spread can't generalize — e.g., merging a dynamic number of objects via `Arr.fold(objs, Obj.assign, {})`. For known field names, prefer spread.
 
 ### Property Access
 
@@ -195,19 +241,57 @@ The `+` operator only works with numbers. Use `&` to concatenate strings:
 
 > **Note:** Unlike JavaScript (which has optional chaining `?.` and no runtime `!`), SimplEx has null-safe member access by default but explicit non-null assertion via `!`. This is inverted from JS — more practical for an expression language working with optional data structures.
 
-**Extension methods** (`::`) — call methods registered via the `extensions` compile option. `obj::method(args)` calls `extensionMap.method(obj, args)`. Requires `extensions` in `CompileOptions`. Null-safe: `null::method()` returns `undefined`. Throws if no extension methods are defined for the type or the method is not found.
+### Extension Methods (`::`)
+
+The `::` operator calls extension methods registered via the `extensions` compile option. `obj::method(args)` is equivalent to `methodBag.method(obj, args)` — the receiver is passed as the first argument to the resolved function.
+
+| Expression | Equivalent |
+|---|---|
+| `obj::method(x)` | `methodBag.method(obj, x)` |
+| `null::anything()` | `undefined` (null-safe) |
+| `a::f()::g()` | `g(f(a))` (chaining) |
+
+Extensions are matched by `typeof` for primitives or by constructor for objects. With the standard library, every `Str.*` / `Num.*` / `Arr.*` / `Obj.*` function is also available as an extension:
+
+```ts
+import { createStdlib } from 'simplex-lang/stdlib'
+
+const { globals, extensions } = createStdlib()
+
+compile('"hello"::toUpperCase()', { globals, extensions })()  // "HELLO"
+compile('[3, 1, 2]::sort()', { globals, extensions })()        // [1, 2, 3]
+compile(
+  'users::filter(u => u.active)::map(u => u.name)',
+  { globals, extensions }
+)({ users: [{ name: 'A', active: true }, { name: 'B', active: false }] })
+// ["A"]
+```
+
+Custom extensions:
 
 ```ts
 const extensions = new Map([
   ['string', {
     capitalize: (s: string) => s[0].toUpperCase() + s.slice(1),
-    truncate: (s: string, len: number) => s.length > len ? s.slice(0, len) + '...' : s
+    truncate: (s: string, len: number) =>
+      s.length > len ? s.slice(0, len) + '...' : s
   }]
 ])
 
-compile('"hello"::capitalize()', { extensions })() // "Hello"
+compile('"hello"::capitalize()', { extensions })()        // "Hello"
 compile('"long text here"::truncate(8)', { extensions })() // "long tex..."
 ```
+
+**Pipe vs `::`** — both compose values; choose by intent:
+
+```
+users | Arr.filter(%, u => u.age >= 18) | Arr.map(%, u => u.name)
+users::filter(u => u.age >= 18)::map(u => u.name)
+```
+
+Use `::` when the operation is naturally a method on the value; use `|` when you need an arbitrary expression with the topic reference `%` (e.g., a non-method call, a transform that doesn't take the value as the first argument, or a side-by-side use of the value).
+
+Throws `ExpressionError` if no extensions are configured for the type or the method is not found.
 
 ### Function Calls
 
@@ -260,7 +344,16 @@ Pipes chain a value through a series of expressions. The `%` topic reference hol
 | `() => 42` | No parameters |
 | `a => b => a + b` | Curried (nested) |
 
-Lambdas are closures — they capture the enclosing scope. Parameters shadow outer variables.
+Lambdas are closures — they capture the enclosing scope. Parameters shadow outer variables. The body is always a single expression (SimplEx has no block syntax — `{ ... }` after `=>` is an object literal, not a block).
+
+**Not supported:**
+
+| Form | Workaround |
+| --- | --- |
+| Destructuring: `({a, b}) => ...`, `([x, y]) => ...` | Destructure in the body: `pair => let a = pair[0], b = pair[1], ...` |
+| Default parameters: `(x = 5) => ...` | Use `??` in the body: `x => let v = x ?? 5, ...` |
+| Rest parameters: `(...args) => ...` | Pass an array: `args => ...` |
+| Named function declarations | Use `let f = (...) => ..., ...` (see [Recursion](#recursion) for self-reference) |
 
 ### Let Expressions
 
@@ -273,6 +366,52 @@ Lambdas are closures — they capture the enclosing scope. Parameters shadow out
 | `let tax = price * 0.2, price + tax` | Sequential binding |
 
 Bindings are sequential — each initializer can reference previous bindings. The last comma-separated expression is the body. Duplicate names cause a `CompileError`.
+
+### Recursion
+
+Named recursion is supported through `let`-bindings when the initializer is a lambda. The binding's name is captured in the lambda's closure and resolved at call time, by which point the binding is established in the scope chain:
+
+```
+let factorial = n => if n <= 1 then 1 else n * factorial(n - 1),
+factorial(5)   // 120
+
+let countdown = n => if n <= 0 then [] else [n, ...countdown(n - 1)],
+countdown(3)   // [3, 2, 1]
+```
+
+**Self-reference works only for lambdas.** Plain expressions need their right-hand side evaluated immediately:
+
+```
+let x = x + 1, x   // Error: x is not defined
+```
+
+**No mutual recursion.** Two sibling `let` bindings cannot see each other — each `let` opens a new scope, and the name becomes visible only for bindings that follow it. Combine both functions into one with a selector parameter, or use the `self(self)` trick below.
+
+**Multi-branch recursion (Fibonacci, tree traversal).** When the recursive case combines two or more recursive calls in a single expression, bind each call with `let` first:
+
+```
+let fib = n =>
+  if n <= 1 then n
+  else
+    let a = fib(n - 1),
+        b = fib(n - 2),
+    a + b,
+fib(10)   // 55
+```
+
+**Anonymous recursion** — for cases where a name isn't available (e.g., inside a pipe stage):
+
+```
+// self(self) trick
+let fact = self => n => if n <= 1 then 1 else n * self(self)(n - 1),
+fact(fact)(5)   // 120
+
+// Y combinator — cleaner body, more setup
+let Y = f => (x => f(y => x(x)(y)))(x => f(y => x(x)(y))),
+Y(self => n => if n <= 1 then n else self(n - 1) + self(n - 2))(10)   // 55
+```
+
+Prefer named recursion for readability; the anonymous forms are useful when a name isn't available.
 
 ### Template Literals
 
@@ -584,17 +723,10 @@ fn({ items: [1, 2, 3], factor: 10 }) // [10, 20, 30]
 
 ## AI / LLM Integration
 
-SimplEx is well-suited as a target language for AI-generated expressions:
-
-- **Safe by design** — no access to globals, filesystem, or network
-- **Deterministic** — same input always produces the same output
-- **Simple grammar** — LLMs can generate valid SimplEx with minimal prompting
-- **Validation** — compilation catches errors before runtime
+SimplEx is a good target for AI-generated expressions: safe by design (no globals, filesystem, or network), deterministic, simple grammar, and compilation catches errors before runtime.
 
 ```ts
-// AI generates expression strings, SimplEx runs them safely
-const userFormula = aiResponse.expression // e.g., "price * quantity * (1 - discount)"
-const fn = compile(userFormula)
+const fn = compile(aiResponse.expression) // e.g., "price * quantity * (1 - discount)"
 fn(data) // safe execution
 ```
 

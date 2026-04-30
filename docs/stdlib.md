@@ -19,6 +19,8 @@ compile('double(Math.abs(x))', {
 })({ x: -5 })  // 10
 ```
 
+> **Every stdlib function is accessed via its namespace** (`Str`, `Num`, `Math`, `Arr`, `Obj`, `Json`, `Date`) or via an extension method (`x::toUpperCase()`). There are **no** bare-name globals like `map`, `filter`, `toUpperCase`. The three exceptions — `empty`, `exists`, `typeOf` — are explicitly documented as top-level utilities.
+
 ## Key Differences from JavaScript
 
 ### 1. NaN never exists in stdlib output
@@ -131,24 +133,24 @@ String functions. All throw `UnexpectedTypeError` if the first argument is not a
 
 | Function | JS Equivalent |
 |---|---|
-| `toString(val)` | `String(val)` — universal converter, accepts any type |
-| `length(s)` | `s.length` |
-| `toUpperCase(s)` | `s.toUpperCase()` |
-| `toLowerCase(s)` | `s.toLowerCase()` |
-| `trim(s)` | `s.trim()` |
-| `trimStart(s)` | `s.trimStart()` |
-| `trimEnd(s)` | `s.trimEnd()` |
-| `split(s, sep)` | `s.split(sep)` |
-| `includes(s, query)` | `s.includes(query)` |
-| `startsWith(s, query)` | `s.startsWith(query)` |
-| `endsWith(s, query)` | `s.endsWith(query)` |
-| `slice(s, start, end?)` | `s.slice(start, end)` |
-| `replaceAll(s, from, to)` | `s.replaceAll(from, to)` |
-| `indexOf(s, query)` | `s.indexOf(query)` |
-| `padStart(s, len, fill?)` | `s.padStart(len, fill)` |
-| `padEnd(s, len, fill?)` | `s.padEnd(len, fill)` |
-| `repeat(s, count)` | `s.repeat(count)` |
-| `charAt(s, index)` | `s[index]` |
+| `Str.toString(val)` | `String(val)` — universal converter, accepts any type |
+| `Str.length(s)` | `s.length` |
+| `Str.toUpperCase(s)` | `s.toUpperCase()` |
+| `Str.toLowerCase(s)` | `s.toLowerCase()` |
+| `Str.trim(s)` | `s.trim()` |
+| `Str.trimStart(s)` | `s.trimStart()` |
+| `Str.trimEnd(s)` | `s.trimEnd()` |
+| `Str.split(s, sep)` | `s.split(sep)` |
+| `Str.includes(s, query)` | `s.includes(query)` |
+| `Str.startsWith(s, query)` | `s.startsWith(query)` |
+| `Str.endsWith(s, query)` | `s.endsWith(query)` |
+| `Str.slice(s, start, end?)` | `s.slice(start, end)` |
+| `Str.replaceAll(s, from, to)` | `s.replaceAll(from, to)` |
+| `Str.indexOf(s, query)` | `s.indexOf(query)` |
+| `Str.padStart(s, len, fill?)` | `s.padStart(len, fill)` |
+| `Str.padEnd(s, len, fill?)` | `s.padEnd(len, fill)` |
+| `Str.repeat(s, count)` | `s.repeat(count)` |
+| `Str.charAt(s, index)` | `s[index]` |
 
 ### Num
 
@@ -156,13 +158,13 @@ Number functions.
 
 | Function | Returns | Notes |
 |---|---|---|
-| `toString(n, radix?)` | `string` | `n.toString(radix)`. Throws `UnexpectedTypeError` if not a number |
-| `parseInt(s, radix?)` | `number \| null` | |
-| `parseFloat(s)` | `number \| null` | |
-| `isFinite(n)` | `boolean` | Same as `Number.isFinite` |
-| `isInteger(n)` | `boolean` | Same as `Number.isInteger` |
-| `isNaN(n)` | `boolean` | Same as `Number.isNaN` |
-| `toFixed(n, digits?)` | `string` | Throws `UnexpectedTypeError` if `n` is not a number |
+| `Num.toString(n, radix?)` | `string` | `n.toString(radix)`. Throws `UnexpectedTypeError` if not a number |
+| `Num.parseInt(s, radix?)` | `number \| null` | |
+| `Num.parseFloat(s)` | `number \| null` | |
+| `Num.isFinite(n)` | `boolean` | Same as `Number.isFinite` |
+| `Num.isInteger(n)` | `boolean` | Same as `Number.isInteger` |
+| `Num.isNaN(n)` | `boolean` | Same as `Number.isNaN` |
+| `Num.toFixed(n, digits?)` | `string` | Throws `UnexpectedTypeError` if `n` is not a number |
 
 ### Math
 
@@ -170,31 +172,31 @@ Mathematical functions and constants. Most return `null` instead of `NaN` for in
 
 | Function | Returns | Notes |
 |---|---|---|
-| `abs(n)` | `number \| null` | |
-| `round(n)` | `number \| null` | |
-| `floor(n)` | `number \| null` | |
-| `ceil(n)` | `number \| null` | |
-| `trunc(n)` | `number \| null` | |
-| `sign(n)` | `number \| null` | |
-| `sqrt(n)` | `number \| null` | Negative input returns `null` |
-| `cbrt(n)` | `number \| null` | |
-| `pow(base, exp)` | `number \| null` | |
-| `log(n)` | `number \| null` | Negative input returns `null` |
-| `log2(n)` | `number \| null` | |
-| `log10(n)` | `number \| null` | |
-| `min(...args)` | `number \| null` | Any non-number arg returns `null` |
-| `max(...args)` | `number \| null` | Any non-number arg returns `null` |
-| `sin(n)` | `number \| null` | |
-| `cos(n)` | `number \| null` | |
-| `tan(n)` | `number \| null` | |
-| `asin(n)` | `number \| null` | |
-| `acos(n)` | `number \| null` | |
-| `atan(n)` | `number \| null` | |
-| `atan2(y, x)` | `number \| null` | |
-| `random()` | `number` | Same as `Math.random()` |
-| `clamp(n, min, max)` | `number` | No JS equivalent. Throws `ExpressionError` if `min > max` |
-| `PI` | `3.14159...` | Constant |
-| `E` | `2.71828...` | Constant |
+| `Math.abs(n)` | `number \| null` | |
+| `Math.round(n)` | `number \| null` | |
+| `Math.floor(n)` | `number \| null` | |
+| `Math.ceil(n)` | `number \| null` | |
+| `Math.trunc(n)` | `number \| null` | |
+| `Math.sign(n)` | `number \| null` | |
+| `Math.sqrt(n)` | `number \| null` | Negative input returns `null` |
+| `Math.cbrt(n)` | `number \| null` | |
+| `Math.pow(base, exp)` | `number \| null` | |
+| `Math.log(n)` | `number \| null` | Negative input returns `null` |
+| `Math.log2(n)` | `number \| null` | |
+| `Math.log10(n)` | `number \| null` | |
+| `Math.min(...args)` | `number \| null` | Any non-number arg returns `null` |
+| `Math.max(...args)` | `number \| null` | Any non-number arg returns `null` |
+| `Math.sin(n)` | `number \| null` | |
+| `Math.cos(n)` | `number \| null` | |
+| `Math.tan(n)` | `number \| null` | |
+| `Math.asin(n)` | `number \| null` | |
+| `Math.acos(n)` | `number \| null` | |
+| `Math.atan(n)` | `number \| null` | |
+| `Math.atan2(y, x)` | `number \| null` | |
+| `Math.random()` | `number` | Same as `Math.random()` |
+| `Math.clamp(n, min, max)` | `number` | No JS equivalent. Throws `ExpressionError` if `min > max` |
+| `Math.PI` | `3.14159...` | Constant |
+| `Math.E` | `2.71828...` | Constant |
 
 ### Arr
 
@@ -202,32 +204,32 @@ Array functions. All throw `UnexpectedTypeError` if the first argument is not an
 
 | Function | Returns | Notes |
 |---|---|---|
-| `toString(a)` | `string` | Comma-separated: `[1,2,3]` → `"1,2,3"` |
-| `length(a)` | `number` | |
-| `map(a, fn)` | `Array` | `fn(value, index, array)` |
-| `filter(a, fn)` | `Array` | |
-| `find(a, fn)` | `any` | |
-| `findIndex(a, fn)` | `number` | |
-| `every(a, fn)` | `boolean` | |
-| `some(a, fn)` | `boolean` | |
-| `reduce(a, fn)` | `any` | No init — uses first element as accumulator |
-| `fold(a, fn, init)` | `any` | Like `reduce` but with explicit init value |
-| `reduceRight(a, fn)` | `any` | Right-to-left `reduce` |
-| `foldRight(a, fn, init)` | `any` | Right-to-left `fold` |
-| `flat(a, depth?)` | `Array` | Default depth: 1 |
-| `flatMap(a, fn)` | `Array` | |
-| `includes(a, val)` | `boolean` | |
-| `indexOf(a, val)` | `number` | |
-| `lastIndexOf(a, val)` | `number` | |
-| `slice(a, start?, end?)` | `Array` | |
-| `join(a, sep?)` | `string` | Default sep: `","` |
-| `sort(a, fn?)` | `Array` | **Immutable** — uses `toSorted()`, original unchanged |
-| `reverse(a)` | `Array` | **Immutable** — uses `toReversed()`, original unchanged |
-| `concat(a, ...arrays)` | `Array` | |
-| `from(val)` | `Array` | `Array.from(val)` — no array guard |
-| `of(...args)` | `Array` | `Array.of(...args)` — no array guard |
-| `fill(a, val, start?, end?)` | `Array` | **Immutable** — returns new array, original unchanged |
-| `at(a, index)` | `any` | Supports negative indices |
+| `Arr.toString(a)` | `string` | Comma-separated: `[1,2,3]` → `"1,2,3"` |
+| `Arr.length(a)` | `number` | |
+| `Arr.map(a, fn)` | `Array` | `fn(value, index, array)` |
+| `Arr.filter(a, fn)` | `Array` | |
+| `Arr.find(a, fn)` | `any` | |
+| `Arr.findIndex(a, fn)` | `number` | |
+| `Arr.every(a, fn)` | `boolean` | |
+| `Arr.some(a, fn)` | `boolean` | |
+| `Arr.reduce(a, fn)` | `any` | No init — uses first element as accumulator |
+| `Arr.fold(a, fn, init)` | `any` | Like `reduce` but with explicit init value |
+| `Arr.reduceRight(a, fn)` | `any` | Right-to-left `reduce` |
+| `Arr.foldRight(a, fn, init)` | `any` | Right-to-left `fold` |
+| `Arr.flat(a, depth?)` | `Array` | Default depth: 1 |
+| `Arr.flatMap(a, fn)` | `Array` | |
+| `Arr.includes(a, val)` | `boolean` | |
+| `Arr.indexOf(a, val)` | `number` | |
+| `Arr.lastIndexOf(a, val)` | `number` | |
+| `Arr.slice(a, start?, end?)` | `Array` | |
+| `Arr.join(a, sep?)` | `string` | Default sep: `","` |
+| `Arr.sort(a, fn?)` | `Array` | **Immutable** — uses `toSorted()`, original unchanged |
+| `Arr.reverse(a)` | `Array` | **Immutable** — uses `toReversed()`, original unchanged |
+| `Arr.concat(a, ...arrays)` | `Array` | |
+| `Arr.from(val)` | `Array` | `Array.from(val)` — no array guard |
+| `Arr.of(...args)` | `Array` | `Array.of(...args)` — no array guard |
+| `Arr.fill(a, val, start?, end?)` | `Array` | **Immutable** — returns new array, original unchanged |
+| `Arr.at(a, index)` | `any` | Supports negative indices |
 
 ### Obj
 
@@ -235,15 +237,17 @@ Object functions for plain objects.
 
 | Function | Returns | Notes |
 |---|---|---|
-| `toString(o)` | `string` | `JSON.stringify(o)` |
-| `keys(o)` | `string[]` | Same as `Object.keys(o)` |
-| `values(o)` | `Array` | Same as `Object.values(o)` |
-| `entries(o)` | `[string, any][]` | Same as `Object.entries(o)` |
-| `fromEntries(entries)` | `Object` | Same as `Object.fromEntries(entries)` |
-| `assign(...objs)` | `Object` | **Immutable** — always returns new object: `Object.assign({}, ...objs)` |
-| `has(o, key)` | `boolean` | Same as `Object.hasOwn(o, key)` |
+| `Obj.toString(o)` | `string` | `JSON.stringify(o)` |
+| `Obj.keys(o)` | `string[]` | Same as `Object.keys(o)` |
+| `Obj.values(o)` | `Array` | Same as `Object.values(o)` |
+| `Obj.entries(o)` | `[string, any][]` | Same as `Object.entries(o)` |
+| `Obj.fromEntries(entries)` | `Object` | Same as `Object.fromEntries(entries)` |
+| `Obj.assign(...objs)` | `Object` | **Immutable** — always returns new object: `Object.assign({}, ...objs)` |
+| `Obj.has(o, key)` | `boolean` | Same as `Object.hasOwn(o, key)` |
 
 > **`Obj.assign` vs JS:** In JS, `Object.assign(target, source)` mutates `target`. In SimplEx, `Obj.assign(a, b)` always returns a new object — `a` is never modified.
+
+> **Prefer spread for static field shapes.** `{ ...a, ...b }` is shorter and reads better than `Obj.assign(a, b)`. Use `Obj.assign` only when merging a dynamic number of objects (e.g., `Arr.fold(objs, Obj.assign, {})`) where spread can't generalize.
 
 ### Json
 
@@ -251,8 +255,8 @@ JSON serialization.
 
 | Function | Returns | Notes |
 |---|---|---|
-| `parse(s)` | `any` | Same as `JSON.parse(s)`. Throws on invalid JSON. |
-| `stringify(val, replacer?, indent?)` | `string` | `JSON.stringify(val, replacer, indent)`. Replacer can be a function `(key, value) => ...` or an array of key strings. |
+| `Json.parse(s)` | `any` | Same as `JSON.parse(s)`. Throws on invalid JSON. |
+| `Json.stringify(val, replacer?, indent?)` | `string` | `JSON.stringify(val, replacer, indent)`. Replacer can be a function `(key, value) => ...` or an array of key strings. |
 
 ### Date (Minimal)
 
@@ -260,9 +264,9 @@ Only two functions. For extended date handling, pass a date library via custom g
 
 | Function | Returns | Notes |
 |---|---|---|
-| `toString(ts)` | `string \| null` | `new Date(ts).toISOString()`. Returns `null` for invalid input |
-| `now()` | `number` | Unix timestamp in ms. Same as `Date.now()` |
-| `parse(s)` | `number \| null` | Returns `null` for unparseable date strings |
+| `Date.toString(ts)` | `string \| null` | `new Date(ts).toISOString()`. Returns `null` for invalid input |
+| `Date.now()` | `number` | Unix timestamp in ms. Same as `Date.now()` |
+| `Date.parse(s)` | `number \| null` | Returns `null` for unparseable date strings |
 
 ## Validation Tiers
 
