@@ -34,6 +34,7 @@
   - [Template Literals](#template-literals)
   - [Comments](#comments)
   - [Reserved Words](#reserved-words)
+  - [Further reading](#further-reading)
 - [Data and Scope](#data-and-scope)
 - [API Reference](#api-reference)
   - [compile()](#compile)
@@ -147,6 +148,8 @@ SimplEx syntax is intentionally close to JavaScript. If you know JS, you can sta
 | `in` operator | Checks prototype chain | Checks own keys only | Works with objects, arrays, and Maps |
 
 **Everything else works as you'd expect from JavaScript:** arrow functions (`x => x + 1`), template literals (`` `hello ${name}` ``), tagged templates, arrays, objects, spread operators, dot/bracket property access, nullish coalescing (`??`), `typeof`, and comments (`//`, `/* */`).
+
+For a feature-by-feature comparison — including everything JavaScript has that SimplEx **doesn't** (`for`/`while`, classes, `try`/`catch`, mutation, regex, `import`, …) — see the full reference: [docs/js-comparison.md](docs/js-comparison.md).
 
 ## Language Reference
 
@@ -442,6 +445,12 @@ The tag function receives an array of static string parts and the interpolated v
 
 `if`, `then`, `else`, `and`, `or`, `not`, `in`, `mod`, `typeof`, `let`, `true`, `false`, `null` — cannot be used as identifiers.
 
+### Further reading
+
+- [docs/recipes.md](docs/recipes.md) — common patterns: tree traversal, BOM unfolding, `groupBy` / `countBy` / `indexBy`, conditional merge, safe navigation.
+- [docs/style-guide.md](docs/style-guide.md) — formatting conventions: indentation, pipe layout, `::` vs pipe vs namespace, spread vs `Obj.assign`.
+- [docs/js-comparison.md](docs/js-comparison.md) — feature-by-feature comparison with JavaScript, including everything JS has that SimplEx **doesn't**.
+
 ## Data and Scope
 
 Identifiers are resolved in this order: **local scope** (lambda params, let bindings) -> **closure** -> **globals** -> **data** -> **error**.
@@ -711,6 +720,9 @@ fn({ score: 95, salary: 50000 }) // 60000
 **Combining with currying:**
 
 ```ts
+// `map` and `mul` here are *your* globals — not the stdlib.
+// The stdlib equivalent is `Arr.map(%, Math.mul(#, factor))` only if `Math.mul`
+// were provided; in practice you'd write: `items | Arr.map(%, x => x * factor)`.
 const fn = compile('items | map(%, mul(#, factor))', {
   globals: {
     map: (arr, fn) => arr.map(fn),
@@ -720,6 +732,8 @@ const fn = compile('items | map(%, mul(#, factor))', {
 
 fn({ items: [1, 2, 3], factor: 10 }) // [10, 20, 30]
 ```
+
+> **Note:** the bare `map`/`mul` names work above because they are passed in as user globals. The standard library exposes its functions only via namespaces (`Arr.map`, `Str.toUpperCase`, …) or `::` extensions (`x::map(fn)`). See [Standard Library](#standard-library) and [docs/stdlib.md](docs/stdlib.md).
 
 ## AI / LLM Integration
 
