@@ -94,6 +94,7 @@ SimplEx is a safe, sandboxed expression language for evaluating user-provided fo
 ### Currying (`#` placeholder)
 
 `#` in call arguments creates a partially applied function:
+
 - `add(#, 3)` → `x => add(x, 3)`
 - `add(1, #)` → `x => add(1, x)`
 - `fn(#, y, #)` → `(a, b) => fn(a, y, b)`
