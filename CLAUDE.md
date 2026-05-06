@@ -254,3 +254,53 @@ The compiler generates JS code referencing runtime helpers: `get(scope, name)` f
 ## Maintenance
 
 After any changes that affect architecture, file structure, build commands, language syntax/semantics, or conventions — update this file to reflect the new state. This includes adding/removing/renaming source files, changing the build pipeline, modifying code style rules, or changing the expression language (operators, grammar, runtime behavior).
+
+<!-- BEGIN github-project skill workflow -->
+## GitHub Project workflow
+
+This project uses an issue-driven workflow on a GitHub Project board. Configuration lives in `github-project.json` (owner + project number).
+
+### Board columns
+
+`Backlog → Todo → In Progress → In Review → Done`
+
+### Labels vs custom fields
+
+- **Labels** describe what the issue *is*: `bug`, `feature`, `refactor`, `chore`, `docs`. Visible everywhere.
+- **Custom fields** are project-only planning metadata: `Direction`, `Impact`, `Effort`. Never use labels for impact/effort.
+
+### Issue hierarchy
+
+Two levels only: parent issue (theme/decomposition umbrella) and sub-issue (a single deliverable with its own branch and PR). Use the `Direction` field for long-lived theme grouping — never use a parent issue for that, parent issues must be closeable.
+
+### Branch naming
+
+```
+<type>/<issue-number>-<short-kebab-description>
+```
+
+Type is one of `feature/`, `fix/`, `refactor/`, `chore/`, `docs/`. Issue number first so `git branch -a` shows the link.
+
+### Per-issue lifecycle
+
+1. Pick from Backlog → move card to **In Progress**
+2. `git checkout -b <type>/<num>-<desc>` off `main`
+3. Implement, commit
+4. Open PR with `Closes #<num>` in body → moves to **In Review**
+5. Inline review comments on the PR
+6. Merge → issue auto-closes → move card to **Done**
+7. Distill non-obvious decisions from PR comments into `docs/design-decisions.md`
+8. Delete branch
+
+### Bot-attributed actions
+
+Programmatic comments, PR reviews, and project mutations should be performed via the configured GitHub App bot, not the user account. Get a token with:
+
+```bash
+GH_TOKEN=$(python3 ~/.claude/github-bot/get_token.py) gh issue comment <num> --body "..."
+```
+
+### Diagnostics
+
+Run the skill's `scripts/diagnose.sh` to verify the setup at any time. It checks bot config, project structure, labels, and templates, and suggests fixes for any drift.
+<!-- END github-project skill workflow -->
