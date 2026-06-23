@@ -64,3 +64,58 @@ The chosen IIFE preserves right-operand laziness via the JS ternary `?:` — `R`
 
 - `src/compiler.ts` — `defaultPipe` short-circuit check.
 - `src/visitors.ts` — `NullishCoalescingExpression` codegen.
+
+---
+
+## Eval-free interpreter backend (`interpret`)
+
+**Status:** Implemented.
+
+### Context
+
+`compile()` builds the expression with `new Function()`. That step is blocked under a strict Content Security Policy (no `'unsafe-eval'`) and in several edge/sandboxed runtimes — MV3 browser-extension service workers, Cloudflare Workers, Deno Deploy. Those environments are squarely in SimplEx's target deployment model (edge / sandboxed multi-tenant — see `positioning.md` §2), so a backend that does not need `new Function`/`eval` is worth carrying.
+
+### Decision
+
+Add a second backend: a tree-walking interpreter `interpret()` that evaluates the AST directly, with identical language semantics to `compile()`. It shares the runtime and the compile-time checks with the codegen backend; only the evaluation strategy differs (walk-and-return vs emit-code-and-`new Function`).
+
+### Separate entry point, not re-exported from the root
+
+`interpret()` is reachable only via `simplex-lang/interpret`, NOT re-exported from `src/index.ts`.
+
+**Why:** tree-shaking honesty. The whole point of the eval-free backend is to ship into environments that forbid `new Function`. If `interpret` were re-exported from the root, a bundler pulling in the root module could drag the codegen path (`compiler.ts`, `visitors.ts`, the `new Function` call) into a build that must not contain it. A dedicated entry point guarantees that importing `simplex-lang/interpret` pulls in only `parser`, `constants`, `errors`, `runtime`, `validate` — verified: no `compiler` / `new Function` in the transitive import graph (the `import type CompileOptions` is erased by tsc).
+
+Alternatives rejected:
+
+1. **Single `compile()` with a `backend: 'interpret'` option.** Rejected — a runtime flag cannot tree-shake; the codegen path would always be reachable, defeating the purpose.
+2. **Re-export `interpret` from the root.** Rejected for the bundling reason above.
+
+### Shared runtime + shared validation (not duplicated)
+
+Backend-agnostic semantics were extracted into `runtime.ts` (operators, context helpers, `resolveContext`) and compile-time checks into `validate.ts` (duplicate `let` names, `Infinity` computed key, unbound topic). Both backends call them.
+
+**Why:** the failure mode of two backends is silent divergence. Centralizing every piece of semantics that *can* be shared means most changes land in one place and automatically apply to both. What genuinely cannot be shared — emit-code vs return-value — is the only thing each backend implements separately.
+
+### Parity tests as the synchronization mechanism
+
+`test/helpers.ts` exports a parity-`compile` that builds each expression with both backends and asserts identical construction, invocation results, and error type/message. Value-oriented suites run every case through both. This is the structural guarantee that the two backends stay in lockstep: a semantics change applied to only one fails parity.
+
+### No `errorMapper`; errors located from AST nodes
+
+`InterpretOptions = Omit<CompileOptions, 'errorMapper'>`. The codegen backend needs `errorMapper` to translate a V8 stack frame in generated code back to a source offset. The interpreter never generates code — it holds the AST node it is evaluating, so it attributes errors to the source location directly (`errNode` + a single top-level `try/catch` + `locateError`). `errorMapper` is therefore not just unused but meaningless for this backend; omitting it from the type prevents a misleading option.
+
+**Known parity nuance:** inside a pipe body the interpreter can produce a *more precise* error location than codegen (e.g. `x | %.y.z` → interpret `[4,9]`, compile `[0,9]` for the whole pipe). Error type and message match; only the span differs, with interpret being tighter. Accepted as-is — a more precise location is not a regression.
+
+### Performance trade-off
+
+Tree-walking is slower per call than JIT-compiled `new Function` output. `interpret()` is positioned as a **fallback for eval-free environments, not a replacement** for `compile()`. Where `new Function` is available, `compile()` remains the recommended path.
+
+### Affected files
+
+- `src/runtime.ts` — new; extracted shared runtime + `resolveContext`.
+- `src/interpreter.ts` — new; `interpret()` + `evalNode()` tree-walker.
+- `src/validate.ts` — new; shared static validation pass.
+- `src/compiler.ts` — imports shared runtime; calls `validate()` before `traverse()`.
+- `src/visitors.ts` — inline validations removed (moved to `validate.ts`).
+- `package.json` — `exports` entry `"./interpret"`.
+- `test/helpers.ts` — parity-`compile`; `test/interpreter.test.ts` — eval-free-specific cases.

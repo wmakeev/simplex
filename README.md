@@ -40,6 +40,7 @@
   - [compile()](#compile)
   - [CompileOptions](#compileoptions)
   - [Errors](#errors)
+- [Eval-free Backend (`interpret`)](#eval-free-backend-interpret)
 - [Customization](#customization)
 - [Standard Library](#standard-library)
 - [Using External Functions](#using-external-functions)
@@ -555,6 +556,48 @@ import { UnexpectedTypeError } from 'simplex-lang'
 compile('"hello" + 1')() // throws UnexpectedTypeError: expected number
 ```
 
+## Eval-free Backend (`interpret`)
+
+`compile()` builds the expression with `new Function()`, which is blocked under a strict Content Security Policy and in some edge/sandboxed runtimes. For those environments SimplEx ships a second backend — a tree-walking interpreter that evaluates the AST directly, with **no `new Function` / `eval`**:
+
+```ts
+import { interpret } from 'simplex-lang/interpret'
+
+interpret('a + b')({ a: 2, b: 3 }) // 5
+```
+
+Use it when `new Function` is unavailable:
+
+- **Strict CSP** — pages without `'unsafe-eval'` in `script-src`.
+- **MV3 browser extensions** — service workers forbid `eval`/`new Function`.
+- **Edge runtimes** — Cloudflare Workers, Deno Deploy, and similar isolates that disallow dynamic code generation.
+
+`interpret()` is a drop-in for `compile()` — **same signature, same language semantics, same errors**. The two backends share the runtime (`runtime.ts`) and the compile-time checks (`validate.ts`); only the evaluation strategy differs. A parity test suite runs the same cases through both and asserts identical results, error types, and messages.
+
+```ts
+import { interpret } from 'simplex-lang/interpret'
+import { createStdlib } from 'simplex-lang/stdlib'
+
+const { globals, extensions } = createStdlib()
+
+interpret('users::filter(u => u.active)::map(u => u.name)', { globals, extensions })({
+  users: [{ name: 'A', active: true }, { name: 'B', active: false }]
+}) // ["A"]
+```
+
+**Trade-offs vs `compile()`:**
+
+| | `compile()` | `interpret()` |
+|---|---|---|
+| Mechanism | codegen → `new Function()` | tree-walking AST evaluation |
+| Works under strict CSP / no-eval | no | **yes** |
+| Per-call performance | near-native after JIT warmup | slower (AST walk per call) |
+| `errorMapper` option | yes | not applicable (errors are located from AST nodes directly) |
+
+`interpret()` is a **fallback for eval-free environments, not a replacement** — prefer `compile()` whenever `new Function` is available. The two are import-isolated: importing `simplex-lang/interpret` does not pull in the codegen path or `new Function`, so the eval-free build tree-shakes cleanly.
+
+> **Note:** `InterpretOptions` is `CompileOptions` without `errorMapper` (the interpreter attributes errors to source nodes directly, so no stack-trace mapping is needed). Every other option — `globals`, `extensions`, operator overrides, context helpers — works identically.
+
 ## Customization
 
 Every aspect of SimplEx evaluation can be customized through compile options.
@@ -744,7 +787,7 @@ const fn = compile(aiResponse.expression) // e.g., "price * quantity * (1 - disc
 fn(data) // safe execution
 ```
 
-> Expressions are compiled once to native JS functions via `new Function()` — subsequent calls have near-native performance.
+> Expressions are compiled once to native JS functions via `new Function()` — subsequent calls have near-native performance. In environments where `new Function` is blocked (strict CSP, MV3 extensions, edge runtimes), use the [eval-free `interpret()` backend](#eval-free-backend-interpret) instead.
 
 ## License
 

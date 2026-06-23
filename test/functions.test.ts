@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
-import { compile } from '../src/index.js'
+import { compile } from './helpers.js'
 
 suite('functions', () => {
   test('function call on null global', () => {

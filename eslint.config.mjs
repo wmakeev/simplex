@@ -62,6 +62,6 @@ export default defineConfig(
     }
   },
   {
-    ignores: ['lib/', 'parser/', 'build/', '__temp/', 'coverage/', 'scripts/', 'playground/']
+    ignores: ['lib/', 'parser/', 'build/', '__temp/', 'coverage/', 'scripts/', 'playground/', '.plan/']
   }
 )

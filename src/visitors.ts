@@ -21,7 +21,6 @@ export interface VisitResult {
 
 export interface TraverseContext {
   expression: string
-  insidePipe: boolean
 }
 
 type Visit = (node: Expression) => VisitResult[]
@@ -152,14 +151,7 @@ const visitors: {
       } else if (p.key.type === 'Identifier') {
         keyParts = [codePart(p.key.name, p)]
       } else if (p.key.type === 'Literal') {
-        // JSON.stringify(Infinity) returns "null", producing wrong key
-        if (typeof p.key.value === 'number' && !Number.isFinite(p.key.value)) {
-          throw new CompileError(
-            `Invalid object key: ${p.key.value}`,
-            context.expression,
-            p.key.location
-          )
-        }
+        // Non-finite keys are rejected up front by the shared validate() pass.
         keyParts = [codePart(JSON.stringify(p.key.value), p)]
       } else {
         // Unreachable: grammar restricts keys to Identifier and Literal
@@ -270,11 +262,8 @@ const visitors: {
     return parts
   },
 
-  PipeSequence: (node, visit, context) => {
+  PipeSequence: (node, visit) => {
     const headCode = visit(node.head)
-
-    const prevInsidePipe = context.insidePipe
-    context.insidePipe = true
 
     const items = node.tail.map(t => {
       const opt = t.operator === '|?'
@@ -289,8 +278,6 @@ const visitors: {
       ]
     })
 
-    context.insidePipe = prevInsidePipe
-
     return [
       codePart(`${GEN.pipe}(`, node),
       ...headCode,
@@ -300,14 +287,8 @@ const visitors: {
     ]
   },
 
-  TopicReference: (node, _visit, context) => {
-    if (!context.insidePipe) {
-      throw new CompileError(
-        `Topic reference "${TOPIC_TOKEN}" is unbound; it must be inside a pipe body`,
-        context.expression,
-        node.location
-      )
-    }
+  TopicReference: node => {
+    // Unbound `%` (outside a pipe body) is rejected by the shared validate() pass.
     const parts: VisitResult[] = [
       codePart(`${GEN.get}(${GEN.scope},"${TOPIC_TOKEN}")`, node)
     ]
@@ -411,19 +392,8 @@ const visitors: {
     return parts
   },
 
-  LetExpression: (node, visit, context) => {
-    const declarationsNamesSet = new Set()
-
-    for (const d of node.declarations) {
-      if (declarationsNamesSet.has(d.id.name)) {
-        throw new CompileError(
-          `"${d.id.name}" name defined inside let expression was repeated`,
-          context.expression,
-          d.id.location
-        )
-      }
-      declarationsNamesSet.add(d.id.name)
-    }
+  LetExpression: (node, visit) => {
+    // Duplicate binding names are rejected by the shared validate() pass.
 
     // (scope=> {
     //   var _varNames = [];
@@ -486,6 +456,6 @@ export function traverse(
   tree: ExpressionStatement,
   expression: string
 ): VisitResult {
-  const context: TraverseContext = { expression, insidePipe: false }
+  const context: TraverseContext = { expression }
   return combineVisitResults(visit(tree.expression, null, context))
 }

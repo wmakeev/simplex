@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 
 import { test, suite } from 'node:test'
-import { compile, CompileError } from '../src/index.js'
+import { CompileError } from '../src/index.js'
 import assert from 'node:assert/strict'
-import { evalExp } from './helpers.js'
+import { compile, evalExp } from './helpers.js'
 
 suite('notations', () => {
   test('string', () => {
