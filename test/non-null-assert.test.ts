@@ -1,5 +1,6 @@
 import { test, suite } from 'node:test'
-import { compile, ExpressionError } from '../src/index.js'
+import { ExpressionError } from '../src/index.js'
+import { compile } from './helpers.js'
 import assert from 'node:assert/strict'
 
 suite('non-null assert (!)', () => {

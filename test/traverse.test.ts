@@ -8,6 +8,7 @@ import {
   traverse,
   VisitResult
 } from '../src/index.js'
+import { validate } from '../src/validate.js'
 
 const getCode = (expression: string) => {
   const tree = parse(expression) as ExpressionStatement
@@ -247,13 +248,17 @@ suite('traverse code', () => {
   })
 
   test('duplicate names in let', () => {
+    // Compile-time validation moved from traverse() to the shared validate() pass.
     const expression = 'let a = 1, a = 2, a'
     const tree = parse(expression) as ExpressionStatement
-    assert.throws(() => traverse(tree, expression), err => {
-      assert.ok(err instanceof CompileError)
-      assert.match(err.message, /repeated/)
-      return true
-    })
+    assert.throws(
+      () => { validate(tree, expression); },
+      err => {
+        assert.ok(err instanceof CompileError)
+        assert.match(err.message, /repeated/)
+        return true
+      }
+    )
   })
 
   test('let', () => {

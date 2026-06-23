@@ -19,6 +19,10 @@
     "./stdlib": {
       "types": "./build/src/stdlib/index.d.ts",
       "default": "./build/src/stdlib/index.js"
+    },
+    "./interpret": {
+      "types": "./build/src/interpreter.d.ts",
+      "default": "./build/src/interpreter.js"
     }
   },
   "keywords": [

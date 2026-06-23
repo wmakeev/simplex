@@ -160,6 +160,8 @@ Match the target deployment and constraints to the recommended candidate:
 
 Designed for the author's own pipelines. Tool-first, community-second (see `positioning.md` §1). Native-JS compilation via `new Function` is the structural distinguisher; current codegen leaves JIT potential unrealized due to bop/uop dispatch and scope-chain walks (see `compiler-roadmap.md`).
 
+Ships a second, **eval-free** backend (`simplex-lang/interpret`): a tree-walking AST interpreter with identical language semantics and no `new Function`/`eval` dependency. This lets the same expressions run under a strict CSP, in MV3 extension service workers, Cloudflare Workers, and Deno Deploy — environments that forbid dynamic code generation. The trade-off is per-call interpreter overhead (like cel-js / JSONata), so it is a fallback for eval-free hosts rather than a replacement for the codegen path. Both backends share `runtime.ts` + `validate.ts` and are kept in lockstep by a parity test suite.
+
 ### CEL and JS implementations
 
 Three notable JS implementations, with different architecture trade-offs:

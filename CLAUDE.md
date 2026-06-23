@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SimplEx (`simplex-lang`) is a TypeScript compiler for a simple expression language that compiles expression strings into executable JavaScript functions. Zero dependencies.
 
-**Pipeline:** Expression string → Peggy parser → AST → `traverse()` code generation → `new Function()` → callable `(data?) => unknown`
+**Pipeline (compile):** Expression string → Peggy parser → AST → `validate()` → `traverse()` code generation → `new Function()` → callable `(data?) => unknown`
+
+**Pipeline (interpret):** Expression string → Peggy parser → AST → `validate()` → tree-walking `evalNode()` → callable `(data?) => unknown`. The eval-free backend (`simplex-lang/interpret`) targets environments where `new Function`/`eval` is unavailable (strict CSP, MV3 extensions, Cloudflare Workers, Deno Deploy, edge runtimes). Both backends share the runtime semantics (`runtime.ts`) and compile-time checks (`validate.ts`); only the evaluation strategy differs.
 
 ## Build & Test Commands
 
@@ -32,8 +34,11 @@ npm run compile:dev && node --test build/test/parser.test.js
 - **`src/simplex.peggy`** — PEG grammar defining the expression language (Peggy format). Generates `parser/index.js`.
 - **`src/simplex-tree.ts`** — AST node type definitions (Literal, Identifier, BinaryExpression, CallExpression, PipeSequence, LambdaExpression, LetExpression, TemplateLiteralExpression, etc.)
 - **`src/visitors.ts`** — AST visitors: `visitors` object maps AST node types to JS code strings; `traverse()` walks the AST and produces generated code with source location offsets.
-- **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → codegen → Function creation. Includes default operators, context helpers, and bootstrap code generation.
-- **`src/error-mapping.ts`** — Error mapping strategy: `ErrorMapper` interface, built-in `v8ErrorMapper`, `registerErrorMapper()` / `getActiveErrorMapper()` registration mechanism, `getExpressionErrorLocation()` helper.
+- **`src/compiler.ts`** — Core compiler: `compile()` orchestrates parse → `validate()` → codegen → Function creation. Owns the `new Function()` step, bootstrap code generation, and `errorMapper` wiring. `CompileOptions = ContextOptions & Partial<{ errorMapper }>`.
+- **`src/runtime.ts`** — Backend-agnostic runtime shared by both backends (no `new Function`): default operators and context helpers, `resolveContext(options)` (fills defaults, returns a `ResolvedContext`), `getExtensionMethod` / `defaultGetProperty`, types `ContextHelpers` / `ContextOptions` / `ExpressionOperators`. Extracted so the interpreter doesn't drag in `compiler.ts` / `visitors.ts` / `new Function`.
+- **`src/interpreter.ts`** — Eval-free backend: `interpret()` + tree-walking `evalNode()` (mirror of `visitors.ts`, returns values instead of code strings). Separate entry point `simplex-lang/interpret`. `InterpretOptions = Omit<CompileOptions, 'errorMapper'>`. Scope frames allocated only in lambda/let/pipe (mirrors codegen). Errors are located from AST nodes directly via `errNode` + a single top-level `try/catch` (no `errorMapper`). Not re-exported from `src/index.ts` — reachable only via the dedicated entry point (keeps the eval-free build tree-shakeable).
+- **`src/validate.ts`** — Shared static validation pass `validate(tree, expression)`: duplicate `let` names, `Infinity` computed object key, unbound topic `%` outside a pipe. Called by both `compile()` and `interpret()` before evaluation. Single source of truth — these checks are NOT in `visitors.ts`.
+- **`src/error-mapping.ts`** — Error mapping strategy (codegen backend only): `ErrorMapper` interface, built-in `v8ErrorMapper`, `registerErrorMapper()` / `getActiveErrorMapper()` registration mechanism, `getExpressionErrorLocation()` helper.
 - **`src/errors.ts`** — Error classes: `ExpressionError`, `CompileError`, `UnexpectedTypeError`
 - **`src/tools/`** — Runtime utilities: type guards, casting, type checking, validation (all in `index.ts`)
 - **`src/index.ts`** — Public API re-exports
@@ -220,6 +225,16 @@ All operators and context helpers can be overridden at compile time.
 ## Code Generation Strategy
 
 The compiler generates JS code referencing runtime helpers: `get(scope, name)` for identifier lookup, `bop["+"]()` for binary operators, `uop["-"]()` for unary, etc. Scope is a nested array structure `[paramNames, paramValues, parentScope]` for lexical scoping in lambdas/let expressions.
+
+## Two backends — keep them in sync
+
+There are two evaluation backends with identical language semantics: the codegen `compile()` (`visitors.ts` → `new Function`) and the tree-walking `interpret()` (`interpreter.ts`). **Any change to language semantics (operators, runtime behavior, scope resolution, new node types, validation) must be applied to BOTH backends.** The split of responsibilities:
+
+- Shared semantics (operators, context helpers, identifier resolution) live in `runtime.ts` — change once, both backends pick it up.
+- Shared compile-time checks live in `validate.ts` — change once, both backends enforce it.
+- Backend-specific control flow: `visitors.ts` `traverse()` emits code strings; `interpreter.ts` `evalNode()` returns values. A new AST node or changed evaluation rule must be mirrored in both.
+
+The **parity test suite is the synchronization gate**: `test/helpers.ts` exports a parity-`compile` that builds each expression with both backends and asserts identical construction, results, and error type/message; value-oriented suites run every case through both. If a semantics change touches only one backend, parity tests fail. `test/interpreter.test.ts` additionally covers eval-free-specific behavior (CSP stub, node-located errors).
 
 ## Code Style
 

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
-import { compile, CompileError } from '../src/index.js'
+import { CompileError } from '../src/index.js'
+import { compile } from './helpers.js'
 
 suite('let', () => {
   test('with one variable', () => {
