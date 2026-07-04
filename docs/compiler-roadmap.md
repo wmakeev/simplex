@@ -27,9 +27,16 @@ proposes inline/specialized alternatives with a performance estimate for each.
 > 1. **Every fast emission keeps a slow twin.** Implementing a fast path must
 >    not delete the alternative emission form — it becomes the branch for
 >    overridden operations (legacy `ContextOptions` during the transition,
->    plugin slots after). The switch is flipped once per compile — a
->    legacy/plugin check selects a whole visitor table — never via `if`s
->    inside individual visitors.
+>    plugin slots after). Branch granularity differs by phase:
+>    - *Legacy phase:* the switch is flipped once per compile — any legacy
+>      semantic override selects a whole legacy visitor table (wholesale
+>      fallback); no `if`s inside individual visitors.
+>    - *Plugin phase:* visitors may branch **per operation** on
+>      `resolved.overridden` (`.research/001-plugins/02-plugin-api.md`) —
+>      that check runs at compile time only and emits either the direct
+>      plugin-slot call or the fast default lowering. No runtime `if`
+>      appears in the emitted code, and no per-override-combination
+>      visitor tables are generated (that would be combinatorial).
 > 2. Items that *remove* public API ship together with the plugin mechanism
 >    (deprecation → removal in the next major), not with the performance
 >    work. The performance half of this roadmap can land first and alone.
@@ -74,7 +81,7 @@ The sections below walk the compiler/visitors layer by layer.
 
 ## 1. Binary operators — dictionary dispatch + wrapper layers
 
-**Where:** `src/compiler.ts:236-297`, `src/visitors.ts:112-113`.
+**Where:** `src/runtime.ts:223-284`, `src/visitors.ts:111-112`.
 
 **Current:**
 
@@ -84,7 +91,7 @@ wrapOp(GEN.bop, '+', node, visit(left), visit(right))
 // → generates: bop["+"](L, R)
 ```
 
-And in compiler.ts:
+And in runtime.ts:
 
 ```ts
 const numericOp = (fn) => (a, b) => fn(ensureNumber(a), ensureNumber(b))
@@ -138,7 +145,7 @@ with a switch. Fine as-is — the type discrimination is unavoidable.
 
 ## 2. Unary operators — same story
 
-**Where:** `src/compiler.ts:217-229`, `src/visitors.ts:109-110`.
+**Where:** `src/runtime.ts:204-216`, `src/visitors.ts:108-109`.
 
 `-x` compiles to `uop["-"](L)` → `val => -ensureNumber(val)`. Same
 dictionary + wrapper issue.
@@ -161,7 +168,7 @@ frequent in conditions).
 
 ## 3. Logical operators — two thunk allocations per `and`/`or`
 
-**Where:** `src/compiler.ts:310-316`, `src/visitors.ts:115-122`.
+**Where:** `src/runtime.ts:296-306`, `src/visitors.ts:114-121`.
 
 **Current:**
 
@@ -198,7 +205,8 @@ emission only.
 
 ## 4. Identifier lookup — `_get` walks a linked list
 
-**Where:** `src/compiler.ts:350-356` (bootstrap).
+**Where:** `src/compiler.ts:54-63` (bootstrap), `src/runtime.ts:51-67`
+(`defaultGetIdentifierValue`).
 
 **Current:**
 
@@ -253,12 +261,12 @@ references — so it emits the generic `get(scope, "x")` for all four.
 - **let binding** → emit the mangled JS variable name directly. The let
   codegen can switch from `_varValues.push(init)` to real JS `var`/`let`
   declarations.
-- **global** → emit a direct lookup against the `globals` object (folding
-  static global *values* into the code is possible but changes observable
-  behavior — see the caveats below).
-- **data field** → emit `_dataGet(data, "x")` — **not** a raw `data["x"]`
-  (see the caveats below).
-- **unresolved** → fall back to `getIdentifierValue`, or throw `CompileError`.
+- **free (not bound by any enclosing lambda/let/pipe)** → emit
+  `_freeGet(globals, data, "x")` — a direct helper call that skips the
+  scope-chain walk but re-runs the globals-vs-data classification at
+  runtime. Do **not** split free identifiers into `global` / `data`
+  classes at compile time by inspecting the keysets — that silently
+  snapshots the keyset (see the caveats below).
 
 Two invariants (decided 2026-07-04, see `.plan/2026-07-04/fork-decisions.md`,
 fork 4):
@@ -267,27 +275,37 @@ fork 4):
   `let` bindings and the `%` topic are always emitted as real JS locals — no
   override can affect them (the identifier hook is only ever consulted after
   the local scope misses, by definition).
-- **Direct `globals["x"]` / `data["x"]` emission and static-globals folding
-  apply only when no plugin overrides the identifier hook.** With an
-  override present, every *free* identifier lowers to a single direct call
-  of the plugin fn; locals stay static regardless.
+- **The `_freeGet` fast lowering (and any future snapshot mode) applies
+  only when no plugin overrides the identifier hook.** With an override
+  present, every *free* identifier lowers to a single direct call of the
+  plugin fn; locals stay static regardless.
 
 Design note: the environment pass should bind *pattern → set of names*, not
 *parameter → single name* — destructuring in `let`/lambda params is an
 accepted candidate (`.research/004-syntax-extensions/`) and will need
 exactly that shape.
 
-Two semantics-preservation caveats (pinned by guard tests in
+Three semantics-preservation caveats (pinned by guard tests in
 `test/semantics-guards.test.ts`):
 
+- **The globals/data *keyset* is read by reference, not just the values.**
+  `defaultGetIdentifierValue` re-checks `Object.hasOwn(globals, name)` and
+  then `Object.hasOwn(data, name)` on every call (`src/runtime.ts:51-67`).
+  Adding a key to `globals` after `compile()` starts shadowing the
+  same-named data field on the next invocation; deleting it falls back to
+  data. A compile-time `global`-vs-`data` classification freezes that
+  decision at compile time and changes both cases. Hence `_freeGet` above:
+  the win is skipping the scope-chain walk, the runtime `hasOwn`
+  classification stays. Direct `globals["x"]` / `data["x"]` emission is
+  allowed only under an explicit, documented snapshot/frozen-globals mode.
 - **Raw `data["x"]` is not equivalent to today's lookup.**
   `defaultGetIdentifierValue` does an `Object.hasOwn` check
   (prototype-pollution safety: inherited properties like `toString` must
   stay invisible), throws `Unknown identifier` on a miss, and special-cases
   the `undefined` identifier (returns `undefined` even when data has an own
-  `"undefined"` key). The direct emission must be a small
-  `_dataGet(data, "x")` helper that keeps all three; the win is skipping
-  the scope-chain walk, not the final guarded read.
+  `"undefined"` key). `_freeGet` must keep all three; it is
+  `defaultGetIdentifierValue` minus the pluggable indirection, not a raw
+  property read.
 - **Globals are read by reference today.** Mutating the `globals` object
   after `compile()` is visible to subsequent invocations. Folding global
   *values* into the emitted code silently switches that to snapshot
@@ -300,9 +318,9 @@ This eliminates:
 - The entire `_get` helper for scoped references.
 - The scope linked list (`[names, values, parent]`) for lambdas and `let`.
 - The closure allocation in `findIndex`.
-- All `_varNames`/`_varValues` arrays for `let` (`src/visitors.ts:441-459`).
+- All `_varNames`/`_varValues` arrays for `let` (`src/visitors.ts:416-431`).
 - All `scope = [params, [p0,p1], scope]` boilerplate inside lambdas
-  (`src/visitors.ts:330-339`).
+  (`src/visitors.ts:318-322`).
 
 **Impact: Very High** for any expression that uses lambdas or `let`.
 Lambdas go from "lookup through a chain on every parameter reference" to
@@ -336,7 +354,7 @@ model.
 
 ## 5. Function call — wrapper + `apply` with array allocation
 
-**Where:** `src/compiler.ts:152-158`, `src/visitors.ts:220-259`.
+**Where:** `src/runtime.ts:139-145`, `src/visitors.ts:212-251`.
 
 **Current:**
 
@@ -357,18 +375,33 @@ Costs:
 2. `apply(null, args)` instead of a direct call.
 3. The wrapper itself.
 
-**Proposed:** inline the null-safe call site:
+**Proposed:** inline the null-safe call site — but **argument evaluation
+order must be preserved**. Today the args array is built *before*
+`defaultCallFunction` sees the callee: JS evaluates every argument of
+`call(F, [A0, A1, ...])` first, and only then the helper returns
+`undefined` for a null callee (the interpreter does the same — callee,
+then `args.map(...)`, then `ctx.callFunction`). So `f(a!)` with
+`f: null, a: null` throws the non-null assertion *from the argument*, and
+`f(missing)` with `f: null` throws `Unknown identifier`. The naive
+emission `(_f=(F))==null ? undefined : _ensFn(_f)(A0, A1)` skips argument
+evaluation when the callee is null — a silent semantic change (swallowed
+argument errors, skipped host-function side effects). The correct
+emission evaluates callee and arguments into temp slots in source order:
 
 ```js
 // f(a,b,c) →
-((_f=(visit f))==null ? undefined : _ensFn(_f)(visit a, visit b, visit c))
+(_f=(visit f), _a0=(visit a), _a1=(visit b), _a2=(visit c),
+ _f==null ? undefined : _ensFn(_f)(_a0, _a1, _a2))
 
-// f() →
+// f() → no argument slots needed
 ((_f=(visit f))==null ? undefined : _ensFn(_f)())
 ```
 
 No helper, no array, no `apply`. `_ensFn` is a named import of
-`ensureFunction` bound into the bootstrap.
+`ensureFunction` bound into the bootstrap. Because every argument needs a
+temp slot, this item **hard-depends on the temp-slot allocator** (see
+"Shared infrastructure" below) — it must not land before it. Guard tests
+pinning the argument-evaluation order: `test/semantics-guards.test.ts`.
 
 **Impact: High.** Function calls are extremely common (stdlib usage,
 chained operations, extensions). Eliminating the args array on every call
@@ -384,7 +417,7 @@ the outer scope-capturing IIFE becomes unnecessary.
 
 ## 6. Property access — dispatcher call for every `a.b`
 
-**Where:** `src/compiler.ts:109-149`, `src/visitors.ts:205-218`.
+**Where:** `src/runtime.ts:96-136`, `src/visitors.ts:197-210`.
 
 **Current:** every `a.b`, `a[b]`, and `a::b` compiles to a single
 `prop(obj, key, extension)` call, which handles:
@@ -430,7 +463,7 @@ and the per-call `extension` parameter.
 
 ## 7. Nullish coalescing — arrow IIFE per evaluation
 
-**Where:** `src/visitors.ts:261-271`.
+**Where:** `src/visitors.ts:253-263`.
 
 **Current:**
 
@@ -468,7 +501,7 @@ slot (guard tests: `test/semantics-guards.test.ts`).
 
 ## 8. Non-null assert `!` — wrapper call
 
-**Where:** `src/compiler.ts:161-171`, `src/visitors.ts:202-203`.
+**Where:** `src/runtime.ts:148-158`, `src/visitors.ts:194-195`.
 
 **Current:** `nna(visit(x))`.
 
@@ -487,7 +520,7 @@ where `_throwNNA` is a tiny helper that builds and throws the error.
 
 ## 9. Pipe sequences — array of tail descriptor objects
 
-**Where:** `src/compiler.ts:174-191`, `src/visitors.ts:273-301`.
+**Where:** `src/runtime.ts:161-178`, `src/visitors.ts:265-296`.
 
 **Current:** a pipe compiles to:
 
@@ -627,7 +660,7 @@ call:
 
 ## 12. `let` expression — arrays of names and values
 
-**Where:** `src/visitors.ts:414-460`.
+**Where:** `src/visitors.ts:400-433`.
 
 Already covered in §4b: today, `let x=1, y=2, expr` generates two arrays,
 pushes names/values, and looks up through `_get`. After static scope
@@ -667,7 +700,7 @@ as-is.
 
 ## 14. Error-mapping wrapper
 
-**Where:** `src/compiler.ts:432-448`.
+**Where:** `src/compiler.ts:100-116`.
 
 Every compiled expression is wrapped in `try/catch` + `errorMapper.mapError`
 unless `errorMapper: null`. The wrapper adds a function-call layer to every
@@ -704,7 +737,29 @@ Rules:
 - The pass runs on the AST (like `validate()`), shared by both backends,
   so parity is preserved by construction.
 - `if true/false then ... else ...` folds to the taken branch; dead
-  branches are dropped (they were already validated).
+  branches are dropped (they were already validated — see the placement
+  rule below).
+- **Placement: folding runs strictly after `validate()` on the original
+  AST.** The plugin pipeline sketches transforms running before
+  validation (`.research/001-plugins/02-plugin-api.md`); folding must
+  not follow that placement, or dropping a dead branch would hide
+  compile-time errors that `validate()` reports today — e.g.
+  `if true then 1 else (let a = 1, a = 2, a)` must keep throwing
+  `CompileError` for the duplicate `let` name in the untaken branch.
+- **Override gating: fold only operations with default semantics.**
+  `1 + 2` under a legacy `binaryOperators` override of `+` (or a plugin
+  operator slot) evaluates the override today; folding with the default
+  operator would silently change the result. The same applies to
+  `castToBoolean` overrides (`not`, `if` conditions, `and`/`or`) and
+  `castToString` overrides (`&`, template literals). In the plugin era,
+  implement folding as a **core optimization pass** that consults
+  `resolved.overridden` — not as an ordinary transform plugin — or give
+  the transform context an explicit `canFold(op)` API. During the legacy
+  transition, any semantic override in `ContextOptions` disables folding
+  for the affected operations (simplest: disables the pass wholesale).
+
+Guard tests pinning the placement and gating rules:
+`test/semantics-guards.test.ts`.
 
 **Impact: Medium** (expression-dependent), **Effort: Small–Medium.**
 Independent of everything else — can land at any point.
@@ -770,7 +825,7 @@ item in this document.
 | 4a | Identifier lookup | drop per-eval `_get.bind(data)`; pass `data` as arg | High | Trivial |
 | 3 | Logical ops | Inline `&&`/`\|\|`, drop thunks | High | Small |
 | 1 | Binary arith | Named helpers, drop dict + wrapper | High | Small |
-| 5 | Function call | Inline null-safe call, drop args array | High | Small |
+| 5 | Function call | Inline null-safe call via temp slots, drop args array (depends on allocator) | High | Small |
 | 4b | Scope resolution | Static env pass; direct JS locals | Very High | Large |
 | 12 | `let` | Real JS `var` locals (depends on 4b) | High | Medium |
 | 9 | Pipes | Inline comma-sequence, drop descriptor array (depends on 4b) | High | Medium |
@@ -793,9 +848,14 @@ item in this document.
    trivial, high impact. Do this today regardless of the larger strategy.
 2. **§3 — native `&&`/`||`.** Small surface change, closes a significant
    allocation source.
-3. **§1 + §2 — drop operator dictionaries.** Decide the story for
-   `binaryOperators`/`unaryOperators`/`logicalOperators` options. If we
-   commit to "no override", we remove them from `CompileOptions`.
+3. **§1 + §2 — fast default operator lowering.** Emit named-helper calls
+   on the default path; detect legacy operator overrides at compile time
+   and fall back to the wholesale legacy visitor table + bootstrap (intro
+   rule 1). No public API is removed here —
+   `binaryOperators`/`unaryOperators`/`logicalOperators` stay in
+   `CompileOptions` until the plugin mechanism ships and its deprecation
+   window closes (intro rule 2; migration table at the end of this
+   document).
 4. **Temp-slot allocator + §5 — inline function calls.** The allocator
    built here also unblocks §6–§9. Also removes `callFunction` from
    the override surface.
@@ -809,10 +869,10 @@ item in this document.
    opportunistically at any point.
 7. Remaining items as cleanup.
 
-Guard tests for the semantics-preservation caveats called out in §4b, §7,
-§9 and §12 live in `test/semantics-guards.test.ts` — they pass against the
-current implementation and exist to fail loudly if an optimization changes
-observable behavior.
+Guard tests for the semantics-preservation caveats called out in §4b, §5,
+§7, §9, §12 and §15 live in `test/semantics-guards.test.ts` — they pass
+against the current implementation and exist to fail loudly if an
+optimization changes observable behavior.
 
 ## What to preserve
 

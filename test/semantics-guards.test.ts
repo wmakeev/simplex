@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { suite, test } from 'node:test'
+import { defaultBinaryOperators, CompileError } from '../src/index.js'
 import { compile } from './helpers.js'
 
 /**
@@ -13,9 +14,14 @@ import { compile } from './helpers.js'
  *   codegen-internal identifiers must not shadow runtime plumbing.
  * - §4b (static identifier resolution): direct data/globals emission must
  *   preserve hasOwn semantics, unknown-identifier errors, the `undefined`
- *   special case, and by-reference globals reads.
+ *   special case, by-reference globals reads, and the by-reference
+ *   globals/data *keyset* (no compile-time global-vs-data classification).
+ * - §5 (inline function calls): arguments are evaluated before the callee
+ *   null check — a null callee must not skip argument evaluation.
  * - §7 (hoisted `??` temps): nested and re-entrant `??` evaluation must
  *   not clobber a shared temp slot.
+ * - §15 (constant folding): folding must not skip validation of dead
+ *   branches and must not bypass semantic overrides of the folded ops.
  *
  * All cases run through the parity helper, so both backends are covered.
  */
@@ -135,6 +141,100 @@ suite('semantics guards: identifier resolution (§4b)', () => {
     const fn = compile('x', { globals })
     assert.equal(fn(), 1)
     globals['x'] = 2
+    assert.equal(fn(), 2)
+  })
+
+  test('globals KEY added after compile starts shadowing the data field', () => {
+    // The globals/data classification happens per call via Object.hasOwn,
+    // not per compile. A compile-time global-vs-data split (raw
+    // `data["x"]` lowering) would keep returning the data value here.
+    const globals: Record<string, unknown> = {}
+    const fn = compile('x', { globals })
+    assert.equal(fn({ x: 1 }), 1)
+    globals['x'] = 2
+    assert.equal(fn({ x: 1 }), 2)
+  })
+
+  test('globals KEY deleted after compile falls back to the data field', () => {
+    // Inverse case: raw `globals["x"]` lowering would return undefined
+    // instead of falling back to data.
+    const globals: Record<string, unknown> = { x: 2 }
+    const fn = compile('x', { globals })
+    assert.equal(fn({ x: 1 }), 2)
+    delete globals['x']
+    assert.equal(fn({ x: 1 }), 1)
+  })
+})
+
+suite('semantics guards: call argument evaluation order (§5)', () => {
+  test('null callee: non-null assertion in an argument still throws', () => {
+    // Arguments are evaluated BEFORE the callee null check. The naive
+    // inline emission `_f==null ? undefined : _ensFn(_f)(args)` would
+    // silently return undefined here.
+    const fn = compile('f(a!)')
+    assert.throws(
+      () => fn({ f: null, a: null }),
+      /Non-null assertion failed: value is null/
+    )
+  })
+
+  test('null callee: unknown identifier in an argument still throws', () => {
+    const fn = compile('f(missing)')
+    assert.throws(() => fn({ f: null }), /Unknown identifier - missing/)
+  })
+
+  test('null callee: side effects in arguments still run', () => {
+    let calls = 0
+    const fn = compile('f(g())', {
+      globals: {
+        g: () => {
+          calls++
+          return 1
+        }
+      }
+    })
+    assert.equal(fn({ f: null }), undefined)
+    // The parity helper invokes both backends, so we only assert that the
+    // argument was evaluated at least once, not an exact count.
+    assert.ok(calls > 0, 'argument side effect must run for a null callee')
+  })
+})
+
+suite('semantics guards: constant folding gates (§15)', () => {
+  test('dead conditional branch is still validated', () => {
+    // Folding `if true` must not drop the untaken branch before
+    // `validate()` has seen it — the duplicate `let` name below is a
+    // compile-time error today and must stay one.
+    assert.throws(
+      () => compile('if true then 1 else (let a = 1, a = 2, a)'),
+      (err: unknown) =>
+        err instanceof CompileError &&
+        err.message.includes('"a" name defined inside let expression was repeated')
+    )
+  })
+
+  test('constant arithmetic respects a binaryOperators override', () => {
+    // `1 + 2` must evaluate the override, not a folded default result.
+    const fn = compile('1 + 2', {
+      binaryOperators: { ...defaultBinaryOperators, '+': () => 42 }
+    })
+    assert.equal(fn(), 42)
+  })
+
+  test('constant concatenation respects a binaryOperators override', () => {
+    const fn = compile('"a" & "b"', {
+      binaryOperators: { ...defaultBinaryOperators, '&': () => 'X' }
+    })
+    assert.equal(fn(), 'X')
+  })
+
+  test('`not` on a constant respects a castToBoolean override', () => {
+    const fn = compile('not true', { castToBoolean: () => false })
+    assert.equal(fn(), true)
+  })
+
+  test('`if` on a constant condition respects a castToBoolean override', () => {
+    const fn = compile('if true then 1 else 2', { castToBoolean: () => false })
     assert.equal(fn(), 2)
   })
 })
