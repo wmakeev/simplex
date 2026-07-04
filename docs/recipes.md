@@ -67,7 +67,7 @@ let sumTree = node =>
 sumTree(root)
 ```
 
-**Why.** Two recursive calls in one expression are not a problem, but if the recursive case **branches** (Fibonacci-style), bind each call with `let` first to keep the structure flat (see [Multi-branch recursion](../README.md#recursion) in the README).
+**Why.** Multiple recursive calls in one expression are fine (see [Recursion](../README.md#recursion) in the README). Binding each call with `let` first (`let a = f(n - 1), b = f(n - 2), a + b`) is a stylistic option that keeps a busy recursive case flat — not a requirement.
 
 ---
 

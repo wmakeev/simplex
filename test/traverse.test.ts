@@ -204,12 +204,12 @@ suite('traverse code', () => {
   test('lambda', () => {
     assert.equal(
       getCode('a => b'),
-      '((scope,params)=>function(p0){scope=[params,[p0],scope];return get(scope,"b")})(scope,["a"])'
+      '((_scope,params)=>function(p0){var scope=[params,[p0],_scope];return get(scope,"b")})(scope,["a"])'
     )
 
     assert.equal(
       getCode('a => (b) => a + b + c'),
-      '((scope,params)=>function(p0){scope=[params,[p0],scope];return ((scope,params)=>function(p0){scope=[params,[p0],scope];return bop["+"](bop["+"](get(scope,"a"),get(scope,"b")),get(scope,"c"))})(scope,["b"])})(scope,["a"])'
+      '((_scope,params)=>function(p0){var scope=[params,[p0],_scope];return ((_scope,params)=>function(p0){var scope=[params,[p0],_scope];return bop["+"](bop["+"](get(scope,"a"),get(scope,"b")),get(scope,"c"))})(scope,["b"])})(scope,["a"])'
     )
   })
 

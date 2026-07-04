@@ -389,19 +389,22 @@ countdown(3)   // [3, 2, 1]
 let x = x + 1, x   // Error: x is not defined
 ```
 
-**No mutual recursion.** Two sibling `let` bindings cannot see each other — each `let` opens a new scope, and the name becomes visible only for bindings that follow it. Combine both functions into one with a selector parameter, or use the `self(self)` trick below.
-
-**Multi-branch recursion (Fibonacci, tree traversal).** When the recursive case combines two or more recursive calls in a single expression, bind each call with `let` first:
+**Mutual recursion works between sibling bindings.** All bindings of one `let` share a scope. Initializers see only *previous* bindings, but a lambda body resolves names at call time — by then every sibling is established:
 
 ```
-let fib = n =>
-  if n <= 1 then n
-  else
-    let a = fib(n - 1),
-        b = fib(n - 2),
-    a + b,
+let even = n => if n == 0 then true else odd(n - 1),
+odd = n => if n == 0 then false else even(n - 1),
+even(10)   // true
+```
+
+**Multi-branch recursion (Fibonacci, tree traversal)** works directly — two or more recursive calls in one expression are fine:
+
+```
+let fib = n => if n <= 1 then n else fib(n - 1) + fib(n - 2),
 fib(10)   // 55
 ```
+
+Binding each recursive call with `let` first (`let a = fib(n - 1), b = fib(n - 2), a + b`) is a stylistic choice for busy recursive cases, not a requirement.
 
 **Anonymous recursion** — for cases where a name isn't available (e.g., inside a pipe stage):
 
