@@ -119,3 +119,45 @@ Tree-walking is slower per call than JIT-compiled `new Function` output. `interp
 - `src/visitors.ts` — inline validations removed (moved to `validate.ts`).
 - `package.json` — `exports` entry `"./interpret"`.
 - `test/helpers.ts` — parity-`compile`; `test/interpreter.test.ts` — eval-free-specific cases.
+
+---
+
+## Lambda scope frames are per-invocation locals (issue #30)
+
+**Status:** Implemented (bug fix).
+
+### Context
+
+The codegen backend emitted lambdas as:
+
+```js
+((scope,params)=>function(p0){scope=[params,[p0],scope];return BODY})(scope,[...])
+```
+
+The generated function **reassigned the closure-captured `scope` variable** on every invocation and never restored it. All invocations of one lambda instance share that single binding, so after a recursive self-call returned, the scope-chain head was a stale frame from the completed recursion. Any `let`-bound recursive lambda with **two or more self-calls in one expression** resolved identifiers against the wrong frame (`fib(10)` → `-80`; a two-base-case variant overflowed the stack). Single-self-call patterns (`n * f(n - 1)`) worked only because JS evaluates operands left-to-right — every read of `n` happened before the recursive call polluted the chain.
+
+The interpreter builds a fresh frame per call (`evalNode(body, [paramNames, args, scope], data)`) and was always correct — a backend divergence the parity suite did not cover (no multi-self-call recursion cases existed).
+
+### Decision
+
+Bind the frame as a fresh per-invocation local instead of mutating the captured variable:
+
+```js
+((_scope,params)=>function(p0){var scope=[params,[p0],_scope];return BODY})(scope,[...])
+```
+
+Nested emissions inside `BODY` reference `scope` lexically and get the invocation's own frame; nested lambdas capture it correctly (real closure semantics).
+
+`LetExpression` and pipe-stage emissions also reassign a `scope` IIFE parameter, but those IIFEs are invoked once per *evaluation* of the enclosing expression, so the reassignment is local and harmless — reviewed and left unchanged.
+
+### Consequences
+
+- Mutual recursion between sibling `let` bindings now works reliably on both backends (bindings share one frame; lambda bodies resolve names at call time). Documentation previously claimed it was unsupported — corrected in `README.md`, `docs/js-comparison.md`, `docs/agent-guide.md`.
+- The multi-branch recursion workaround (binding each self-call with `let` first) is now a stylistic choice, not a requirement.
+- Regression suite: `test/recursion.test.ts` (parity — both backends).
+- The scope-chain mechanism itself is slated for removal by static scope resolution (`docs/compiler-roadmap.md` §4b); the regression tests must survive that rewrite.
+
+### Affected files
+
+- `src/visitors.ts` — `LambdaExpression` codegen.
+- `test/recursion.test.ts` — new regression suite.

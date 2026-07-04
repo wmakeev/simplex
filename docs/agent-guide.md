@@ -232,14 +232,13 @@ let factorial = n => if n <= 1 then 1 else n * factorial(n - 1),
 factorial(5)                        // 120
 ```
 
-Self-reference works **only for lambdas** (`let x = x + 1, x` errors). **No mutual recursion** —
-sibling `let` bindings cannot see each other. For multi-branch recursion (Fibonacci, tree
-walks) bind each recursive call with `let` first:
+Self-reference works **only for lambdas** (`let x = x + 1, x` errors). Mutual recursion between
+sibling bindings works — lambda bodies resolve names at call time, so an earlier binding can
+call a later one (initializers still see only previous bindings). Multi-branch recursion
+(Fibonacci, tree walks) works directly:
 
 ```
-let fib = n =>
-  if n <= 1 then n
-  else let a = fib(n - 1), b = fib(n - 2), a + b,
+let fib = n => if n <= 1 then n else fib(n - 1) + fib(n - 2),
 fib(10)                             // 55
 ```
 

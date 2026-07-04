@@ -308,9 +308,14 @@ const visitors: {
       const fnParamsList = fnParams.join()
       const fnParamsNamesList = paramsNames.map(p => JSON.stringify(p)).join()
 
+      // The frame must be a fresh per-invocation local (`var scope`), NOT a
+      // reassignment of the closure-captured variable: all invocations of one
+      // lambda instance share that captured binding, so mutating it leaks
+      // frames of completed calls into subsequent ones (breaks expressions
+      // with two+ recursive self-calls, e.g. Fibonacci — see issue #30).
       const parts: VisitResult[] = [
         codePart(
-          `((${GEN.scope},params)=>function(${fnParamsList}){${GEN.scope}=[params,[${fnParamsList}],${GEN.scope}];return `,
+          `((${GEN._scope},params)=>function(${fnParamsList}){var ${GEN.scope}=[params,[${fnParamsList}],${GEN._scope}];return `,
           node
         ),
         ...visit(node.expression),

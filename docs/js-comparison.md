@@ -77,7 +77,7 @@ The README's [Like JS, but…](../README.md#like-js-but) section is a short summ
 | Spread in call sites | `f(...arr)` | **no** | the call must list arguments. For variadic stdlib, use the namespace form (`Math.max(a, b, c)`); to apply over an array, fold: `Arr.fold(arr, (a, b) => Math.max(a, b))` |
 | Currying placeholder | — | `#` inside call arguments — `add(#, 3)` is `x => add(x, 3)` | `#` only works inside call arguments; it is not a general-purpose hole |
 | Named recursion | yes | yes — a `let` binding whose initializer is a lambda can call itself by name; see the [Recursion](../README.md#recursion) section |
-| Mutual recursion | yes | **no** — sibling `let` bindings cannot see each other |
+| Mutual recursion | yes | yes — sibling `let` bindings share one scope; lambda bodies resolve names at call time |
 | Generators / `yield` | yes | **no** | |
 | async / await, Promise | yes | **no** | every expression is synchronous |
 | `new`, constructors | yes | **no** | values are produced by literals and by globals you provide |
@@ -113,7 +113,7 @@ The README's [Like JS, but…](../README.md#like-js-but) section is a short summ
 | Reassignment | `x = y` | **no** — bindings are immutable | re-bind with a new `let`: `let x = …, let x = newValue, …` |
 | Hoisting | yes | **no** — a name is in scope only after its `let` binding is established (the lambda case is the one exception, see below) |
 | Self-reference in a binding | `const x = x + 1` is a TDZ error | identical for non-lambdas (`let x = x + 1, x` errors); **works** when the initializer is a lambda — the name is captured by closure and resolved at call time |
-| Mutual recursion | yes | **no** — two sibling `let` bindings cannot reference each other |
+| Mutual recursion | yes | yes — a lambda body sees all sibling bindings at call time; only *initializers* are restricted to previous bindings |
 | TDZ | yes | not a category — there is no hoisting, so the question doesn't arise |
 
 ---
