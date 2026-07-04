@@ -268,7 +268,7 @@ references — so it emits the generic `get(scope, "x")` for all four.
   classes at compile time by inspecting the keysets — that silently
   snapshots the keyset (see the caveats below).
 
-Two invariants (decided 2026-07-04, see `.plan/2026-07-04/fork-decisions.md`,
+Two invariants (decided 2026-07-04, see `.plan/2026-07-04-compiler-roadmap-plan/fork-decisions.md`,
 fork 4):
 
 - **Static resolution of local bindings is unconditional.** Lambda params,
@@ -607,7 +607,7 @@ point to preserve and no plugin hook replacing it (the hook was dropped from
 the plugin design). If this section is implemented before the major, the
 inline emission temporarily keeps the current runtime-throw branch for `|>`;
 the branch is deleted with the grammar. Removal checklist lives in
-`.plan/2026-07-04/fork-decisions.md`, fork 1.
+`.plan/2026-07-04-compiler-roadmap-plan/fork-decisions.md`, fork 1.
 
 ---
 
