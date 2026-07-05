@@ -800,20 +800,33 @@ variant.
 
 ## Step 0 — benchmark harness (before any of the above)
 
-The repository currently has **no benchmarks**; every Impact rating in
-this document is an estimate. Two deserve explicit skepticism: dictionary
-lookups (`bop["+"]`) are near-free under V8 inline caches, so §1's win
-rests on eliminating the `numericOp` double call, not the dictionary; and
-V8 often sinks short-lived closures in the optimizing tier, so allocation
-wins should be measured, not assumed. The *safest* bets are the pure
-allocation eliminations: §3 thunks, §5 args array, §9 descriptor
-objects, §4a `findIndex` closure + `bind(data)`.
+**Done.** The harness lives in `bench/` (`npm run bench`); see
+[`bench/README.md`](../bench/README.md) for the campaign how-to (quick/full
+presets, §7.1 calibration checklist, A/A noise floor, dual-build ABAB
+before/after, reading the compare report) and
+`.plan/2026-07-04-compiler-roadmap-plan/plans/00-benchmark-harness/measurement-protocol.md`
+for the normative protocol. Every Impact rating below remains an estimate
+until measured. Two deserve explicit skepticism: dictionary lookups
+(`bop["+"]`) are near-free under V8 inline caches, so §1's win rests on
+eliminating the `numericOp` double call, not the dictionary; and V8 often
+sinks short-lived closures in the optimizing tier, so allocation wins
+should be measured, not assumed. The *safest* bets are the pure allocation
+eliminations: §3 thunks, §5 args array, §9 descriptor objects, §4a
+`findIndex` closure + `bind(data)`.
 
-Before phase-2 work starts: add a micro+macro benchmark suite (e.g.
-`mitata` / `tinybench`) over a fixed set of representative expressions
-(arith-heavy, pipe-heavy, lambda-heavy, property-heavy, mixed stdlib),
-run per-item before/after, and record the numbers next to each landed
-item in this document.
+**Definition of Done for every measurement (protocol §12):** `before` and
+`after` run with `bench:full` on one `envId` / exact Node version /
+`corpusVersion` and the result files committed; the headline number comes
+from a dual-build **ABAB** run; all steady cells pass the
+`kOptimized && kTurboFanned` tier assert with 0 deopts; deltas classified
+by the two-stage significance criterion (bytes/op included); the number is
+recorded next to the item in this document in the §9.3 format **including
+zero slices** (`~` in cold / no-opt / interpret is a result) — and
+unexpected outcomes are written into the item's prose.
+
+### Baseline (2026-07-04, `i5-4690K.linux.node24`)
+
+<!-- BASELINE-PLACEHOLDER -->
 
 ---
 

@@ -45,6 +45,7 @@ npm run compile:dev && node --test build/test/parser.test.js
 - **`src/stdlib/`** — Standard library (`createStdlib()`). Separate entry point: `simplex-lang/stdlib`. Namespaced functions (Str, Num, Math, Arr, Obj, Json, Date) + top-level utilities (empty, exists, typeOf). Returns `{ globals, extensions }` for use with `compile()`. Conventions: NaN→null, immutable (toSorted/toReversed), tiered validation (NaN wrapper / semantic wrapper / input guard). See [`docs/stdlib.md`](docs/stdlib.md) for full API reference.
 - **`parser/`** — Auto-generated parser output (do not edit manually)
 - **`build/`** — Compiled JS output
+- **`bench/`** — Performance benchmark harness for the compiler-roadmap fronts (`npm run bench`; plain ESM `.mjs`, outside `tsconfig`/ESLint, `mitata` dev-dependency only — zero-deps policy preserved). See [`bench/README.md`](bench/README.md).
 
 ## SimplEx Language Reference
 

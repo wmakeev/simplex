@@ -23,3 +23,13 @@ node_modules
 
 # working
 .plan
+
+# bench (harness lives in bench/, outside src/; results are selective)
+# Committed:   bench/results/<envId>/  — baselines + final before/after (protocol §8.2),
+#              env-config.json, noise-floor-history.jsonl
+# Ignored:     transient quick runs, diagnostic logs, A/A noise runs (their
+#              essence is one line in noise-floor-history.jsonl)
+/bench/results/tmp/
+/bench/results/**/*.log
+/bench/results/**/*.trace
+/bench/results/**/*aa-[0-9].json
